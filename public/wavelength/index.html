@@ -968,11 +968,12 @@
 
       function calculatePosFromEvent(e) {
         const rect = wrapper.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const touch = (e.touches && e.touches[0]) ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
+        const clientX = touch ? touch.clientX : e.clientX;
+        const clientY = touch ? touch.clientY : e.clientY;
 
         const hubX = rect.left + rect.width / 2;
-        const hubY = rect.bottom; // Bottom center is hub origin
+        const hubY = rect.top + rect.height * (200 / 240); // Exact SVG hub center
 
         const dx = clientX - hubX;
         const dy = hubY - clientY;
@@ -1099,3 +1100,4 @@
   </script>
 </body>
 </html>
+

@@ -811,6 +811,11 @@
         resetButtons();
         showToast(msg || 'An error occurred', 'error');
       });
+
+      socket.on('connect_error', () => {
+        resetButtons();
+        showToast('Connection error. Server may still be starting up...', 'error');
+      });
     }
 
     function navigateToGame(gameType, roomId) {

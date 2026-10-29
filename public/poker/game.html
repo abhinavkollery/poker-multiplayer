@@ -1243,12 +1243,13 @@
     // Initialization on load
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      roomId = urlParams.get('room') || sessionStorage.getItem('roomId');
-      playerName = sessionStorage.getItem('playerName');
+      roomId = (urlParams.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
+      playerName = sessionStorage.getItem('playerName') || localStorage.getItem('playerName') || ('Player_' + Math.floor(Math.random() * 1000));
+      sessionStorage.setItem('playerName', playerName);
       isHost = sessionStorage.getItem('isHost') === 'true';
 
-      if (!roomId || !playerName) {
-        window.location.href = '/';
+      if (!roomId) {
+        window.location.href = '/?game=poker';
         return;
       }
 

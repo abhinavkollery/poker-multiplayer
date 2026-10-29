@@ -114,6 +114,7 @@ class PlatformerGame {
 
   loadLevel(levelIndex) {
     this.currentLevelIndex = levelIndex;
+    this.state = 'playing';
     const level = getLevel(levelIndex);
     this.currentLevel = level;
 
@@ -252,8 +253,15 @@ class PlatformerGame {
     return { success: true };
   }
 
+  clearTimer() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  }
+
   resetToLobby() {
-    clearTimeout(this.timer);
+    this.clearTimer();
     this.state = 'waiting';
     this.currentLevelIndex = 0;
     this.currentLevel = null;

@@ -218,6 +218,23 @@ assert.strictEqual(plat.players[1].reachedExit, true);
 assert.strictEqual(plat.state, 'level_cleared');
 console.log('  ✓ Level cleared when all co-op partners reached exit portal');
 
+// Test key collection on level 3
+plat.loadLevel(2); // Level 3 index
+assert(plat.currentLevel.keys.length > 0, 'Level 3 must have keys');
+const testKey = plat.currentLevel.keys[0];
+plat.updatePlayerState('pl1', { collectedKeyId: testKey.id });
+assert(plat.collectedKeys.has(testKey.id), 'Key must be added to collectedKeys');
+assert.strictEqual(plat.doorStates[plat.currentLevel.lockedDoors[0].id], true, 'Locked door must open with key');
+console.log('  ✓ Key pickup and locked door opening verified');
+
+// Test Poker fold action
+const foldPlayerId = poker.players[poker.currentPlayerIndex].id;
+const otherPlayer = poker.players.find(p => p.id !== foldPlayerId);
+const chipsBefore = otherPlayer.chips;
+poker.handleAction(foldPlayerId, 'fold', 0);
+assert(otherPlayer.chips > chipsBefore, 'Winning player chips must increase');
+console.log('  ✓ Poker fold action and pot award verified');
+
 console.log('\n🎉 ALL 7 TEST SUITES PASSED FLAWLESSLY!');
 imposter.clearTimer();
 waveCoop.clearTimer();

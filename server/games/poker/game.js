@@ -721,6 +721,14 @@ class PokerGame {
     this.turnStartTime = null;
   }
 
+  clearTimer() {
+    this.clearTurnTimer();
+    if (this.nextHandTimer) {
+      clearTimeout(this.nextHandTimer);
+      this.nextHandTimer = null;
+    }
+  }
+
   getPublicState() {
     return {
       roomId: this.roomId,

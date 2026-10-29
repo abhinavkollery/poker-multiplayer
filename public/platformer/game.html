@@ -1219,7 +1219,11 @@
       ctx.shadowColor = color;
       ctx.shadowBlur = isSelf ? 10 : 4;
       ctx.beginPath();
-      ctx.roundRect(-w / 2, -h / 2, w, h, [12, 12, 8, 8]);
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(-w / 2, -h / 2, w, h, [12, 12, 8, 8]);
+      } else {
+        ctx.rect(-w / 2, -h / 2, w, h);
+      }
       ctx.fill();
       ctx.shadowBlur = 0;
 

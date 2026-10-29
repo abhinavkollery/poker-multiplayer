@@ -151,13 +151,15 @@ io.on('connection', socket => {
   });
 
   // 2. Join Room
-  socket.on('join-room', ({ roomId, name }) => {
+  socket.on('join-room', (payload = {}) => {
+    const roomId = payload.roomId;
+    const name = payload.name;
     if (!roomId) {
       socket.emit('join-error', 'Room ID is required');
       return;
     }
 
-    const cleanRoomId = roomId.trim().toUpperCase();
+    const cleanRoomId = String(roomId || '').trim().toUpperCase();
     const game = rooms.get(cleanRoomId);
     if (!game) {
       socket.emit('join-error', 'Room not found. Check the code and try again.');
