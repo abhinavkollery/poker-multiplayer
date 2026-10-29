@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Royal Flush Poker | Game Table</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/shared/style.css">
   <style>
     /* Viewport lock & Game Canvas */
     html, body {
@@ -964,6 +964,9 @@
     <!-- Header -->
     <header class="table-header">
       <div class="header-left">
+        <button class="btn btn-ghost" onclick="window.location.href='/'" style="padding: 6px 12px; font-size: 13px;" title="Back to Games Hub">
+          <span>🎮 Games Hub</span>
+        </button>
         <div class="room-badge" onclick="copyRoomCode()" title="Click to copy room code">
           <span>ROOM:</span>
           <span id="headerRoomCode" class="code">------</span>

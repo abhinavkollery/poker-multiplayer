@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Imposter | Word Deduction Game</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 15%, #241115 0%, #120a0d 50%, #080406 100%);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Header */
+    .game-nav {
+      height: 60px;
+      background: rgba(14, 8, 10, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(231, 76, 60, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-left, .nav-center, .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .room-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .room-badge:hover {
+      background: rgba(231, 76, 60, 0.2);
+      border-color: var(--imposter-red);
+    }
+
+    .phase-pill {
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(231, 76, 60, 0.2);
+      border: 1px solid var(--imposter-red);
+      color: #ff8e88;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-badge {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: #ffffff;
+    }
+
+    /* Main Container */
+    .game-arena {
+      flex: 1;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Glass Panels */
+    .arena-panel {
+      background: rgba(20, 12, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    /* Turn Indicator Banner */
+    .turn-banner {
+      background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(142, 68, 173, 0.25) 100%);
+      border: 1px solid rgba(231, 76, 60, 0.4);
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .turn-banner.my-turn {
+      border-color: #ff6b6b;
+      box-shadow: 0 0 24px rgba(231, 76, 60, 0.4);
+      animation: pulseTurn 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseTurn {
+      0%, 100% { box-shadow: 0 0 16px rgba(231, 76, 60, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(231, 76, 60, 0.7); }
+    }
+
+    .clue-input-group {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .clue-input {
+      flex: 1;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 0 16px;
+      font-size: 16px;
+      color: #ffffff;
+      outline: none;
+    }
+
+    .clue-input:focus {
+      border-color: var(--imposter-red);
+      box-shadow: 0 0 12px rgba(231, 76, 60, 0.3);
+    }
+
+    /* Voting Cards */
+    .voting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .vote-card {
+      background: rgba(0, 0, 0, 0.35);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .vote-card:hover:not(.disabled) {
+      border-color: var(--imposter-red);
+      transform: translateY(-3px);
+      background: rgba(231, 76, 60, 0.15);
+    }
+
+    .vote-card.selected {
+      border-color: #ff4757;
+      background: rgba(231, 76, 60, 0.25);
+      box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+    }
+
+    .vote-card.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Chat Drawer */
+    .chat-drawer {
+      position: fixed;
+      top: 60px;
+      right: -360px;
+      width: 340px;
+      height: calc(100vh - 60px);
+      background: rgba(14, 8, 10, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      z-index: 150;
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .chat-drawer.open {
+      right: 0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-msg {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .chat-msg .author {
+      font-weight: 700;
+      color: var(--imposter-red);
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .chat-input-box {
+      padding: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Reveal animations */
+    .elimination-box {
+      text-align: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header -->
+  <header class="game-nav">
+    <div class="nav-left">
+      <button class="btn btn-ghost" onclick="window.location.href='/'" style="padding: 6px 12px; font-size: 13px;">
+        <span>🎮 Games Hub</span>
+      </button>
+      <div class="room-badge" onclick="copyRoomCode()" title="Click to copy room code">
+        <span>ROOM:</span>
+        <span id="navRoomCode" style="color: #ff8e88;">------</span>
+        <span>📋</span>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div id="phasePill" class="phase-pill">
+        <span id="phaseText">WAITING</span>
+        <span id="phaseTimer" class="time-badge hidden">30s</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="btn btn-ghost" onclick="toggleChat()">
+        <span>💬 Chat</span>
+      </button>
+      <button class="btn btn-danger" onclick="leaveRoom()" style="padding: 6px 12px; font-size: 13px;">
+        <span>Leave</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Game Arena -->
+  <main class="game-arena">
+
+    <!-- 1. LOBBY VIEW -->
+    <section id="viewLobby" class="arena-panel">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 6px;">🕵️ The Imposter</h2>
+        <p style="color: var(--text-muted); font-size: 14px;">Invite players using the room code. Once at least 3 players join, the host can start!</p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;">Players in Lobby (<span id="lobbyPlayerCount">0</span>)</h3>
+        <div id="lobbyPlayerGrid" class="player-card-grid"></div>
+      </div>
+
+      <!-- Host Controls -->
+      <div id="hostControlsCard" class="hidden" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 20px; margin-bottom: 20px;">
+        <h4 style="font-size: 14px; color: var(--gold-light); margin-bottom: 14px;">👑 Host Game Options</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Word Category</label>
+            <select id="lobbyCategory" class="btn btn-ghost" style="width: 100%; margin-top: 4px; padding: 8px;">
+              <option value="all">🎲 All Categories</option>
+              <option value="Everyday">☕ Everyday Objects</option>
+              <option value="Food & Drink">🍕 Food & Drink</option>
+              <option value="Animals">🦁 Animals</option>
+              <option value="Nature & Places">🌴 Nature & Places</option>
+              <option value="Pop Culture">🎬 Pop Culture</option>
+              <option value="Tech & Transport">🚀 Tech & Transport</option>
+              <option value="People & Jobs">🧑‍⚕️ Roles & Jobs</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Imposters</label>
+            <select id="lobbyImposterCount" class="btn btn-ghost" style="width: 100%; margin-top: 4px; padding: 8px;">
+              <option value="1">1 Imposter</option>
+              <option value="2">2 Imposters (6+ players)</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="btnStartGame" class="btn btn-danger" style="width: 100%; padding: 14px; font-size: 16px;" onclick="startGame()" disabled>
+          <span>Start Game (Need 3+ Players)</span>
+        </button>
+      </div>
+
+      <div id="waitingForHostNotice" class="text-center text-muted" style="font-size: 14px;">
+        Waiting for the host to start the game...
+      </div>
+    </section>
+
+    <!-- 2. REVEAL SECRET WORD VIEW -->
+    <section id="viewReveal" class="arena-panel hidden text-center">
+      <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">🔒 Your Secret Identity</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Click or tap the card below to reveal your secret word. Make sure no one is peeking!</p>
+
+      <div class="secret-flip-card-container">
+        <div id="secretFlipCard" class="secret-flip-card" onclick="flipSecretCard()">
+          <div class="secret-card-front">
+            <span style="font-size: 48px;">👁️</span>
+            <span style="font-weight: 700; font-size: 18px;">TAP TO REVEAL WORD</span>
+            <span style="font-size: 12px; color: var(--text-muted);">(Keeps your word hidden from peepers)</span>
+          </div>
+          <div id="secretCardBack" class="secret-card-back">
+            <span id="myRoleBadge" style="font-size: 13px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 12px; background: rgba(0,0,0,0.4);">🛡️ CIVILIAN</span>
+            <div id="mySecretWordDisplay" style="font-size: 36px; font-weight: 800; letter-spacing: 2px; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.4);">------</div>
+            <p id="myRoleDesc" style="font-size: 12px; line-height: 1.4; color: #e0e0e0; max-width: 280px;">Listen carefully to clues and sus out the imposter without giving away your word!</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <button id="btnPlayerReady" class="btn btn-gold" style="padding: 12px 32px;" onclick="confirmReady()">
+          <span>I've Memorized My Word &amp; I'm Ready</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. CLUES & GAMEPLAY VIEW -->
+    <section id="viewClues" class="arena-panel hidden">
+      <!-- Active Turn Banner -->
+      <div id="turnBanner" class="turn-banner">
+        <div>
+          <h3 id="turnBannerTitle" style="font-size: 18px; font-weight: 800;">Waiting for clue...</h3>
+          <p id="turnBannerSubtitle" style="font-size: 13px; color: var(--text-muted);">Each player gives one short clue describing their word.</p>
+        </div>
+        <div id="turnTimerBox" class="time-badge" style="font-size: 16px; padding: 6px 14px;">30s</div>
+      </div>
+
+      <!-- Clue input (Only visible when it's your turn) -->
+      <div id="myClueInputContainer" class="hidden">
+        <form onsubmit="handleClueSubmit(event)">
+          <div class="clue-input-group">
+            <input type="text" id="clueTextInput" class="clue-input" placeholder="Type a 1-word or short clue..." maxlength="50" autocomplete="off" required>
+            <button type="submit" class="btn btn-danger"><span>Submit Clue</span></button>
+            <button type="button" class="btn btn-ghost" onclick="passClue()"><span>Pass</span></button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Live Clues Timeline -->
+      <div style="margin-top: 24px;">
+        <h4 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;">Clue Board (Round <span id="clueRoundNumber">1</span>)</h4>
+        <div id="cluesTimeline" class="clue-timeline"></div>
+      </div>
+
+      <!-- Alive Players List -->
+      <div style="margin-top: 24px;">
+        <h4 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;">Active Players</h4>
+        <div id="activePlayersGrid" class="player-card-grid"></div>
+      </div>
+    </section>
+
+    <!-- 4. DISCUSSION VIEW -->
+    <section id="viewDiscussion" class="arena-panel hidden text-center">
+      <h3 style="font-size: 24px; font-weight: 800; color: #ff8e88; margin-bottom: 8px;">🗣️ Discussion Time</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Review the clues above, debate, and figure out who is acting sus!</p>
+
+      <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <div style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--imposter-red); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; background: rgba(0,0,0,0.4);" id="discussionTimerDisplay">
+          60
+        </div>
+      </div>
+
+      <div id="hostSkipDiscussionBox" class="hidden" style="margin-top: 14px;">
+        <button class="btn btn-ghost" onclick="skipDiscussion()">
+          <span>⏩ Skip Discussion &amp; Start Voting</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 5. VOTING VIEW -->
+    <section id="viewVoting" class="arena-panel hidden">
+      <div class="text-center" style="margin-bottom: 20px;">
+        <h3 style="font-size: 24px; font-weight: 800; color: #ff6b6b; margin-bottom: 6px;">🗳️ Cast Your Vote!</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Select the player you suspect is the Imposter. Votes are secret until tally!</p>
+        <div style="margin-top: 8px; font-size: 13px; color: var(--gold-light);">
+          Votes in: <strong id="votesProgressCount">0/0</strong>
+        </div>
+      </div>
+
+      <div id="votingGrid" class="voting-grid"></div>
+
+      <div style="margin-top: 24px; text-align: center;">
+        <button id="btnConfirmVote" class="btn btn-danger" style="padding: 12px 36px; font-size: 16px;" onclick="submitVote()" disabled>
+          <span>Confirm Vote</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 6. VOTE RESULTS VIEW -->
+    <section id="viewVoteResult" class="arena-panel hidden">
+      <div id="voteEliminationBox" class="elimination-box">
+        <h3 id="eliminationTitle" style="font-size: 24px; font-weight: 800; margin-bottom: 10px;">Voting Results</h3>
+        <p id="eliminationDesc" style="font-size: 16px; margin-bottom: 16px;"></p>
+        <div id="eliminationIdentity" style="font-size: 28px; font-weight: 800; margin-top: 10px;"></div>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <h4 style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;">Vote Breakdown:</h4>
+        <div id="voteBreakdownList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+    </section>
+
+    <!-- 7. IMPOSTER GUESS STEAL VIEW -->
+    <section id="viewImposterGuess" class="arena-panel hidden text-center">
+      <div style="background: rgba(231, 76, 60, 0.2); border: 2px dashed #ff4757; border-radius: 16px; padding: 24px;">
+        <span style="font-size: 40px;">⚡</span>
+        <h3 style="font-size: 26px; font-weight: 800; color: #ff6b6b; margin-top: 6px;">LAST CHANCE STEAL!</h3>
+        <p style="font-size: 14px; color: #f0e6d3; margin: 10px 0 20px;">
+          The Imposter was unmasked, but can steal the victory by guessing the Civilians' secret word!
+        </p>
+
+        <div id="imposterGuessFormContainer" class="hidden">
+          <form onsubmit="handleImposterGuessSubmit(event)" style="display: flex; gap: 10px; max-width: 400px; margin: 0 auto;">
+            <input type="text" id="imposterWordGuessInput" class="clue-input" placeholder="Guess Civilians' word..." required>
+            <button type="submit" class="btn btn-danger"><span>Guess!</span></button>
+          </form>
+        </div>
+
+        <div id="imposterGuessWaitingContainer" class="text-muted" style="font-size: 14px;">
+          Waiting for the Imposter to guess...
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. GAME OVER VIEW -->
+    <section id="viewGameOver" class="arena-panel hidden text-center">
+      <div style="margin-bottom: 24px;">
+        <span id="gameOverEmoji" style="font-size: 54px;">🎉</span>
+        <h2 id="gameOverTitle" style="font-size: 32px; font-weight: 800; margin: 10px 0;">CIVILIANS WIN!</h2>
+        <p id="gameOverReason" style="font-size: 15px; color: var(--text-muted); max-width: 500px; margin: 0 auto;"></p>
+      </div>
+
+      <!-- Secret Words Reveal -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 500px; margin: 0 auto 24px;">
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 14px;">
+          <span style="font-size: 12px; color: var(--gold-light); font-weight: 700;">CIVILIANS' WORD</span>
+          <div id="revealedCivilianWord" style="font-size: 22px; font-weight: 800; margin-top: 4px;">------</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(231,76,60,0.3); border-radius: 14px; padding: 14px;">
+          <span style="font-size: 12px; color: #ff8e88; font-weight: 700;">IMPOSTER'S WORD</span>
+          <div id="revealedImposterWord" style="font-size: 22px; font-weight: 800; margin-top: 4px; color: #ff6b6b;">------</div>
+        </div>
+      </div>
+
+      <!-- Final Player Roster -->
+      <div style="margin-bottom: 24px;">
+        <h4 style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Final Scores &amp; Identities</h4>
+        <div id="finalScoresGrid" class="player-card-grid"></div>
+      </div>
+
+      <div id="hostPlayAgainBox" class="hidden">
+        <button class="btn btn-gold" style="padding: 14px 40px; font-size: 16px;" onclick="playAgain()">
+          <span>Next Round / Play Again</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Side Chat Drawer -->
+  <aside id="chatDrawer" class="chat-drawer">
+    <div style="padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 700; font-size: 15px;">💬 Room Discussion</span>
+      <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 12px;" onclick="toggleChat()">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <form class="chat-input-box" onsubmit="sendChatMessage(event)">
+      <input type="text" id="chatInput" placeholder="Accuse someone or discuss..." maxlength="140" style="flex: 1; height: 38px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0 10px; color: #fff; font-size: 13px; outline: none;">
+      <button type="submit" class="btn btn-danger" style="padding: 0 12px; font-size: 12px;">Send</button>
+    </form>
+  </aside>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket = null;
+    let roomId = null;
+    let playerName = null;
+    let gameState = null;
+    let selectedVoteTargetId = null;
+
+    const AVATARS = ['🐱', '🐶', '🦊', '🐼', '🐨', '🐯', '🦁', '🐵'];
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      roomId = (params.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
+      playerName = sessionStorage.getItem('playerName') || 'Player_' + Math.floor(Math.random() * 1000);
+
+      if (!roomId) {
+        window.location.href = '/?game=imposter';
+        return;
+      }
+
+      document.getElementById('navRoomCode').textContent = roomId;
+
+      socket = io();
+
+      socket.on('connect', () => {
+        socket.emit('join-room', { roomId, name: playerName });
+      });
+
+      socket.on('join-error', (msg) => {
+        showToast(msg, 'error');
+        setTimeout(() => { window.location.href = '/?game=imposter'; }, 2000);
+      });
+
+      socket.on('action-error', (msg) => {
+        showToast(msg, 'error');
+      });
+
+      socket.on('game-state', (state) => {
+        renderGameState(state);
+      });
+
+      socket.on('chat-message', ({ name, message }) => {
+        addChatMessage(name, message);
+      });
+    });
+
+    function renderGameState(state) {
+      gameState = state;
+      const myId = socket ? socket.id : null;
+      const myPlayer = state.myPlayer;
+      const isHost = myPlayer && myPlayer.isHost;
+
+      // Update Phase Pill
+      document.getElementById('phaseText').textContent = state.state.replace('_', ' ');
+      const phaseTimer = document.getElementById('phaseTimer');
+      if (state.timeRemaining > 0) {
+        phaseTimer.classList.remove('hidden');
+        phaseTimer.textContent = `${state.timeRemaining}s`;
+      } else {
+        phaseTimer.classList.add('hidden');
+      }
+
+      // Hide all panels first
+      ['viewLobby', 'viewReveal', 'viewClues', 'viewDiscussion', 'viewVoting', 'viewVoteResult', 'viewImposterGuess', 'viewGameOver'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+
+      // Show relevant panel based on state.state
+      if (state.state === 'waiting') {
+        renderLobby(state, isHost);
+      } else if (state.state === 'revealing') {
+        renderReveal(state);
+      } else if (state.state === 'clues') {
+        renderClues(state);
+      } else if (state.state === 'discussion') {
+        renderDiscussion(state, isHost);
+      } else if (state.state === 'voting') {
+        renderVoting(state);
+      } else if (state.state === 'vote_result') {
+        renderVoteResult(state);
+      } else if (state.state === 'imposter_guess') {
+        renderImposterGuess(state);
+      } else if (state.state === 'game_over') {
+        renderGameOver(state, isHost);
+      }
+    }
+
+    function renderLobby(state, isHost) {
+      document.getElementById('viewLobby').classList.remove('hidden');
+      document.getElementById('lobbyPlayerCount').textContent = state.players.length;
+
+      const grid = document.getElementById('lobbyPlayerGrid');
+      grid.innerHTML = state.players.map(p => {
+        const avatar = AVATARS[(p.avatarIndex || 1) - 1] || '👤';
+        return `
+          <div class="p-card">
+            <div class="p-avatar">${avatar}</div>
+            <div class="p-name">${escapeHtml(p.name)}</div>
+            <div class="p-status">${p.isHost ? '👑 Host' : 'Player'}</div>
+          </div>
+        `;
+      }).join('');
+
+      const hostControls = document.getElementById('hostControlsCard');
+      const waitingNotice = document.getElementById('waitingForHostNotice');
+      if (isHost) {
+        hostControls.classList.remove('hidden');
+        waitingNotice.classList.add('hidden');
+        const startBtn = document.getElementById('btnStartGame');
+        startBtn.disabled = !state.canStart;
+        startBtn.innerHTML = state.canStart
+          ? `<span>Start Game (${state.players.length} Players)</span>`
+          : `<span>Need at least 3 players to start (${state.players.length}/3)</span>`;
+      } else {
+        hostControls.classList.add('hidden');
+        waitingNotice.classList.remove('hidden');
+      }
+    }
+
+    function renderReveal(state) {
+      document.getElementById('viewReveal').classList.remove('hidden');
+      const my = state.myPlayer;
+      if (!my) return;
+
+      const flipCard = document.getElementById('secretFlipCard');
+      const wordDisplay = document.getElementById('mySecretWordDisplay');
+      const roleBadge = document.getElementById('myRoleBadge');
+      const roleDesc = document.getElementById('myRoleDesc');
+      const cardBack = document.getElementById('secretCardBack');
+
+      wordDisplay.textContent = my.word || '------';
+
+      if (my.isImposter) {
+        roleBadge.textContent = '🕵️ YOU ARE THE IMPOSTER';
+        roleBadge.style.color = '#ff6b6b';
+        roleDesc.textContent = 'Your word is slightly different from the Civilians! Blend in, listen carefully, and don\'t get caught!';
+        cardBack.classList.add('is-imposter');
+      } else {
+        roleBadge.textContent = '🛡️ CIVILIAN';
+        roleBadge.style.color = '#7de7ff';
+        roleDesc.textContent = 'Everyone except the Imposter has this exact word. Give clever clues to sus out the imposter!';
+        cardBack.classList.remove('is-imposter');
+      }
+
+      const readyBtn = document.getElementById('btnPlayerReady');
+      if (my.ready) {
+        readyBtn.disabled = true;
+        readyBtn.innerHTML = `<span>✅ Ready! Waiting for others...</span>`;
+      } else {
+        readyBtn.disabled = false;
+        readyBtn.innerHTML = `<span>I've Memorized My Word &amp; I'm Ready</span>`;
+      }
+    }
+
+    function renderClues(state) {
+      document.getElementById('viewClues').classList.remove('hidden');
+      document.getElementById('clueRoundNumber').textContent = state.clueRound;
+
+      const isMyTurn = state.activeTurnPlayer && state.myPlayer && state.activeTurnPlayer.id === state.myPlayer.id;
+      const banner = document.getElementById('turnBanner');
+      banner.classList.toggle('my-turn', !!isMyTurn);
+
+      if (isMyTurn) {
+        document.getElementById('turnBannerTitle').textContent = `🎯 IT'S YOUR TURN!`;
+        document.getElementById('turnBannerSubtitle').textContent = `Type a 1-word or short clue describing your secret word.`;
+        document.getElementById('myClueInputContainer').classList.remove('hidden');
+      } else {
+        const turnName = state.activeTurnPlayer ? state.activeTurnPlayer.name : 'someone';
+        document.getElementById('turnBannerTitle').textContent = `Waiting for ${escapeHtml(turnName)}...`;
+        document.getElementById('turnBannerSubtitle').textContent = `They are thinking of a clue to describe their word.`;
+        document.getElementById('myClueInputContainer').classList.add('hidden');
+      }
+
+      document.getElementById('turnTimerBox').textContent = `${state.timeRemaining}s`;
+
+      // Render Clue Board
+      const timeline = document.getElementById('cluesTimeline');
+      if (!state.clues || state.clues.length === 0) {
+        timeline.innerHTML = `<div class="text-muted" style="font-size: 13px; text-align: center; padding: 12px;">No clues given yet this round.</div>`;
+      } else {
+        timeline.innerHTML = state.clues.map(c => `
+          <div class="clue-item">
+            <span class="clue-avatar">💬</span>
+            <div class="clue-content">
+              <div class="clue-author">${escapeHtml(c.playerName)}</div>
+              <div class="clue-text">"${escapeHtml(c.text)}"</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Render Active Players
+      const activeGrid = document.getElementById('activePlayersGrid');
+      activeGrid.innerHTML = state.players.map(p => {
+        const isTurn = state.activeTurnPlayer && state.activeTurnPlayer.id === p.id;
+        const avatar = AVATARS[(p.avatarIndex || 1) - 1] || '👤';
+        return `
+          <div class="p-card ${isTurn ? 'is-active-turn' : ''} ${!p.alive ? 'is-eliminated' : ''}">
+            <div class="p-avatar">${avatar}</div>
+            <div class="p-name">${escapeHtml(p.name)}</div>
+            <div class="p-status">${!p.alive ? '💀 Out' : isTurn ? 'Active Turn' : 'Alive'}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDiscussion(state, isHost) {
+      document.getElementById('viewDiscussion').classList.remove('hidden');
+      document.getElementById('discussionTimerDisplay').textContent = state.timeRemaining || 0;
+      document.getElementById('hostSkipDiscussionBox').classList.toggle('hidden', !isHost);
+    }
+
+    function renderVoting(state) {
+      document.getElementById('viewVoting').classList.remove('hidden');
+      document.getElementById('votesProgressCount').textContent = `${state.votesCount || 0} / ${state.players.filter(p => p.alive).length}`;
+
+      const grid = document.getElementById('votingGrid');
+      const myId = socket ? socket.id : null;
+
+      grid.innerHTML = state.players.filter(p => p.alive).map(p => {
+        const isMe = p.id === myId;
+        const isSelected = selectedVoteTargetId === p.id;
+        const avatar = AVATARS[(p.avatarIndex || 1) - 1] || '👤';
+        return `
+          <div class="vote-card ${isSelected ? 'selected' : ''} ${isMe ? 'disabled' : ''}" onclick="selectVoteTarget('${p.id}', ${isMe})">
+            <div style="font-size: 32px;">${avatar}</div>
+            <div style="font-weight: 700; font-size: 15px;">${escapeHtml(p.name)}</div>
+            <span style="font-size: 12px; color: var(--text-muted);">${isMe ? '(You)' : 'Suspect'}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectVoteTarget(targetId, isMe) {
+      if (isMe) {
+        showToast('You cannot vote for yourself!', 'error');
+        return;
+      }
+      selectedVoteTargetId = targetId;
+      document.querySelectorAll('.vote-card').forEach(c => c.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+      document.getElementById('btnConfirmVote').disabled = false;
+    }
+
+    function submitVote() {
+      if (!selectedVoteTargetId) return;
+      socket.emit('imposter:cast-vote', { targetId: selectedVoteTargetId });
+      document.getElementById('btnConfirmVote').disabled = true;
+      document.getElementById('btnConfirmVote').innerHTML = `<span>Vote Cast! Waiting for others...</span>`;
+    }
+
+    function renderVoteResult(state) {
+      document.getElementById('viewVoteResult').classList.remove('hidden');
+      const res = state.lastVoteResult;
+      if (!res) return;
+
+      const title = document.getElementById('eliminationTitle');
+      const desc = document.getElementById('eliminationDesc');
+      const identity = document.getElementById('eliminationIdentity');
+
+      if (res.isTie || !res.eliminatedPlayer) {
+        title.textContent = `⚖️ It's a Tie!`;
+        desc.textContent = `No player received a majority of the votes. No one is eliminated this round!`;
+        identity.textContent = `🤝 Clue round will continue!`;
+        identity.style.color = 'var(--gold-light)';
+      } else {
+        const p = res.eliminatedPlayer;
+        title.textContent = `🗳️ ${escapeHtml(p.name)} was Eliminated!`;
+        desc.textContent = `The players cast their votes and ${escapeHtml(p.name)} received the most accusations.`;
+
+        if (p.isImposter) {
+          identity.innerHTML = `🕵️ THEY WERE AN IMPOSTER!`;
+          identity.style.color = '#ff6b6b';
+        } else {
+          identity.innerHTML = `🛡️ THEY WERE AN INNOCENT CIVILIAN!`;
+          identity.style.color = '#7de7ff';
+        }
+      }
+
+      // Breakdown
+      const breakdownBox = document.getElementById('voteBreakdownList');
+      if (res.breakdown) {
+        breakdownBox.innerHTML = res.breakdown.map(b => `
+          <div style="background: rgba(255,255,255,0.05); padding: 8px 14px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 13px;">
+            <span><strong>${escapeHtml(b.name)}</strong>: ${b.voteCount} vote${b.voteCount === 1 ? '' : 's'}</span>
+            <span class="text-muted">${b.voters.join(', ')}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderImposterGuess(state) {
+      document.getElementById('viewImposterGuess').classList.remove('hidden');
+      const my = state.myPlayer;
+      const isImposter = my && my.isImposter;
+
+      document.getElementById('imposterGuessFormContainer').classList.toggle('hidden', !isImposter);
+      document.getElementById('imposterGuessWaitingContainer').classList.toggle('hidden', !!isImposter);
+    }
+
+    function renderGameOver(state, isHost) {
+      document.getElementById('viewGameOver').classList.remove('hidden');
+      const isCivilians = state.winner === 'civilians';
+
+      document.getElementById('gameOverEmoji').textContent = isCivilians ? '🎉' : '🕵️';
+      document.getElementById('gameOverTitle').textContent = isCivilians ? 'CIVILIANS WIN!' : 'IMPOSTERS WIN!';
+      document.getElementById('gameOverTitle').style.color = isCivilians ? '#7de7ff' : '#ff6b6b';
+      document.getElementById('gameOverReason').textContent = state.winReason || '';
+
+      if (state.revealedWords) {
+        document.getElementById('revealedCivilianWord').textContent = state.revealedWords.civilianWord;
+        document.getElementById('revealedImposterWord').textContent = state.revealedWords.imposterWord;
+      }
+
+      const grid = document.getElementById('finalScoresGrid');
+      grid.innerHTML = state.players.map(p => {
+        const avatar = AVATARS[(p.avatarIndex || 1) - 1] || '👤';
+        return `
+          <div class="p-card">
+            <div class="p-avatar">${avatar}</div>
+            <div class="p-name">${escapeHtml(p.name)}</div>
+            <div class="p-status" style="color: ${p.isImposter ? '#ff6b6b' : '#7de7ff'}; font-weight: 700;">
+              ${p.isImposter ? '🕵️ Imposter' : '🛡️ Civilian'}
+            </div>
+            <div style="font-size: 12px; color: var(--gold-light);">Score: ${p.score || 0}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('hostPlayAgainBox').classList.toggle('hidden', !isHost);
+    }
+
+    function flipSecretCard() {
+      document.getElementById('secretFlipCard').classList.toggle('flipped');
+    }
+
+    function confirmReady() {
+      socket.emit('imposter:ready');
+    }
+
+    function handleClueSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('clueTextInput');
+      const clue = input.value.trim();
+      if (!clue) return;
+      socket.emit('imposter:submit-clue', { clue });
+      input.value = '';
+    }
+
+    function passClue() {
+      socket.emit('imposter:submit-clue', { clue: '(Passed)' });
+    }
+
+    function skipDiscussion() {
+      socket.emit('player-action', { action: 'skip-discussion' });
+    }
+
+    function handleImposterGuessSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('imposterWordGuessInput');
+      const guess = input.value.trim();
+      if (!guess) return;
+      socket.emit('imposter:guess', { guess });
+      input.value = '';
+    }
+
+    function startGame() {
+      const category = document.getElementById('lobbyCategory').value;
+      const imposterCount = parseInt(document.getElementById('lobbyImposterCount').value, 10);
+      socket.emit('start-game', { category, imposterCount });
+    }
+
+    function playAgain() {
+      socket.emit('player-action', { action: 'play-again' });
+    }
+
+    function copyRoomCode() {
+      navigator.clipboard.writeText(roomId).then(() => {
+        showToast(`Copied room code: ${roomId}`, 'success');
+      }).catch(() => {
+        showToast(`Room code: ${roomId}`);
+      });
+    }
+
+    function toggleChat() {
+      document.getElementById('chatDrawer').classList.toggle('open');
+    }
+
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      socket.emit('chat-message', { message: msg });
+      input.value = '';
+    }
+
+    function addChatMessage(author, text) {
+      const box = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      div.innerHTML = `<div class="author">${escapeHtml(author)}</div><div>${escapeHtml(text)}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function leaveRoom() {
+      if (confirm('Leave this game?')) {
+        if (socket) socket.disconnect();
+        sessionStorage.clear();
+        window.location.href = '/?game=imposter';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+  </script>
+</body>
+</html>
+

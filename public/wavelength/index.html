@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wavelength | The Telepathy Game</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 15%, #0d1e2d 0%, #08111a 50%, #03060a 100%);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Top Navigation */
+    .game-nav {
+      height: 60px;
+      background: rgba(8, 17, 26, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0, 210, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-left, .nav-center, .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .room-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .room-badge:hover {
+      background: rgba(0, 210, 255, 0.2);
+      border-color: var(--wave-cyan);
+    }
+
+    .phase-pill {
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(0, 210, 255, 0.15);
+      border: 1px solid var(--wave-cyan);
+      color: #7de7ff;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Main Game Arena */
+    .game-arena {
+      flex: 1;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Glass Panels */
+    .arena-panel {
+      background: rgba(14, 25, 38, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    /* Scoreboard Banner */
+    .score-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 14px 20px;
+      gap: 16px;
+    }
+
+    .score-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .score-item .label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+
+    .score-item .val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .score-item.red .val { color: #ff6b6b; }
+    .score-item.blue .val { color: #54a0ff; }
+    .score-item.coop .val { color: var(--gold-light); }
+
+    /* Spectrum Extremes */
+    .spectrum-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .spectrum-card {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .spectrum-card.left {
+      background: linear-gradient(135deg, rgba(30, 144, 255, 0.3) 0%, rgba(0, 210, 255, 0.15) 100%);
+      border: 1px solid #1e90ff;
+      color: #70cfff;
+    }
+
+    .spectrum-card.right {
+      background: linear-gradient(135deg, rgba(255, 71, 87, 0.3) 0%, rgba(255, 42, 122, 0.15) 100%);
+      border: 1px solid #ff4757;
+      color: #ff9fa8;
+    }
+
+    /* Clue Display */
+    .clue-hero {
+      background: linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(155, 81, 224, 0.2) 100%);
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      border-radius: 16px;
+      padding: 18px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      animation: glowPulse 3s infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
+      100% { box-shadow: 0 0 30px rgba(0, 210, 255, 0.45); }
+    }
+
+    .clue-hero .clue-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--wave-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .clue-hero .clue-text {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    /* Dial Device Container */
+    .dial-container {
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .dial-canvas-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 55%; /* Aspect ratio for semi-circle gauge */
+      user-select: none;
+      touch-action: none;
+    }
+
+    .dial-canvas-wrapper svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Shutter cover when target is concealed */
+    .shutter-cover {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+
+    .dial-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      width: 100%;
+    }
+
+    .step-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .step-btn:hover:not(:disabled) {
+      background: rgba(0, 210, 255, 0.2);
+      border-color: var(--wave-cyan);
+    }
+
+    .step-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Counter Guess Buttons */
+    .counter-guess-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 440px;
+      margin: 20px auto 0;
+    }
+
+    .counter-btn {
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .counter-btn.left {
+      background: rgba(30, 144, 255, 0.2);
+      border-color: #1e90ff;
+      color: #70cfff;
+    }
+
+    .counter-btn.left:hover {
+      background: rgba(30, 144, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .counter-btn.right {
+      background: rgba(255, 71, 87, 0.2);
+      border-color: #ff4757;
+      color: #ff9fa8;
+    }
+
+    .counter-btn.right:hover {
+      background: rgba(255, 71, 87, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Teams Column Roster */
+    .teams-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .team-box {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .team-box.red { border-top: 4px solid #ff4757; }
+    .team-box.blue { border-top: 4px solid #1e90ff; }
+
+    /* Chat Drawer */
+    .chat-drawer {
+      position: fixed;
+      top: 60px;
+      right: -360px;
+      width: 340px;
+      height: calc(100vh - 60px);
+      background: rgba(8, 17, 26, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      z-index: 150;
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .chat-drawer.open { right: 0; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-msg {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .chat-msg .author {
+      font-weight: 700;
+      color: var(--wave-cyan);
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .chat-input-box {
+      padding: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .teams-container { grid-template-columns: 1fr; }
+      .spectrum-header { flex-direction: column; gap: 8px; }
+      .counter-guess-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header -->
+  <header class="game-nav">
+    <div class="nav-left">
+      <button class="btn btn-ghost" onclick="window.location.href='/'" style="padding: 6px 12px; font-size: 13px;">
+        <span>🎮 Games Hub</span>
+      </button>
+      <div class="room-badge" onclick="copyRoomCode()" title="Click to copy room code">
+        <span>ROOM:</span>
+        <span id="navRoomCode" style="color: #7de7ff;">------</span>
+        <span>📋</span>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div id="phasePill" class="phase-pill">
+        <span id="phaseText">WAITING</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="btn btn-ghost" onclick="toggleChat()">
+        <span>💬 Chat</span>
+      </button>
+      <button class="btn btn-danger" onclick="leaveRoom()" style="padding: 6px 12px; font-size: 13px;">
+        <span>Leave</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Game Arena -->
+  <main class="game-arena">
+
+    <!-- Score Banner -->
+    <div id="scoreBanner" class="score-banner">
+      <div class="score-item">
+        <span class="label">Round</span>
+        <span id="roundNumberDisplay" class="val">1/7</span>
+      </div>
+      <div id="scoreTeamsContainer" style="display: flex; gap: 30px;">
+        <div class="score-item red">
+          <span class="label">Team Red</span>
+          <span id="scoreRedDisplay" class="val">0</span>
+        </div>
+        <div class="score-item blue">
+          <span class="label">Team Blue</span>
+          <span id="scoreBlueDisplay" class="val">0</span>
+        </div>
+      </div>
+      <div id="scoreCoopContainer" class="score-item coop hidden">
+        <span class="label">Total Score</span>
+        <span id="scoreCoopDisplay" class="val">0 Pts</span>
+      </div>
+      <div class="score-item">
+        <span class="label">Psychic</span>
+        <span id="psychicNameDisplay" class="val" style="font-size: 18px; font-weight: 700; color: #ff9fa8;">---</span>
+      </div>
+    </div>
+
+    <!-- 1. LOBBY VIEW -->
+    <section id="viewLobby" class="arena-panel">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 6px;">🌊 Wavelength Lobby</h2>
+        <p style="color: var(--text-muted); font-size: 14px;">Invite players with the room code. Mode: <strong id="lobbyModeDisplay">Co-op</strong></p>
+      </div>
+
+      <!-- Teams Mode Split vs Coop List -->
+      <div id="lobbyTeamsView" class="teams-container hidden">
+        <div class="team-box red">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="color: #ff6b6b; font-size: 16px; font-weight: 800;">🔴 Team Red</h3>
+            <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px;" onclick="switchTeam('red')">Join Red</button>
+          </div>
+          <div id="teamRedList" class="player-card-grid"></div>
+        </div>
+
+        <div class="team-box blue">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="color: #54a0ff; font-size: 16px; font-weight: 800;">🔵 Team Blue</h3>
+            <button class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px;" onclick="switchTeam('blue')">Join Blue</button>
+          </div>
+          <div id="teamBlueList" class="player-card-grid"></div>
+        </div>
+      </div>
+
+      <div id="lobbyCoopView">
+        <h3 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Players (<span id="coopPlayerCount">0</span>)</h3>
+        <div id="coopPlayerGrid" class="player-card-grid"></div>
+      </div>
+
+      <!-- Host Controls -->
+      <div id="hostControlsCard" class="hidden" style="margin-top: 24px; text-align: center;">
+        <button id="btnStartGame" class="btn btn-purple" style="padding: 14px 40px; font-size: 16px;" onclick="startGame()">
+          <span>Start Wavelength Game</span>
+        </button>
+      </div>
+      <div id="waitingForHostNotice" class="text-center text-muted" style="margin-top: 20px; font-size: 14px;">
+        Waiting for room host to start...
+      </div>
+    </section>
+
+    <!-- 2. GAMEPLAY VIEW (DIAL & CLUES) -->
+    <section id="viewGameplay" class="arena-panel hidden">
+
+      <!-- Spectrum Opposites -->
+      <div class="spectrum-header">
+        <div id="spectrumLeft" class="spectrum-card left">---</div>
+        <div style="font-size: 22px; font-weight: 800; color: var(--text-muted);">◀ · · · ▶</div>
+        <div id="spectrumRight" class="spectrum-card right">---</div>
+      </div>
+
+      <!-- Clue Hero Banner -->
+      <div id="clueHeroBox" class="clue-hero hidden">
+        <div class="clue-label">🔮 Psychic's Clue</div>
+        <div id="clueHeroText" class="clue-text">"..."</div>
+      </div>
+
+      <!-- Psychic Clue Input Form -->
+      <div id="psychicInputBox" class="hidden" style="background: rgba(0,0,0,0.3); border: 2px solid var(--wave-cyan); border-radius: 16px; padding: 20px; margin-bottom: 24px; text-align: center;">
+        <h3 style="font-size: 18px; font-weight: 800; color: #7de7ff; margin-bottom: 6px;">🔮 YOU ARE THE PSYCHIC!</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          Look at the target position highlighted on the dial below. Think of a concept where it lands at that exact point on the spectrum and submit your clue!
+        </p>
+        <form onsubmit="handleClueSubmit(event)" style="display: flex; gap: 10px; max-width: 480px; margin: 0 auto;">
+          <input type="text" id="psychicClueInput" class="form-input" placeholder="Enter your clue..." maxlength="50" required autocomplete="off">
+          <button type="submit" class="btn btn-purple" style="white-space: nowrap;">Submit Clue</button>
+        </form>
+      </div>
+
+      <!-- Waiting for Psychic Notice -->
+      <div id="waitingForPsychicNotice" class="hidden text-center text-muted" style="padding: 16px; margin-bottom: 20px;">
+        <span class="spinner" style="margin-bottom: 8px;"></span>
+        <div>The Psychic is tuning their mind and writing a clue...</div>
+      </div>
+
+      <!-- THE WAVELENGTH DIAL SVG -->
+      <div class="dial-container">
+        <div class="dial-canvas-wrapper" id="dialWrapper">
+          <svg viewBox="0 0 400 240" id="dialSvg">
+            <defs>
+              <!-- Shutter pattern for closed state -->
+              <linearGradient id="shutterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1b2a38" />
+                <stop offset="50%" stop-color="#0f1924" />
+                <stop offset="100%" stop-color="#14212d" />
+              </linearGradient>
+              <linearGradient id="needleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="50%" stop-color="#ff4757" />
+                <stop offset="100%" stop-color="#ff2a7a" />
+              </linearGradient>
+            </defs>
+
+            <!-- Outer Gauge Background Rim -->
+            <path d="M 30 200 A 170 170 0 0 1 370 200" fill="none" stroke="#0a1219" stroke-width="50" stroke-linecap="round" />
+            <path d="M 30 200 A 170 170 0 0 1 370 200" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="48" stroke-linecap="round" />
+
+            <!-- TARGET WEDGES CONTAINER (Secret or Revealed) -->
+            <g id="targetWedgesGroup"></g>
+
+            <!-- SHUTTER COVER (Conceals target for guessers) -->
+            <g id="shutterGroup">
+              <path d="M 34 200 A 166 166 0 0 1 366 200" fill="none" stroke="url(#shutterGrad)" stroke-width="44" stroke-linecap="round" />
+              <!-- Shutter slats / texture -->
+              <path d="M 36 200 A 164 164 0 0 1 364 200" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="40" stroke-dasharray="4,8" stroke-linecap="round" />
+            </g>
+
+            <!-- Dial Tick Marks -->
+            <g id="dialTicksGroup"></g>
+
+            <!-- NEEDLE / POINTER -->
+            <g id="needleGroup" style="transform-origin: 200px 200px; transition: transform 0.1s ease-out;">
+              <!-- Needle Pointer Line -->
+              <line x1="200" y1="200" x2="200" y2="15" stroke="url(#needleGrad)" stroke-width="4" stroke-linecap="round" />
+              <!-- Needle Arrow Tip -->
+              <polygon points="200,8 193,24 207,24" fill="#ffffff" />
+              <!-- Center Hub -->
+              <circle cx="200" cy="200" r="28" fill="#1b2a38" stroke="var(--wave-cyan)" stroke-width="3" />
+              <circle cx="200" cy="200" r="14" fill="var(--wave-cyan)" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- Dial Fine-Tune Controls -->
+        <div id="dialControlsBox" class="dial-controls">
+          <button class="step-btn" onclick="stepDial(-5)">◀◀ -5%</button>
+          <button class="step-btn" onclick="stepDial(-1)">◀ -1%</button>
+          <span style="font-weight: 800; font-size: 18px; min-width: 60px; text-align: center; color: var(--wave-cyan);" id="needlePosLabel">50%</span>
+          <button class="step-btn" onclick="stepDial(1)">+1% ▶</button>
+          <button class="step-btn" onclick="stepDial(5)">+5% ▶▶</button>
+        </div>
+
+        <!-- Lock Dial Button -->
+        <div id="lockDialContainer" style="margin-top: 18px; text-align: center;" class="hidden">
+          <button class="btn btn-gold" style="padding: 12px 36px; font-size: 16px;" onclick="lockDial()">
+            <span>🔒 Lock in Team Guess</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- COUNTER GUESS VIEW (Teams Mode) -->
+      <div id="counterGuessBox" class="hidden text-center" style="margin-top: 24px; background: rgba(0,0,0,0.3); border-radius: 16px; padding: 20px;">
+        <h3 id="counterGuessTitle" style="font-size: 20px; font-weight: 800; color: #ff9fa8; margin-bottom: 4px;">OPPONENT COUNTER GUESS</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Is the actual secret target to the <strong>LEFT</strong> or <strong>RIGHT</strong> of where the team set the dial?
+        </p>
+        <div class="counter-guess-grid">
+          <button class="counter-btn left" onclick="submitCounterGuess('left')">◀ TARGET IS LEFT</button>
+          <button class="counter-btn right" onclick="submitCounterGuess('right')">TARGET IS RIGHT ▶</button>
+        </div>
+      </div>
+
+      <!-- REVEAL RESULTS VIEW -->
+      <div id="revealResultBox" class="hidden text-center" style="margin-top: 24px;">
+        <div style="background: rgba(0,0,0,0.4); border-radius: 16px; padding: 24px; border: 1px solid rgba(255,255,255,0.15);">
+          <div id="revealScoreBadge" style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">🎯 +4 POINTS! BULLSEYE!</div>
+          <p id="revealDescText" style="font-size: 15px; color: var(--text-muted); margin-bottom: 16px;"></p>
+          <button class="btn btn-gold" style="padding: 12px 36px; font-size: 16px;" onclick="nextRound()">
+            <span>Advance to Next Round ▶</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- GAME OVER VIEW -->
+      <div id="gameOverBox" class="hidden text-center" style="margin-top: 24px;">
+        <span style="font-size: 50px;">🏆</span>
+        <h2 id="gameOverTitle" style="font-size: 32px; font-weight: 800; margin: 10px 0;">GAME OVER!</h2>
+        <p id="gameOverDesc" style="font-size: 16px; color: var(--text-muted); margin-bottom: 20px;"></p>
+        <button class="btn btn-gold" style="padding: 14px 40px; font-size: 16px;" onclick="playAgain()">
+          <span>Play Again</span>
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Side Chat Drawer -->
+  <aside id="chatDrawer" class="chat-drawer">
+    <div style="padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 700; font-size: 15px;">💬 Telepathy Chat</span>
+      <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 12px;" onclick="toggleChat()">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <form class="chat-input-box" onsubmit="sendChatMessage(event)">
+      <input type="text" id="chatInput" placeholder="Chat with team..." maxlength="140" style="flex: 1; height: 38px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0 10px; color: #fff; font-size: 13px; outline: none;">
+      <button type="submit" class="btn btn-purple" style="padding: 0 12px; font-size: 12px;">Send</button>
+    </form>
+  </aside>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket = null;
+    let roomId = null;
+    let playerName = null;
+    let gameState = null;
+    let isDraggingDial = false;
+
+    const AVATARS = ['🐱', '🐶', '🦊', '🐼', '🐨', '🐯', '🦁', '🐵'];
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      roomId = (params.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
+      playerName = sessionStorage.getItem('playerName') || 'Player_' + Math.floor(Math.random() * 1000);
+
+      if (!roomId) {
+        window.location.href = '/?game=wavelength';
+        return;
+      }
+
+      document.getElementById('navRoomCode').textContent = roomId;
+      initDialInteraction();
+      renderDialTicks();
+
+      socket = io();
+
+      socket.on('connect', () => {
+        socket.emit('join-room', { roomId, name: playerName });
+      });
+
+      socket.on('join-error', (msg) => {
+        showToast(msg, 'error');
+        setTimeout(() => { window.location.href = '/?game=wavelength'; }, 2000);
+      });
+
+      socket.on('action-error', (msg) => {
+        showToast(msg, 'error');
+      });
+
+      socket.on('game-state', (state) => {
+        renderGameState(state);
+      });
+
+      // Synchronize live needle movements across teammates
+      socket.on('wavelength:dial-moved', ({ dialNeedle }) => {
+        if (!isDraggingDial) {
+          updateNeedleDisplay(dialNeedle);
+        }
+      });
+
+      socket.on('chat-message', ({ name, message }) => {
+        addChatMessage(name, message);
+      });
+    });
+
+    function renderGameState(state) {
+      gameState = state;
+      const myId = socket ? socket.id : null;
+      const my = state.myPlayer;
+      const isHost = my && my.isHost;
+      const isPsychic = state.isPsychic;
+
+      // Update Phase Pill
+      document.getElementById('phaseText').textContent = state.state.replace('_', ' ');
+
+      // Update Score Banner
+      const isTeams = state.mode === 'teams';
+      document.getElementById('scoreTeamsContainer').classList.toggle('hidden', !isTeams);
+      document.getElementById('scoreCoopContainer').classList.toggle('hidden', isTeams);
+
+      if (isTeams) {
+        document.getElementById('scoreRedDisplay').textContent = state.scores.red || 0;
+        document.getElementById('scoreBlueDisplay').textContent = state.scores.blue || 0;
+        document.getElementById('roundNumberDisplay').textContent = `#${state.currentRound}`;
+      } else {
+        document.getElementById('scoreCoopDisplay').textContent = `${state.scores.coop || 0} Pts`;
+        document.getElementById('roundNumberDisplay').textContent = `${state.currentRound}/${state.totalRounds}`;
+      }
+
+      document.getElementById('psychicNameDisplay').textContent = state.currentPsychic ? state.currentPsychic.name : '---';
+
+      // Toggle Views
+      if (state.state === 'waiting') {
+        renderLobby(state, isHost, isTeams);
+      } else {
+        renderGameplay(state, isPsychic, isHost, isTeams);
+      }
+    }
+
+    function renderLobby(state, isHost, isTeams) {
+      document.getElementById('viewLobby').classList.remove('hidden');
+      document.getElementById('viewGameplay').classList.add('hidden');
+      document.getElementById('lobbyModeDisplay').textContent = isTeams ? '⚔️ Teams (Red vs Blue)' : '🤝 Co-op (Play Together)';
+
+      if (isTeams) {
+        document.getElementById('lobbyTeamsView').classList.remove('hidden');
+        document.getElementById('lobbyCoopView').classList.add('hidden');
+
+        const redList = document.getElementById('teamRedList');
+        const blueList = document.getElementById('teamBlueList');
+
+        const redPlayers = state.players.filter(p => p.team === 'red');
+        const bluePlayers = state.players.filter(p => p.team === 'blue');
+
+        redList.innerHTML = renderPlayerCardList(redPlayers);
+        blueList.innerHTML = renderPlayerCardList(bluePlayers);
+      } else {
+        document.getElementById('lobbyTeamsView').classList.add('hidden');
+        document.getElementById('lobbyCoopView').classList.remove('hidden');
+        document.getElementById('coopPlayerCount').textContent = state.players.length;
+        document.getElementById('coopPlayerGrid').innerHTML = renderPlayerCardList(state.players);
+      }
+
+      const hostBox = document.getElementById('hostControlsCard');
+      const waitNotice = document.getElementById('waitingForHostNotice');
+      if (isHost) {
+        hostBox.classList.remove('hidden');
+        waitNotice.classList.add('hidden');
+        document.getElementById('btnStartGame').disabled = !state.canStart;
+      } else {
+        hostBox.classList.add('hidden');
+        waitNotice.classList.remove('hidden');
+      }
+    }
+
+    function renderPlayerCardList(players) {
+      return players.map(p => {
+        const avatar = AVATARS[(p.avatarIndex || 1) - 1] || '👤';
+        return `
+          <div class="p-card">
+            <div class="p-avatar">${avatar}</div>
+            <div class="p-name">${escapeHtml(p.name)}</div>
+            <div class="p-status">${p.isHost ? '👑 Host' : 'Player'}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderGameplay(state, isPsychic, isHost, isTeams) {
+      document.getElementById('viewLobby').classList.add('hidden');
+      document.getElementById('viewGameplay').classList.remove('hidden');
+
+      // Spectrum Cards
+      if (state.currentCard) {
+        document.getElementById('spectrumLeft').textContent = state.currentCard.left;
+        document.getElementById('spectrumRight').textContent = state.currentCard.right;
+      }
+
+      // Clue Hero
+      const clueBox = document.getElementById('clueHeroBox');
+      const clueText = document.getElementById('clueHeroText');
+      if (state.clue) {
+        clueBox.classList.remove('hidden');
+        clueText.textContent = `"${state.clue}"`;
+      } else {
+        clueBox.classList.add('hidden');
+      }
+
+      // Psychic Clue Input Box
+      const psychicBox = document.getElementById('psychicInputBox');
+      const waitingPsychicNotice = document.getElementById('waitingForPsychicNotice');
+      if (state.state === 'psychic_clue') {
+        if (isPsychic) {
+          psychicBox.classList.remove('hidden');
+          waitingPsychicNotice.classList.add('hidden');
+        } else {
+          psychicBox.classList.add('hidden');
+          waitingPsychicNotice.classList.remove('hidden');
+        }
+      } else {
+        psychicBox.classList.add('hidden');
+        waitingPsychicNotice.classList.add('hidden');
+      }
+
+      // Shutter & Target Wedge on Dial
+      renderTargetWedges(state.target, state.isTargetVisible);
+      document.getElementById('shutterGroup').style.opacity = state.isTargetVisible ? '0' : '1';
+
+      // Dial Needle
+      updateNeedleDisplay(state.dialNeedle);
+
+      // Lock Dial Button
+      const lockBox = document.getElementById('lockDialContainer');
+      const canLock = state.state === 'team_guess' && !isPsychic && (!isTeams || (state.myPlayer && state.myPlayer.team === state.activeTeam));
+      lockBox.classList.toggle('hidden', !canLock);
+
+      // Disable/Enable dial step buttons
+      const dialActive = state.state === 'team_guess' && !isPsychic && (!isTeams || (state.myPlayer && state.myPlayer.team === state.activeTeam));
+      document.querySelectorAll('.step-btn').forEach(btn => btn.disabled = !dialActive);
+
+      // Counter Guess
+      const counterBox = document.getElementById('counterGuessBox');
+      const canCounter = state.state === 'counter_guess' && isTeams && state.myPlayer && state.myPlayer.team !== state.activeTeam;
+      counterBox.classList.toggle('hidden', !canCounter);
+
+      // Reveal Results
+      const revealBox = document.getElementById('revealResultBox');
+      if (state.state === 'reveal' && state.lastRoundResult) {
+        revealBox.classList.remove('hidden');
+        const res = state.lastRoundResult;
+        const scoreBadge = document.getElementById('revealScoreBadge');
+        if (res.points === 4) {
+          scoreBadge.textContent = '🎯 +4 POINTS! BULLSEYE!';
+          scoreBadge.style.color = '#ffd700';
+        } else if (res.points === 3) {
+          scoreBadge.textContent = '🌟 +3 POINTS! SUPER CLOSE!';
+          scoreBadge.style.color = '#ff9f43';
+        } else if (res.points === 2) {
+          scoreBadge.textContent = '👍 +2 POINTS! ON THE RIGHT TRACK!';
+          scoreBadge.style.color = '#54a0ff';
+        } else {
+          scoreBadge.textContent = '❌ 0 POINTS (MISSED)';
+          scoreBadge.style.color = '#ee5253';
+        }
+        let desc = `Target was at ${res.target}%, dial was set to ${res.dialNeedle}%. (Distance: ${res.distance}%)`;
+        if (res.counterCorrect) {
+          desc += ` • Opponents correctly counter-guessed ${res.counterGuess.toUpperCase()} for +1 bonus point!`;
+        }
+        document.getElementById('revealDescText').textContent = desc;
+      } else {
+        revealBox.classList.add('hidden');
+      }
+
+      // Game Over
+      const gameOverBox = document.getElementById('gameOverBox');
+      if (state.state === 'game_over') {
+        gameOverBox.classList.remove('hidden');
+        document.getElementById('gameOverDesc').textContent = state.winReason || '';
+      } else {
+        gameOverBox.classList.add('hidden');
+      }
+    }
+
+    // Dial SVG Rendering & Math
+    function posToAngle(pos) {
+      // 0% -> -90 deg (left), 100% -> +90 deg (right)
+      return -90 + (pos / 100) * 180;
+    }
+
+    function angleToPos(angle) {
+      return ((angle + 90) / 180) * 100;
+    }
+
+    function updateNeedleDisplay(pos) {
+      const angle = posToAngle(pos);
+      const needle = document.getElementById('needleGroup');
+      if (needle) {
+        needle.style.transform = `rotate(${angle}deg)`;
+      }
+      const label = document.getElementById('needlePosLabel');
+      if (label) {
+        label.textContent = `${Math.round(pos)}%`;
+      }
+    }
+
+    function renderDialTicks() {
+      const g = document.getElementById('dialTicksGroup');
+      if (!g) return;
+      let ticks = '';
+      for (let i = 0; i <= 10; i++) {
+        const pos = i * 10;
+        const angle = posToAngle(pos) * (Math.PI / 180);
+        const r1 = 175;
+        const r2 = 185;
+        const x1 = 200 + r1 * Math.sin(angle);
+        const y1 = 200 - r1 * Math.cos(angle);
+        const x2 = 200 + r2 * Math.sin(angle);
+        const y2 = 200 - r2 * Math.cos(angle);
+        ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.2)" stroke-width="2" />`;
+      }
+      g.innerHTML = ticks;
+    }
+
+    function renderTargetWedges(targetPos, isVisible) {
+      const g = document.getElementById('targetWedgesGroup');
+      if (!g) return;
+      if (!isVisible || targetPos === null) {
+        g.innerHTML = '';
+        return;
+      }
+
+      // Zones:
+      // Outer 2pt: ±13%
+      // Mid 3pt: ±7.5%
+      // Bullseye 4pt: ±3.5%
+      const wedgeOuter = describeArc(200, 200, 166, Math.max(0, targetPos - 13), Math.min(100, targetPos + 13));
+      const wedgeMid = describeArc(200, 200, 166, Math.max(0, targetPos - 7.5), Math.min(100, targetPos + 7.5));
+      const wedgeCenter = describeArc(200, 200, 166, Math.max(0, targetPos - 3.5), Math.min(100, targetPos + 3.5));
+
+      g.innerHTML = `
+        <path d="${wedgeOuter}" fill="none" stroke="#1e90ff" stroke-width="44" stroke-linecap="round" />
+        <path d="${wedgeMid}" fill="none" stroke="#ff9f43" stroke-width="44" stroke-linecap="round" />
+        <path d="${wedgeCenter}" fill="none" stroke="#ffd700" stroke-width="44" stroke-linecap="round" />
+        <circle cx="${200 + 166 * Math.sin(posToAngle(targetPos) * Math.PI / 180)}" cy="${200 - 166 * Math.cos(posToAngle(targetPos) * Math.PI / 180)}" r="4" fill="#000" />
+      `;
+    }
+
+    function describeArc(cx, cy, radius, startPos, endPos) {
+      const startAngle = posToAngle(startPos) * (Math.PI / 180);
+      const endAngle = posToAngle(endPos) * (Math.PI / 180);
+
+      const x1 = cx + radius * Math.sin(startAngle);
+      const y1 = cy - radius * Math.cos(startAngle);
+      const x2 = cx + radius * Math.sin(endAngle);
+      const y2 = cy - radius * Math.cos(endAngle);
+
+      return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
+    }
+
+    // Dial Touch / Mouse Drag
+    function initDialInteraction() {
+      const wrapper = document.getElementById('dialWrapper');
+
+      function calculatePosFromEvent(e) {
+        const rect = wrapper.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const hubX = rect.left + rect.width / 2;
+        const hubY = rect.bottom; // Bottom center is hub origin
+
+        const dx = clientX - hubX;
+        const dy = hubY - clientY;
+
+        let angleRad = Math.atan2(dx, dy); // -PI/2 (left) to PI/2 (right)
+        let angleDeg = angleRad * (180 / Math.PI);
+        angleDeg = Math.max(-90, Math.min(90, angleDeg));
+        return Math.max(0, Math.min(100, angleToPos(angleDeg)));
+      }
+
+      function onPointerDown(e) {
+        if (!gameState || gameState.state !== 'team_guess' || gameState.isPsychic) return;
+        isDraggingDial = true;
+        const pos = calculatePosFromEvent(e);
+        updateNeedleDisplay(pos);
+        socket.emit('wavelength:move-dial', { position: pos });
+      }
+
+      function onPointerMove(e) {
+        if (!isDraggingDial) return;
+        const pos = calculatePosFromEvent(e);
+        updateNeedleDisplay(pos);
+        socket.emit('wavelength:move-dial', { position: pos });
+      }
+
+      function onPointerUp() {
+        isDraggingDial = false;
+      }
+
+      wrapper.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      wrapper.addEventListener('touchstart', onPointerDown, { passive: true });
+      window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('touchend', onPointerUp);
+    }
+
+    function stepDial(delta) {
+      if (!gameState || gameState.state !== 'team_guess' || gameState.isPsychic) return;
+      const current = gameState.dialNeedle || 50;
+      const next = Math.max(0, Math.min(100, current + delta));
+      gameState.dialNeedle = next;
+      updateNeedleDisplay(next);
+      socket.emit('wavelength:move-dial', { position: next });
+    }
+
+    function lockDial() {
+      socket.emit('wavelength:lock-dial');
+    }
+
+    function handleClueSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('psychicClueInput');
+      const clue = input.value.trim();
+      if (!clue) return;
+      socket.emit('wavelength:submit-clue', { clue });
+      input.value = '';
+    }
+
+    function submitCounterGuess(guess) {
+      socket.emit('wavelength:counter-guess', { guess });
+    }
+
+    function nextRound() {
+      socket.emit('wavelength:next-round');
+    }
+
+    function switchTeam(team) {
+      socket.emit('wavelength:switch-team', { team });
+    }
+
+    function startGame() {
+      socket.emit('start-game');
+    }
+
+    function playAgain() {
+      socket.emit('player-action', { action: 'play-again' });
+    }
+
+    function copyRoomCode() {
+      navigator.clipboard.writeText(roomId).then(() => {
+        showToast(`Copied room code: ${roomId}`, 'success');
+      }).catch(() => {
+        showToast(`Room code: ${roomId}`);
+      });
+    }
+
+    function toggleChat() {
+      document.getElementById('chatDrawer').classList.toggle('open');
+    }
+
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      socket.emit('chat-message', { message: msg });
+      input.value = '';
+    }
+
+    function addChatMessage(author, text) {
+      const box = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      div.innerHTML = `<div class="author">${escapeHtml(author)}</div><div>${escapeHtml(text)}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function leaveRoom() {
+      if (confirm('Leave this game?')) {
+        if (socket) socket.disconnect();
+        sessionStorage.clear();
+        window.location.href = '/?game=wavelength';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+  </script>
+</body>
+</html>

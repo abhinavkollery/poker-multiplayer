@@ -465,3 +465,353 @@ html, body {
     opacity: 0;
   }
 }
+
+/* ==========================================================================
+   Multi-Game Hub & Game Suite Styles
+   ========================================================================== */
+
+:root {
+  --imposter-red: #e74c3c;
+  --imposter-dark: #2c0e12;
+  --wave-cyan: #00d2ff;
+  --wave-pink: #ff2a7a;
+  --wave-purple: #9b51e0;
+  --team-red: #ff4757;
+  --team-blue: #1e90ff;
+  --bg-card: rgba(18, 26, 36, 0.7);
+  --bg-card-hover: rgba(26, 38, 52, 0.85);
+  --border-light: rgba(255, 255, 255, 0.12);
+}
+
+/* Games Tab Bar */
+.games-tab-bar {
+  display: flex;
+  background: rgba(10, 16, 24, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 6px;
+  gap: 8px;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.game-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  outline: none;
+  position: relative;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.game-tab-btn .tab-icon {
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.game-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.game-tab-btn:hover .tab-icon {
+  transform: scale(1.15);
+}
+
+.game-tab-btn.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.game-tab-btn.tab-poker.active {
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.25) 0%, rgba(26, 74, 46, 0.4) 100%);
+  border-color: rgba(201, 162, 39, 0.5);
+  box-shadow: 0 4px 18px rgba(201, 162, 39, 0.25);
+  color: var(--gold-light);
+}
+
+.game-tab-btn.tab-imposter.active {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.28) 0%, rgba(142, 68, 173, 0.3) 100%);
+  border-color: rgba(231, 76, 60, 0.5);
+  box-shadow: 0 4px 18px rgba(231, 76, 60, 0.3);
+  color: #ff8e88;
+}
+
+.game-tab-btn.tab-wavelength.active {
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.22) 0%, rgba(255, 42, 122, 0.25) 100%);
+  border-color: rgba(0, 210, 255, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 210, 255, 0.25);
+  color: #7de7ff;
+}
+
+/* Nav Header for all games */
+.game-top-nav {
+  height: 58px;
+  background: rgba(8, 14, 20, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  width: 100%;
+}
+
+.game-top-nav .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 17px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.game-top-nav .nav-brand .brand-badge {
+  font-size: 20px;
+}
+
+/* Interactive Player Cards */
+.player-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.p-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-align: center;
+}
+
+.p-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.p-card .p-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.p-card .p-name {
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.p-card .p-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.p-card.is-eliminated {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+  border-color: rgba(231, 76, 60, 0.4);
+}
+
+.p-card.is-active-turn {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.4);
+  animation: cardPulse 2s infinite ease-in-out;
+}
+
+@keyframes cardPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(201, 162, 39, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(201, 162, 39, 0.6); }
+}
+
+/* Secret Reveal Flip Card */
+.secret-flip-card-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  min-height: 220px;
+}
+
+.secret-flip-card {
+  width: 100%;
+  height: 220px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.secret-flip-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.secret-card-front, .secret-card-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.secret-card-front {
+  background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+}
+
+.secret-card-back {
+  background: linear-gradient(135deg, #162447 0%, #1f4068 100%);
+  border: 2px solid var(--gold);
+  transform: rotateY(180deg);
+  box-shadow: 0 0 30px rgba(201, 162, 39, 0.35);
+}
+
+.secret-card-back.is-imposter {
+  background: linear-gradient(135deg, #4a121a 0%, #29080c 100%);
+  border-color: var(--danger);
+  box-shadow: 0 0 35px rgba(231, 76, 60, 0.45);
+}
+
+/* Clue Log Timeline */
+.clue-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.clue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  animation: fadeIn 0.3s ease;
+}
+
+.clue-item .clue-avatar {
+  font-size: 20px;
+}
+
+.clue-item .clue-content {
+  flex: 1;
+}
+
+.clue-item .clue-author {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-light);
+  margin-bottom: 2px;
+}
+
+.clue-item .clue-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Wavelength Spectrum Bar */
+.spectrum-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(10, 15, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 14px 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.spectrum-card {
+  flex: 1;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.spectrum-card.left {
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.35) 0%, rgba(0, 210, 255, 0.2) 100%);
+  border: 1px solid rgba(30, 144, 255, 0.5);
+  color: #70cfff;
+}
+
+.spectrum-card.right {
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.35) 0%, rgba(255, 42, 122, 0.2) 100%);
+  border: 1px solid rgba(255, 71, 87, 0.5);
+  color: #ff9fa8;
+}
+
+.spectrum-connector {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-weight: 800;
+}

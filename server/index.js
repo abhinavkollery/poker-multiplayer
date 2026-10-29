@@ -3,7 +3,10 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
-const PokerGame = require('./game');
+
+const PokerGame = require('./games/poker/game');
+const ImposterGame = require('./games/imposter/game');
+const WavelengthGame = require('./games/wavelength/game');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,11 +15,36 @@ const io = new Server(server, {
 });
 
 app.use(express.json());
+
+// Specific game routes (registered before express.static)
+app.get(['/poker', '/poker/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/poker/lobby.html'));
+});
+app.get(['/poker/game', '/poker/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/poker/game.html'));
+});
+app.get('/game.html', (req, res) => {
+  // Backwards compatibility for existing poker links
+  res.sendFile(path.join(__dirname, '../public/poker/game.html'));
+});
+app.get(['/imposter', '/imposter/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/imposter/game.html'));
+});
+app.get(['/imposter/game', '/imposter/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/imposter/game.html'));
+});
+app.get(['/wavelength', '/wavelength/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/wavelength/game.html'));
+});
+app.get(['/wavelength/game', '/wavelength/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/wavelength/game.html'));
+});
+
 app.use(express.static(path.join(__dirname, '../public')));
 
-const rooms = new Map(); // roomId -> PokerGame
+const rooms = new Map(); // roomId -> GameInstance (PokerGame | ImposterGame | WavelengthGame)
 
-// REST endpoints
+// REST endpoint to inspect room status
 app.get('/api/room/:roomId', (req, res) => {
   const roomId = (req.params.roomId || '').toUpperCase();
   const game = rooms.get(roomId);
@@ -26,16 +54,15 @@ app.get('/api/room/:roomId', (req, res) => {
 
   res.json({
     roomId: game.roomId,
+    gameType: game.gameType || 'poker',
     playerCount: game.players.length,
     maxPlayers: game.maxPlayers,
-    state: game.state,
-    smallBlind: game.smallBlind,
-    bigBlind: game.bigBlind,
-    startingChips: game.startingChips
+    state: game.state
   });
 });
 
 function emitPersonalizedStates(game, socketIo) {
+  if (!game) return;
   for (const player of game.players) {
     const sock = socketIo.sockets.sockets.get(player.id);
     if (sock) {
@@ -44,18 +71,55 @@ function emitPersonalizedStates(game, socketIo) {
   }
 }
 
+function broadcastLobbyUpdate(game, socketIo) {
+  if (!game) return;
+  socketIo.to(game.roomId).emit('lobby-update', {
+    roomId: game.roomId,
+    gameType: game.gameType,
+    players: game.players.map(p => ({
+      id: p.id,
+      name: p.name,
+      chips: p.chips,
+      team: p.team,
+      ready: p.ready,
+      connected: p.connected,
+      isHost: p.id === game.players[0]?.id
+    })),
+    canStart: game.canStart(),
+    maxPlayers: game.maxPlayers,
+    state: game.state
+  });
+}
+
 // Socket.io handlers
 io.on('connection', socket => {
-  // 1. Create Room
-  socket.on('create-room', ({ name, maxPlayers, startingChips, smallBlind, bigBlind }) => {
+  // 1. Create Room (Multi-game)
+  socket.on('create-room', (payload = {}) => {
+    const gameType = payload.gameType || 'poker';
+    const name = payload.name;
     const roomId = uuidv4().substring(0, 6).toUpperCase();
-    const game = new PokerGame(roomId, {
-      maxPlayers: Math.min(8, Math.max(2, Number(maxPlayers) || 6)),
-      startingChips: Number(startingChips) || 1000,
-      smallBlind: Number(smallBlind) || 10,
-      bigBlind: Number(bigBlind) || 20
-    });
-    game.io = io;
+
+    let game;
+    if (gameType === 'imposter') {
+      game = new ImposterGame(roomId, payload);
+    } else if (gameType === 'wavelength') {
+      game = new WavelengthGame(roomId, payload);
+    } else {
+      // Poker
+      game = new PokerGame(roomId, {
+        maxPlayers: Math.min(8, Math.max(2, Number(payload.maxPlayers) || 6)),
+        startingChips: Number(payload.startingChips) || 1000,
+        smallBlind: Number(payload.smallBlind) || 10,
+        bigBlind: Number(payload.bigBlind) || 20
+      });
+    }
+
+    if (typeof game.setIO === 'function') {
+      game.setIO(io);
+    } else {
+      game.io = io;
+    }
+
     rooms.set(roomId, game);
 
     const joinResult = game.addPlayer(socket.id, name);
@@ -67,23 +131,14 @@ io.on('connection', socket => {
     socket.join(roomId);
     socket.data = {
       roomId,
+      gameType: game.gameType,
       name: joinResult.player.name,
       isHost: true
     };
 
-    socket.emit('room-created', { roomId });
+    socket.emit('room-created', { roomId, gameType: game.gameType });
     socket.emit('game-state', game.getStateForPlayer(socket.id));
-    io.to(roomId).emit('lobby-update', {
-      roomId,
-      players: game.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        chips: p.chips,
-        connected: p.connected,
-        isHost: p.id === game.players[0]?.id
-      })),
-      canStart: game.canStart()
-    });
+    broadcastLobbyUpdate(game, io);
   });
 
   // 2. Join Room
@@ -96,7 +151,7 @@ io.on('connection', socket => {
     const cleanRoomId = roomId.trim().toUpperCase();
     const game = rooms.get(cleanRoomId);
     if (!game) {
-      socket.emit('join-error', 'Room not found');
+      socket.emit('join-error', 'Room not found. Check the code and try again.');
       return;
     }
 
@@ -121,24 +176,19 @@ io.on('connection', socket => {
     socket.join(cleanRoomId);
     socket.data = {
       roomId: cleanRoomId,
+      gameType: game.gameType,
       name: player.name,
       isHost: game.players[0]?.id === socket.id
     };
 
-    socket.emit('room-joined', { roomId: cleanRoomId, reconnected });
-    socket.emit('game-state', game.getStateForPlayer(socket.id));
-
-    io.to(cleanRoomId).emit('lobby-update', {
+    socket.emit('room-joined', {
       roomId: cleanRoomId,
-      players: game.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        chips: p.chips,
-        connected: p.connected,
-        isHost: p.id === game.players[0]?.id
-      })),
-      canStart: game.canStart()
+      gameType: game.gameType,
+      reconnected
     });
+
+    socket.emit('game-state', game.getStateForPlayer(socket.id));
+    broadcastLobbyUpdate(game, io);
 
     socket.to(cleanRoomId).emit('player-joined', {
       name: player.name,
@@ -151,34 +201,42 @@ io.on('connection', socket => {
   });
 
   // 3. Start Game
-  socket.on('start-game', () => {
+  socket.on('start-game', (options = {}) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
     const game = rooms.get(roomId);
     if (!game) return;
 
     if (!game.players[0] || game.players[0].id !== socket.id) {
-      socket.emit('action-error', 'Only the host can start the game');
+      socket.emit('action-error', 'Only the room host can start the game');
       return;
     }
 
     if (!game.canStart()) {
-      socket.emit('action-error', 'Cannot start game (need at least 2 players in waiting state)');
+      socket.emit('action-error', 'Cannot start: not enough players (need minimum to play)');
       return;
     }
 
-    game.startGame();
+    game.startGame(options);
     emitPersonalizedStates(game, io);
+    broadcastLobbyUpdate(game, io);
   });
 
-  // 4. Player Action
-  socket.on('player-action', ({ action, amount }) => {
+  // 4. Player Action (Universal & Poker)
+  socket.on('player-action', (payload = {}) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
     const game = rooms.get(roomId);
     if (!game) return;
 
-    const result = game.handleAction(socket.id, action, amount);
+    const action = typeof payload === 'string' ? payload : (payload.action || payload.type);
+    let result;
+    if (game.gameType === 'poker') {
+      result = game.handleAction(socket.id, action, payload.amount !== undefined ? payload.amount : payload);
+    } else {
+      result = game.handleAction(socket.id, action, payload);
+    }
+
     if (result && result.error) {
       socket.emit('action-error', result.error);
     } else {
@@ -186,7 +244,116 @@ io.on('connection', socket => {
     }
   });
 
-  // 5. Chat Message
+  // 5. Imposter Game Specific Events
+  socket.on('imposter:ready', () => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'imposter') {
+      game.handleAction(socket.id, 'ready');
+      emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('imposter:submit-clue', ({ clue }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'imposter') {
+      const res = game.handleAction(socket.id, 'submit-clue', { clue });
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('imposter:cast-vote', ({ targetId }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'imposter') {
+      const res = game.handleAction(socket.id, 'cast-vote', { targetId });
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('imposter:guess', ({ guess }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'imposter') {
+      const res = game.handleAction(socket.id, 'imposter-guess', { guess });
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  // 6. Wavelength Game Specific Events
+  socket.on('wavelength:submit-clue', ({ clue }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'wavelength') {
+      const res = game.handleAction(socket.id, 'submit-clue', { clue });
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('wavelength:move-dial', ({ position }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'wavelength') {
+      const res = game.handleAction(socket.id, 'move-dial', { position });
+      if (res && !res.error) {
+        // Broadcast immediate live needle update for 60fps team synchronization
+        io.to(roomId).emit('wavelength:dial-moved', {
+          dialNeedle: game.dialNeedle,
+          playerId: socket.id
+        });
+      }
+    }
+  });
+
+  socket.on('wavelength:lock-dial', () => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'wavelength') {
+      const res = game.handleAction(socket.id, 'lock-dial');
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('wavelength:counter-guess', ({ guess }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'wavelength') {
+      const res = game.handleAction(socket.id, 'counter-guess', { guess });
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('wavelength:switch-team', ({ team }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'wavelength') {
+      const res = game.handleAction(socket.id, 'switch-team', { team });
+      if (res && res.error) socket.emit('action-error', res.error);
+      else {
+        emitPersonalizedStates(game, io);
+        broadcastLobbyUpdate(game, io);
+      }
+    }
+  });
+
+  socket.on('wavelength:next-round', () => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'wavelength') {
+      const res = game.handleAction(socket.id, 'next-round');
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  // 7. Chat Message (All Games)
   socket.on('chat-message', ({ message }) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
@@ -194,13 +361,14 @@ io.on('connection', socket => {
     if (!cleanMsg) return;
 
     io.to(roomId).emit('chat-message', {
+      senderId: socket.id,
       name: socket.data?.name || 'Anonymous',
       message: cleanMsg,
       timestamp: Date.now()
     });
   });
 
-  // 6. Disconnect
+  // 8. Disconnect
   socket.on('disconnect', () => {
     const roomId = socket.data?.roomId;
     const name = socket.data?.name;
@@ -213,32 +381,28 @@ io.on('connection', socket => {
 
     const anyConnected = game.players.some(p => p.connected);
     if (game.players.length === 0 || !anyConnected) {
-      game.clearTurnTimer();
+      if (typeof game.clearTurnTimer === 'function') game.clearTurnTimer();
+      if (typeof game.clearTimer === 'function') game.clearTimer();
       rooms.delete(roomId);
       return;
     }
 
     if (game.state === 'waiting') {
-      io.to(roomId).emit('lobby-update', {
-        roomId,
-        players: game.players.map(p => ({
-          id: p.id,
-          name: p.name,
-          chips: p.chips,
-          connected: p.connected,
-          isHost: p.id === game.players[0]?.id
-        })),
-        canStart: game.canStart()
-      });
+      broadcastLobbyUpdate(game, io);
     } else {
       emitPersonalizedStates(game, io);
     }
   });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🃏 Poker server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
+    console.log(`🎮 Game Server running on http://localhost:${PORT}`);
+    console.log(`   🃏 Poker: http://localhost:${PORT}/poker`);
+    console.log(`   🕵️ Imposter: http://localhost:${PORT}/imposter`);
+    console.log(`   🌊 Wavelength: http://localhost:${PORT}/wavelength`);
+  });
+}
 
 module.exports = { app, server, io, rooms };

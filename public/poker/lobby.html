@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Royal Flush Poker | Texas Hold'em</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* Floating card suits animation background */
+    .floating-suit-1 { left: 8%; animation-duration: 22s; font-size: 38px; animation-delay: 0s; }
+    .floating-suit-2 { left: 24%; animation-duration: 28s; font-size: 28px; animation-delay: 4s; }
+    .floating-suit-3 { left: 42%; animation-duration: 19s; font-size: 42px; animation-delay: 7s; }
+    .floating-suit-4 { left: 63%; animation-duration: 25s; font-size: 32px; animation-delay: 2s; }
+    .floating-suit-5 { left: 78%; animation-duration: 31s; font-size: 48px; animation-delay: 9s; }
+    .floating-suit-6 { left: 91%; animation-duration: 21s; font-size: 30px; animation-delay: 5s; }
+
+    .lobby-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    /* Header & Branding */
+    .brand-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo-chip {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffeaa7 0%, #c9a227 50%, #7c5c0d 100%);
+      box-shadow: 0 0 25px rgba(201, 162, 39, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -2px 5px rgba(0, 0, 0, 0.5);
+      border: 3px dashed rgba(10, 15, 20, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #0d140f;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+      user-select: none;
+      animation: chipPulse 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes chipPulse {
+      0% { transform: scale(1) rotate(0deg); box-shadow: 0 0 20px rgba(201, 162, 39, 0.35); }
+      100% { transform: scale(1.04) rotate(12deg); box-shadow: 0 0 32px rgba(201, 162, 39, 0.6); }
+    }
+
+    .brand-title {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #f0e6d3 50%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 24px rgba(201, 162, 39, 0.45), 0 0 45px rgba(201, 162, 39, 0.2);
+    }
+
+    .brand-subtitle {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Glassmorphism Panel */
+    .lobby-card {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 28px 28px 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lobby-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 15%;
+      right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(201, 162, 39, 0.5) 50%, transparent 100%);
+    }
+
+    /* Tabs */
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--gold);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-light) 50%, var(--gold) 70%, transparent 100%);
+      box-shadow: 0 0 12px var(--gold);
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #b0bec5;
+      letter-spacing: 0.3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: #1a2040;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .form-input:disabled, .form-select:disabled {
+      background: #12162a;
+      color: rgba(255, 255, 255, 0.45);
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-submit-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .code-input {
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    /* Footer info */
+    .lobby-footer {
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating animated suits background -->
+  <div class="floating-suits" aria-hidden="true">
+    <div class="floating-suit floating-suit-1">♠</div>
+    <div class="floating-suit floating-suit-2">♥</div>
+    <div class="floating-suit floating-suit-3">♦</div>
+    <div class="floating-suit floating-suit-4">♣</div>
+    <div class="floating-suit floating-suit-5">♠</div>
+    <div class="floating-suit floating-suit-6">♥</div>
+  </div>
+
+  <div class="lobby-wrapper">
+    <div style="width: 100%; display: flex; justify-content: flex-start;">
+      <a href="/" class="btn btn-ghost" style="padding: 6px 14px; font-size: 13px;">
+        <span>🎮 All Games Hub</span>
+      </a>
+    </div>
+
+    <!-- Header -->
+    <header class="brand-header">
+      <div class="brand-logo-chip">♠</div>
+      <h1 class="brand-title">Royal Flush Poker</h1>
+      <p class="brand-subtitle">High Stakes Texas Hold'em</p>
+    </header>
+
+    <!-- Main Card -->
+    <main class="lobby-card">
+      <!-- Tabs Header -->
+      <div class="tabs-header" role="tablist">
+        <button id="tabCreate" class="tab-btn active" role="tab" aria-selected="true" aria-controls="formCreate">
+          Create Game
+        </button>
+        <button id="tabJoin" class="tab-btn" role="tab" aria-selected="false" aria-controls="formJoin">
+          Join Game
+        </button>
+      </div>
+
+      <!-- Create Game Form -->
+      <form id="formCreate" onsubmit="handleCreateRoom(event)">
+        <div class="form-group">
+          <label class="form-label" for="createPlayerName">Your Name</label>
+          <input type="text" id="createPlayerName" class="form-input" placeholder="e.g. Phil Ivey" maxlength="15" required autocomplete="nickname">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="maxPlayers">Max Players</label>
+            <select id="maxPlayers" class="form-select">
+              <option value="2">2 Players (Heads Up)</option>
+              <option value="3">3 Players</option>
+              <option value="4">4 Players</option>
+              <option value="5">5 Players</option>
+              <option value="6" selected>6 Players (Default)</option>
+              <option value="7">7 Players</option>
+              <option value="8">8 Players (Full Ring)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="startingChips">Starting Chips</label>
+            <select id="startingChips" class="form-select">
+              <option value="500">500 Chips</option>
+              <option value="1000" selected>1,000 Chips</option>
+              <option value="2000">2,000 Chips</option>
+              <option value="5000">5,000 Chips</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="smallBlind">Small Blind</label>
+            <select id="smallBlind" class="form-select" onchange="updateBigBlind()">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bigBlind">Big Blind</label>
+            <input type="text" id="bigBlind" class="form-input" value="20" disabled>
+          </div>
+        </div>
+
+        <button type="submit" id="btnCreateSubmit" class="btn btn-gold form-submit-btn">
+          <span>Create Room</span>
+        </button>
+      </form>
+
+      <!-- Join Game Form -->
+      <form id="formJoin" class="hidden" onsubmit="handleJoinRoom(event)">
+        <div class="form-group">
+          <label class="form-label" for="joinPlayerName">Your Name</label>
+          <input type="text" id="joinPlayerName" class="form-input" placeholder="e.g. Daniel Negreanu" maxlength="15" required autocomplete="nickname">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="joinRoomCode">Room Code</label>
+          <input type="text" id="joinRoomCode" class="form-input code-input" placeholder="ABCDEF" maxlength="10" required autocomplete="off" spellcheck="false" oninput="this.value = this.value.toUpperCase()">
+        </div>
+
+        <button type="submit" id="btnJoinSubmit" class="btn btn-gold form-submit-btn">
+          <span>Join Room</span>
+        </button>
+      </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="lobby-footer">
+      <span>♦</span> Real-Time Texas Hold'em <span>♦</span> Socket.io Powered <span>♦</span>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Socket.io Library -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    // Tab switching logic
+    const tabCreate = document.getElementById('tabCreate');
+    const tabJoin = document.getElementById('tabJoin');
+    const formCreate = document.getElementById('formCreate');
+    const formJoin = document.getElementById('formJoin');
+    const smallBlindSelect = document.getElementById('smallBlind');
+    const bigBlindInput = document.getElementById('bigBlind');
+    const btnCreateSubmit = document.getElementById('btnCreateSubmit');
+    const btnJoinSubmit = document.getElementById('btnJoinSubmit');
+
+    function switchTab(activeTab) {
+      if (activeTab === 'create') {
+        tabCreate.classList.add('active');
+        tabCreate.setAttribute('aria-selected', 'true');
+        tabJoin.classList.remove('active');
+        tabJoin.setAttribute('aria-selected', 'false');
+        formCreate.classList.remove('hidden');
+        formJoin.classList.add('hidden');
+      } else {
+        tabJoin.classList.add('active');
+        tabJoin.setAttribute('aria-selected', 'true');
+        tabCreate.classList.remove('active');
+        tabCreate.setAttribute('aria-selected', 'false');
+        formJoin.classList.remove('hidden');
+        formCreate.classList.add('hidden');
+      }
+    }
+
+    tabCreate.addEventListener('click', () => switchTab('create'));
+    tabJoin.addEventListener('click', () => switchTab('join'));
+
+    function updateBigBlind() {
+      const sb = parseInt(smallBlindSelect.value, 10) || 10;
+      bigBlindInput.value = (sb * 2).toString();
+    }
+
+    // Toast notification helper
+    function showToast(message, type = 'error') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      let icon = '⚠️';
+      if (type === 'success') icon = '✓';
+      if (type === 'info') icon = 'ℹ️';
+
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 250);
+      }, 4000);
+    }
+
+    // Restore saved player name if available
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedName = sessionStorage.getItem('playerName') || '';
+      if (savedName) {
+        document.getElementById('createPlayerName').value = savedName;
+        document.getElementById('joinPlayerName').value = savedName;
+      }
+
+      // Check if URL has ?room=CODE or ?join=CODE
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('room') || urlParams.get('join');
+      if (roomParam) {
+        switchTab('join');
+        const joinCodeInput = document.getElementById('joinRoomCode');
+        joinCodeInput.value = roomParam.trim().toUpperCase();
+      }
+    });
+
+    // Socket.io initialization
+    let socket;
+    try {
+      socket = io();
+    } catch (err) {
+      console.error('Socket.io failed to initialize:', err);
+    }
+
+    let isPending = false;
+
+    function setPendingState(btn, pending, originalText) {
+      isPending = pending;
+      if (pending) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Connecting...`;
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = `<span>${originalText}</span>`;
+      }
+    }
+
+    // Socket Event Handlers
+    if (socket) {
+      socket.on('room-created', ({ roomId }) => {
+        setPendingState(btnCreateSubmit, false, 'Create Room');
+        const playerName = document.getElementById('createPlayerName').value.trim();
+        sessionStorage.setItem('roomId', roomId);
+        sessionStorage.setItem('playerName', playerName);
+        sessionStorage.setItem('isHost', 'true');
+        window.location.href = `/game.html?room=${encodeURIComponent(roomId)}`;
+      });
+
+      socket.on('room-joined', ({ roomId, reconnected }) => {
+        setPendingState(btnJoinSubmit, false, 'Join Room');
+        const playerName = document.getElementById('joinPlayerName').value.trim();
+        sessionStorage.setItem('roomId', roomId);
+        sessionStorage.setItem('playerName', playerName);
+        sessionStorage.setItem('isHost', 'false');
+        window.location.href = `/game.html?room=${encodeURIComponent(roomId)}`;
+      });
+
+      socket.on('join-error', (errorMessage) => {
+        setPendingState(btnCreateSubmit, false, 'Create Room');
+        setPendingState(btnJoinSubmit, false, 'Join Room');
+        showToast(errorMessage || 'Failed to join game room', 'error');
+      });
+
+      socket.on('connect_error', (err) => {
+        setPendingState(btnCreateSubmit, false, 'Create Room');
+        setPendingState(btnJoinSubmit, false, 'Join Room');
+        showToast('Unable to connect to game server', 'error');
+      });
+    }
+
+    // Form Submissions
+    function handleCreateRoom(e) {
+      e.preventDefault();
+      if (isPending) return;
+
+      const name = document.getElementById('createPlayerName').value.trim();
+      const maxPlayers = parseInt(document.getElementById('maxPlayers').value, 10);
+      const startingChips = parseInt(document.getElementById('startingChips').value, 10);
+      const smallBlind = parseInt(document.getElementById('smallBlind').value, 10);
+      const bigBlind = smallBlind * 2;
+
+      if (!name) {
+        showToast('Please enter your name', 'error');
+        return;
+      }
+
+      if (!socket || !socket.connected) {
+        showToast('Connecting to server... please try again in a moment', 'info');
+        return;
+      }
+
+      setPendingState(btnCreateSubmit, true, 'Create Room');
+      socket.emit('create-room', {
+        name,
+        maxPlayers,
+        startingChips,
+        smallBlind,
+        bigBlind
+      });
+    }
+
+    function handleJoinRoom(e) {
+      e.preventDefault();
+      if (isPending) return;
+
+      const name = document.getElementById('joinPlayerName').value.trim();
+      const roomId = document.getElementById('joinRoomCode').value.trim().toUpperCase();
+
+      if (!name) {
+        showToast('Please enter your name', 'error');
+        return;
+      }
+      if (!roomId) {
+        showToast('Please enter room code', 'error');
+        return;
+      }
+
+      if (!socket || !socket.connected) {
+        showToast('Connecting to server... please try again in a moment', 'info');
+        return;
+      }
+
+      setPendingState(btnJoinSubmit, true, 'Join Room');
+      socket.emit('join-room', {
+        roomId,
+        name
+      });
+    }
+  </script>
+</body>
+</html>
