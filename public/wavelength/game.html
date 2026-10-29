@@ -744,7 +744,7 @@
       gameState = state;
       const myId = socket ? socket.id : null;
       const my = state.myPlayer;
-      const isHost = my && my.isHost;
+      const isHost = (state.isHost !== undefined) ? state.isHost : ((my && my.isHost) || sessionStorage.getItem('isHost') === 'true');
       const isPsychic = state.isPsychic;
 
       // Update Phase Pill

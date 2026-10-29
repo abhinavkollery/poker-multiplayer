@@ -622,7 +622,7 @@
       gameState = state;
       const myId = socket ? socket.id : null;
       const myPlayer = state.myPlayer;
-      const isHost = myPlayer && myPlayer.isHost;
+      const isHost = (state.isHost !== undefined) ? state.isHost : ((myPlayer && myPlayer.isHost) || sessionStorage.getItem('isHost') === 'true');
 
       // Update Phase Pill
       document.getElementById('phaseText').textContent = state.state.replace('_', ' ');

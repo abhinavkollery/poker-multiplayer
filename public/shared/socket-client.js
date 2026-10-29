@@ -169,21 +169,27 @@
       if (e.target === overlay) closePartySwitchModal();
     };
 
-    const gamesHtml = PARTY_GAMES_LIST.map(g => `
-      <div onclick="window.triggerPartyGameSwitch('${g.id}')" style="
+    const gamesHtml = PARTY_GAMES_LIST.map(g => {
+      const clickAttr = isHost ? `onclick="window.triggerPartyGameSwitch('${g.id}')"` : `onclick="alert('Only the room host can switch games for everyone.')"`;
+      return `
+      <div ${clickAttr} style="
         background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: center;
-        gap: 12px; transition: all 0.2s ease;
-      " onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='#38bdf8';this.style.transform='translateY(-2px)'"
-         onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.12)';this.style.transform='none'">
+        border-radius: 12px; padding: 14px; cursor: ${isHost ? 'pointer' : 'default'}; display: flex; align-items: center;
+        gap: 12px; transition: all 0.2s ease; opacity: ${isHost ? '1' : '0.75'};
+      " ${isHost ? `onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='#38bdf8';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.12)';this.style.transform='none'"` : ''}>
         <div style="font-size: 26px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 8px;">${g.icon}</div>
         <div style="flex: 1; text-align: left;">
           <div style="color: #f8fafc; font-weight: 700; font-size: 14px;">${g.title}</div>
           <div style="color: #94a3b8; font-size: 12px; line-height: 1.3;">${g.desc}</div>
         </div>
-        <div style="color: #38bdf8; font-size: 16px; font-weight: 700;">➔</div>
+        <div style="color: ${isHost ? '#38bdf8' : '#64748b'}; font-size: 16px; font-weight: 700;">${isHost ? '➔' : '🔒'}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
+
+    const headerNotice = isHost
+      ? `<p style="margin: 0; color: #94a3b8; font-size: 13px;">Pick a new game or return to the lobby. All connected players migrate together automatically without re-entering the room code!</p>`
+      : `<p style="margin: 0; color: #f59e0b; font-size: 13px; font-weight: 600;">👑 Only the Party Host can switch games for everyone. You are viewing available party games.</p>`;
 
     overlay.innerHTML = `
       <div style="
@@ -204,9 +210,7 @@
             <h3 style="margin: 0; color: #f8fafc; font-size: 20px; font-weight: 800;">Switch Party Game</h3>
             <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">ROOM: ${cleanRoom}</span>
           </div>
-          <p style="margin: 0; color: #94a3b8; font-size: 13px;">
-            Pick a new game or return to the lobby. All connected players migrate together automatically without re-entering the room code!
-          </p>
+          ${headerNotice}
         </div>
 
         <div id="partySwitchList" style="display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; padding-right: 4px;">

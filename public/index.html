@@ -1868,9 +1868,11 @@
       if (!name) return alert('Please enter your player name');
 
       myPlayerName = name;
+      isPartyHost = true;
       localStorage.setItem('party_player_name', name);
       localStorage.setItem('playerName', name);
       sessionStorage.setItem('playerName', name);
+      sessionStorage.setItem('isHost', 'true');
 
       const btn = document.getElementById('btnCreatePartyTeam');
       if (btn) {
@@ -1892,9 +1894,11 @@
       if (!name) return alert('Please enter your name');
 
       myPlayerName = name;
+      isPartyHost = true;
       localStorage.setItem('party_player_name', name);
       localStorage.setItem('playerName', name);
       sessionStorage.setItem('playerName', name);
+      sessionStorage.setItem('isHost', 'true');
 
       let payload = Object.assign({ gameType: currentGame, name }, getSelectedGamePayload());
 
@@ -1914,9 +1918,11 @@
 
       if (!name || !roomId) return alert('Name and room code are required');
       myPlayerName = name;
+      isPartyHost = false;
       localStorage.setItem('party_player_name', name);
       localStorage.setItem('playerName', name);
       sessionStorage.setItem('playerName', name);
+      sessionStorage.setItem('isHost', 'false');
 
       const btn = document.getElementById('btnSubmitJoin');
       if (btn) {
@@ -1929,18 +1935,23 @@
 
     if (socket) {
       socket.on('room-created', ({ roomId, gameType }) => {
+        sessionStorage.setItem('isHost', 'true');
+        sessionStorage.setItem('roomId', roomId);
         if (gameType === 'party' || gameType === 'lobby') {
           enterPartyLobbyMode(roomId, true);
         } else {
-          navigateToGame(gameType, roomId);
+          navigateToGame(gameType, roomId, true);
         }
       });
 
-      socket.on('room-joined', ({ roomId, gameType }) => {
+      socket.on('room-joined', ({ roomId, gameType, isHost }) => {
+        const hostStatus = !!isHost;
+        sessionStorage.setItem('isHost', hostStatus ? 'true' : 'false');
+        sessionStorage.setItem('roomId', roomId);
         if (gameType === 'party' || gameType === 'lobby') {
-          enterPartyLobbyMode(roomId, false);
+          enterPartyLobbyMode(roomId, hostStatus);
         } else {
-          navigateToGame(gameType, roomId);
+          navigateToGame(gameType, roomId, hostStatus);
         }
       });
 
@@ -1957,7 +1968,7 @@
       });
 
       socket.on('party:game-switched', ({ newGameType, roomId }) => {
-        navigateToGame(newGameType, roomId);
+        navigateToGame(newGameType, roomId, isPartyHost);
       });
 
       socket.on('join-error', (msg) => {
@@ -2104,10 +2115,15 @@
       alert(`Party invite link copied to clipboard!\n${link}`);
     }
 
-    function navigateToGame(gameType, roomId) {
+    function navigateToGame(gameType, roomId, isHost = false) {
       const encoded = encodeURIComponent(roomId);
       const name = encodeURIComponent(localStorage.getItem('party_player_name') || 'Player');
+      sessionStorage.setItem('isHost', isHost ? 'true' : 'false');
+      sessionStorage.setItem('roomId', roomId);
       let targetUrl = `/${gameType}/game.html?room=${encoded}&name=${name}`;
+      if (isHost) {
+        targetUrl += '&host=true';
+      }
       const backendUrl = window.getPartyBackendUrl && window.getPartyBackendUrl();
       if (backendUrl) {
         targetUrl += `&server=${encodeURIComponent(backendUrl)}`;

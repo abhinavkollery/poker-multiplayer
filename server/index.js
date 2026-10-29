@@ -179,21 +179,95 @@ app.get('/api/room/:roomId', (req, res) => {
   });
 });
 
+// Persistent Room & Player Disconnection Management
+const roomCleanupTimers = new Map(); // roomId -> Timeout
+const playerDisconnectTimers = new Map(); // `${roomId}:${playerId}` -> Timeout
+
+function scheduleRoomCleanup(roomId) {
+  if (roomCleanupTimers.has(roomId)) return;
+  const timer = setTimeout(() => {
+    roomCleanupTimers.delete(roomId);
+    const game = rooms.get(roomId);
+    if (!game) return;
+    const anyConnected = game.players.some(p => p.connected);
+    if (!anyConnected) {
+      if (typeof game.clearTurnTimer === 'function') game.clearTurnTimer();
+      if (typeof game.clearTimer === 'function') game.clearTimer();
+      rooms.delete(roomId);
+    }
+  }, 60000); // 60s grace period for page reloads / navigation
+  roomCleanupTimers.set(roomId, timer);
+}
+
+function cancelRoomCleanup(roomId) {
+  const timer = roomCleanupTimers.get(roomId);
+  if (timer) {
+    clearTimeout(timer);
+    roomCleanupTimers.delete(roomId);
+  }
+}
+
+function getRoomHost(game) {
+  if (!game || !game.players || game.players.length === 0) return null;
+  // 1. By stored host name
+  if (game.hostName) {
+    const hostByName = game.players.find(p => p.name && p.name.toLowerCase() === game.hostName.toLowerCase());
+    if (hostByName) return hostByName;
+  }
+  // 2. By stored host player id
+  if (game.hostPlayerId) {
+    const hostById = game.players.find(p => p.id === game.hostPlayerId);
+    if (hostById) return hostById;
+  }
+  // 3. First connected human player, or first player
+  const firstConnected = game.players.find(p => p.connected && !p.isBot);
+  return firstConnected || game.players[0];
+}
+
+function isSocketHost(game, socket) {
+  if (!game || !socket) return false;
+  const host = getRoomHost(game);
+  if (!host) return false;
+  if (socket.id === host.id) return true;
+  if (socket.data?.name && game.hostName && socket.data.name.toLowerCase() === game.hostName.toLowerCase()) {
+    return true;
+  }
+  if (socket.data?.isHost === true && socket.data?.roomId === game.roomId) {
+    return true;
+  }
+  return false;
+}
+
 function emitPersonalizedStates(game, socketIo) {
   if (!game) return;
+  const host = getRoomHost(game);
   for (const player of game.players) {
     const sock = socketIo.sockets.sockets.get(player.id);
     if (sock) {
-      sock.emit('game-state', game.getStateForPlayer(player.id));
+      const state = game.getStateForPlayer(player.id) || {};
+      state.isHost = host ? (player.id === host.id || (player.name && host.name && player.name.toLowerCase() === host.name.toLowerCase())) : false;
+      state.hostId = host?.id || null;
+      state.hostName = host?.name || null;
+      if (Array.isArray(state.players)) {
+        state.players.forEach(p => {
+          if (host && (p.id === host.id || (p.name && host.name && p.name.toLowerCase() === host.name.toLowerCase()))) {
+            p.isHost = true;
+          }
+        });
+      }
+      sock.emit('game-state', state);
     }
   }
 }
 
 function broadcastLobbyUpdate(game, socketIo) {
   if (!game) return;
+  const host = getRoomHost(game);
   socketIo.to(game.roomId).emit('lobby-update', {
     roomId: game.roomId,
     gameType: game.gameType,
+    hostId: host?.id || null,
+    hostName: host?.name || null,
     players: game.players.map(p => ({
       id: p.id,
       name: p.name,
@@ -202,7 +276,8 @@ function broadcastLobbyUpdate(game, socketIo) {
       role: p.role,
       ready: p.ready,
       connected: p.connected,
-      isHost: p.id === game.players[0]?.id
+      isBot: p.isBot || false,
+      isHost: host ? (p.id === host.id || (p.name && host.name && p.name.toLowerCase() === host.name.toLowerCase())) : false
     })),
     canStart: game.canStart(),
     maxPlayers: game.maxPlayers,
@@ -215,10 +290,13 @@ io.on('connection', socket => {
   // 1. Create Room (Multi-game)
   socket.on('create-room', (payload = {}) => {
     const gameType = payload.gameType || 'poker';
-    const name = payload.name;
+    const name = (payload.name || 'Host').trim();
     const roomId = uuidv4().substring(0, 6).toUpperCase();
 
     const game = createGameInstance(gameType, roomId, payload);
+    game.hostName = name;
+    game.creatorName = name;
+    game.hostPlayerId = socket.id;
     rooms.set(roomId, game);
 
     const joinResult = game.addPlayer(socket.id, name);
@@ -235,63 +313,127 @@ io.on('connection', socket => {
       isHost: true
     };
 
-    socket.emit('room-created', { roomId, gameType: game.gameType });
-    socket.emit('game-state', game.getStateForPlayer(socket.id));
+    socket.emit('room-created', {
+      roomId,
+      gameType: game.gameType,
+      isHost: true,
+      hostId: socket.id,
+      hostName: name
+    });
+
+    const state = game.getStateForPlayer(socket.id) || {};
+    state.isHost = true;
+    state.hostId = socket.id;
+    state.hostName = name;
+    if (Array.isArray(state.players)) {
+      state.players.forEach(p => {
+        if (p.id === socket.id) p.isHost = true;
+      });
+    }
+    socket.emit('game-state', state);
     broadcastLobbyUpdate(game, io);
   });
 
   // 2. Join Room
   socket.on('join-room', (payload = {}) => {
     const roomId = payload.roomId;
-    const name = payload.name;
+    const name = (payload.name || '').trim();
     if (!roomId) {
       socket.emit('join-error', 'Room ID is required');
       return;
     }
 
     const cleanRoomId = String(roomId || '').trim().toUpperCase();
+    cancelRoomCleanup(cleanRoomId);
+
     const game = rooms.get(cleanRoomId);
     if (!game) {
       socket.emit('join-error', 'Room not found. Check the code and try again.');
       return;
     }
 
+    // Cancel pending disconnect timers for this player
+    const cleanName = (name || '').toLowerCase();
+    for (const [key, timer] of playerDisconnectTimers.entries()) {
+      if (key.startsWith(`${cleanRoomId}:`)) {
+        clearTimeout(timer);
+        playerDisconnectTimers.delete(key);
+      }
+    }
+
     let reconnected = false;
     let player = null;
 
-    // Try reconnecting first
-    const reconnectResult = game.reconnectPlayer(socket.id, name);
-    if (reconnectResult.success) {
+    // 1. Try game's reconnectPlayer first
+    const reconnectResult = (typeof game.reconnectPlayer === 'function')
+      ? game.reconnectPlayer(socket.id, name)
+      : { success: false };
+
+    if (reconnectResult && reconnectResult.success) {
       reconnected = true;
       player = reconnectResult.player;
     } else {
-      // Add as new player
-      const addResult = game.addPlayer(socket.id, name);
-      if (addResult.error) {
-        socket.emit('join-error', addResult.error);
-        return;
-      }
-      if (addResult.reconnected) {
+      // 2. Check if a player with this name already exists in game.players
+      const existing = game.players.find(p => p.name && p.name.toLowerCase() === cleanName);
+      if (existing) {
+        existing.id = socket.id;
+        existing.connected = true;
         reconnected = true;
+        player = existing;
+      } else {
+        // 3. Add as new player
+        const addResult = game.addPlayer(socket.id, name);
+        if (addResult.error) {
+          socket.emit('join-error', addResult.error);
+          return;
+        }
+        if (addResult.reconnected) {
+          reconnected = true;
+        }
+        player = addResult.player;
       }
-      player = addResult.player;
     }
+
+    // Preserve/update host assignment
+    if (game.hostName && player.name && player.name.toLowerCase() === game.hostName.toLowerCase()) {
+      game.hostPlayerId = socket.id;
+    } else if (!game.hostName && game.players[0]?.id === socket.id) {
+      game.hostName = player.name;
+      game.hostPlayerId = socket.id;
+    }
+
+    const host = getRoomHost(game);
+    const isHost = host ? (host.id === socket.id || (player && player.name && host.name && player.name.toLowerCase() === host.name.toLowerCase())) : false;
 
     socket.join(cleanRoomId);
     socket.data = {
       roomId: cleanRoomId,
       gameType: game.gameType,
       name: player.name,
-      isHost: game.players[0]?.id === socket.id
+      isHost: !!isHost
     };
 
     socket.emit('room-joined', {
       roomId: cleanRoomId,
       gameType: game.gameType,
-      reconnected
+      reconnected,
+      isHost: !!isHost,
+      hostId: host?.id || null,
+      hostName: host?.name || null
     });
 
-    socket.emit('game-state', game.getStateForPlayer(socket.id));
+    const state = game.getStateForPlayer(socket.id) || {};
+    state.isHost = !!isHost;
+    state.hostId = host?.id || null;
+    state.hostName = host?.name || null;
+    if (Array.isArray(state.players)) {
+      state.players.forEach(p => {
+        if (host && (p.id === host.id || (p.name && host.name && p.name.toLowerCase() === host.name.toLowerCase()))) {
+          p.isHost = true;
+        }
+      });
+    }
+    socket.emit('game-state', state);
     broadcastLobbyUpdate(game, io);
 
     socket.to(cleanRoomId).emit('player-joined', {
@@ -311,7 +453,7 @@ io.on('connection', socket => {
     const game = rooms.get(roomId);
     if (!game) return;
 
-    if (!game.players[0] || game.players[0].id !== socket.id) {
+    if (!isSocketHost(game, socket)) {
       socket.emit('action-error', 'Only the room host can start the game');
       return;
     }
@@ -355,7 +497,7 @@ io.on('connection', socket => {
     const game = rooms.get(roomId);
     if (!game) return;
 
-    if (game.players[0]?.id !== socket.id) {
+    if (!isSocketHost(game, socket)) {
       socket.emit('action-error', 'Only the host can select games');
       return;
     }
@@ -378,7 +520,7 @@ io.on('connection', socket => {
     const oldGame = rooms.get(roomId);
     if (!oldGame) return;
 
-    if (oldGame.players[0]?.id !== socket.id) {
+    if (!isSocketHost(oldGame, socket)) {
       socket.emit('action-error', 'Only the host can switch games');
       return;
     }
@@ -390,8 +532,13 @@ io.on('connection', socket => {
     if (typeof oldGame.clearTurnTimer === 'function') oldGame.clearTurnTimer();
 
     const newGame = createGameInstance(newGameType, roomId, gameOptions);
-    // Only migrate active connected human players, eliminating ghosts and bots
-    const activePlayers = oldGame.players.filter(p => p.connected && !p.isBot);
+    const host = getRoomHost(oldGame);
+    newGame.hostName = host ? host.name : (oldGame.hostName || socket.data?.name);
+    newGame.creatorName = newGame.hostName;
+    newGame.hostPlayerId = host ? host.id : socket.id;
+
+    // Migrate active connected/recent human players, eliminating ghosts and bots
+    const activePlayers = oldGame.players.filter(p => !p.isBot);
     activePlayers.forEach(p => {
       newGame.addPlayer(p.id, p.name);
     });
@@ -427,7 +574,7 @@ io.on('connection', socket => {
     const roomId = socket.data?.roomId;
     const game = rooms.get(roomId);
     if (game && game.gameType === 'poker') {
-      if (game.players[0]?.id !== socket.id) {
+      if (!isSocketHost(game, socket)) {
         socket.emit('action-error', 'Only the host can add bots');
         return;
       }
@@ -439,6 +586,23 @@ io.on('connection', socket => {
         broadcastLobbyUpdate(game, io);
       }
     }
+  });
+
+  // Host Kick Player from room
+  socket.on('party:kick-player', ({ targetId }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (!game || !isSocketHost(game, socket)) return;
+    if (targetId === socket.id) return;
+    game.removePlayer(targetId);
+    const targetSock = io.sockets.sockets.get(targetId);
+    if (targetSock) {
+      targetSock.emit('action-error', 'You were removed from the room by the host');
+      targetSock.leave(roomId);
+      targetSock.disconnect(true);
+    }
+    broadcastLobbyUpdate(game, io);
+    emitPersonalizedStates(game, io);
   });
 
   // 7. Imposter Game Specific Events
@@ -676,21 +840,44 @@ io.on('connection', socket => {
     const game = rooms.get(roomId);
     if (!game) return;
 
-    game.removePlayer(socket.id);
-    io.to(roomId).emit('player-disconnected', { name, id: socket.id });
-
-    const anyConnected = game.players.some(p => p.connected);
-    if (game.players.length === 0 || !anyConnected) {
-      if (typeof game.clearTurnTimer === 'function') game.clearTurnTimer();
-      if (typeof game.clearTimer === 'function') game.clearTimer();
-      rooms.delete(roomId);
-      return;
+    const player = game.players.find(p => p.id === socket.id);
+    if (player) {
+      player.connected = false;
     }
 
-    if (game.state === 'waiting') {
-      broadcastLobbyUpdate(game, io);
-    } else {
+    io.to(roomId).emit('player-disconnected', { name, id: socket.id });
+
+    if (game.state !== 'waiting') {
+      game.removePlayer(socket.id);
       emitPersonalizedStates(game, io);
+    } else {
+      // Waiting lobby: 20s grace period for navigation/page reload before removing
+      const timerKey = `${roomId}:${socket.id}`;
+      const disconnectTimer = setTimeout(() => {
+        playerDisconnectTimers.delete(timerKey);
+        const currentGame = rooms.get(roomId);
+        if (!currentGame || currentGame.state !== 'waiting') return;
+        const p = currentGame.players.find(pl => pl.id === socket.id);
+        if (p && !p.connected) {
+          currentGame.removePlayer(socket.id);
+          // If the disconnected player was host, promote next connected player
+          if (currentGame.hostName && p.name && currentGame.hostName.toLowerCase() === p.name.toLowerCase()) {
+            const nextHost = currentGame.players.find(pl => pl.connected && !pl.isBot) || currentGame.players[0];
+            if (nextHost) {
+              currentGame.hostName = nextHost.name;
+              currentGame.hostPlayerId = nextHost.id;
+            }
+          }
+          broadcastLobbyUpdate(currentGame, io);
+        }
+      }, 20000);
+      playerDisconnectTimers.set(timerKey, disconnectTimer);
+      broadcastLobbyUpdate(game, io);
+    }
+
+    const anyConnected = game.players.some(p => p.connected);
+    if (!anyConnected) {
+      scheduleRoomCleanup(roomId);
     }
   });
 });

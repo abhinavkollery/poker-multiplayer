@@ -324,6 +324,9 @@
 
     socket.on('room-joined', (data) => {
       document.getElementById('roomCodeDisplay').textContent = data.roomId;
+      if (data.isHost !== undefined) {
+        sessionStorage.setItem('isHost', data.isHost ? 'true' : 'false');
+      }
     });
 
     socket.on('game-state', (state) => {
@@ -422,7 +425,7 @@
       }
 
       // Start / Restart button for host
-      const isHost = state.players[0]?.id === myPlayerId;
+      const isHost = (state.isHost !== undefined) ? state.isHost : (state.players[0]?.id === myPlayerId || sessionStorage.getItem('isHost') === 'true');
       const startBtn = document.getElementById('startBtn');
       if (isHost && (state.state === 'waiting' || state.state === 'game_over')) {
         startBtn.style.display = 'block';

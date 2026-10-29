@@ -35,12 +35,9 @@ class PartyLobbyGame {
 
     const existing = this.players.find(p => p.name.toLowerCase() === cleanName.toLowerCase());
     if (existing) {
-      if (!existing.connected) {
-        existing.id = id;
-        existing.connected = true;
-        return { success: true, player: existing, reconnected: true };
-      }
-      return { error: 'Player name already taken' };
+      existing.id = id;
+      existing.connected = true;
+      return { success: true, player: existing, reconnected: true };
     }
 
     const player = {
@@ -75,6 +72,10 @@ class PartyLobbyGame {
   }
 
   getHostId() {
+    if (this.hostName) {
+      const p = this.players.find(pl => pl.name && pl.name.toLowerCase() === this.hostName.toLowerCase());
+      if (p) return p.id;
+    }
     const active = this.players.find(p => p.connected);
     return active ? active.id : (this.players[0] ? this.players[0].id : null);
   }

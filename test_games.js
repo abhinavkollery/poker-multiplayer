@@ -522,6 +522,77 @@ const rewrites = vercelConfig.rewrites.map(r => r.source);
 });
 console.log('  ✓ Vercel Serverless Function entry point and vercel.json rewrites verified');
 
+// Test 17: Login Navigation Resilience & Dynamic Host Controls
+// ==========================================
+console.log('\nTest 17: Login Navigation Resilience & Dynamic Host Controls');
+const EventEmitter = require('events');
+const app = require('./server/index');
+const io = app.io;
+const rooms = app.rooms;
+const connectionHandler = io.listeners('connection')[0];
+
+function createMockSocket(id) {
+  const sock = new EventEmitter();
+  sock.id = id;
+  sock.rooms = new Set([id]);
+  sock.join = (room) => sock.rooms.add(room);
+  sock.leave = (room) => sock.rooms.delete(room);
+  sock.to = () => ({ emit: () => {} });
+  connectionHandler(sock);
+  return sock;
+}
+
+// Host creates room on index.html
+const hostSock1 = createMockSocket('mock_host_1');
+let navTestRoomId = null;
+hostSock1.on('room-created', (d) => {
+  navTestRoomId = d.roomId;
+  assert.strictEqual(d.isHost, true);
+  assert.strictEqual(d.hostName, 'TestHost');
+});
+hostSock1.emit('create-room', { gameType: 'poker', name: 'TestHost' });
+assert(navTestRoomId, 'Room must be created with ID');
+assert(rooms.has(navTestRoomId), 'Room must exist in server rooms');
+
+// Host navigates to /poker/game.html (disconnect & reconnect transition)
+hostSock1.emit('disconnect');
+assert(rooms.has(navTestRoomId), 'Room must NOT be deleted immediately during navigation disconnect');
+
+const hostSock2 = createMockSocket('mock_host_2');
+let hostJoined = null;
+hostSock2.on('room-joined', (d) => { hostJoined = d; });
+hostSock2.emit('join-room', { roomId: navTestRoomId, name: 'TestHost' });
+assert.strictEqual(hostJoined.isHost, true, 'Host must retain host controls after navigation reconnect');
+
+// Guest joins
+const guestSock = createMockSocket('mock_guest_1');
+let guestJoined = null;
+let guestActionError = null;
+guestSock.on('room-joined', (d) => { guestJoined = d; });
+guestSock.on('action-error', (err) => { guestActionError = err; });
+guestSock.emit('join-room', { roomId: navTestRoomId, name: 'GuestUser' });
+assert.strictEqual(guestJoined.isHost, false, 'Guest must NOT have host status');
+
+// Guest start blocked, host start allowed
+guestSock.emit('start-game', {});
+assert.strictEqual(guestActionError, 'Only the room host can start the game');
+
+hostSock2.emit('poker:add-bot', {});
+const currentPoker = rooms.get(navTestRoomId);
+assert.strictEqual(currentPoker.players.length, 3, 'Host adding bot must succeed');
+
+hostSock2.emit('start-game', {});
+assert.strictEqual(currentPoker.state, 'pre-flop', 'Host starting game must succeed');
+
+// Party switch to Imposter
+hostSock2.emit('party:switch-game', { newGameType: 'imposter', roomId: navTestRoomId });
+const switchedGame = rooms.get(navTestRoomId);
+assert.strictEqual(switchedGame.gameType, 'imposter');
+assert.strictEqual(switchedGame.hostName, 'TestHost', 'Host privileges must carry over to Imposter');
+
+rooms.delete(navTestRoomId);
+console.log('  ✓ Room navigation grace period, host persistence, and permission boundaries verified');
+
 // Clean timers
 imposter.clearTimer();
 waveCoop.clearTimer();
@@ -533,5 +604,5 @@ drawGame.clearTimer();
 triviaGame.clearTimer();
 spyGame.clearTimer();
 
-console.log('\n🎉 ALL 16 TEST SUITES PASSED FLAWLESSLY!');
+console.log('\n🎉 ALL 17 TEST SUITES PASSED FLAWLESSLY!');
 process.exit(0);

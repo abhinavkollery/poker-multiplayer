@@ -572,7 +572,7 @@
       document.getElementById('roundBadge').textContent = `Round ${state.currentRound} / ${state.maxRounds}`;
       document.getElementById('timerDisplay').textContent = `${state.timeLeft}s`;
 
-      const amHost = state.players[0]?.id === myPlayerId;
+      const amHost = (state.isHost !== undefined) ? state.isHost : (state.players[0]?.id === myPlayerId || sessionStorage.getItem('isHost') === 'true');
       isDrawer = state.isDrawer;
 
       // Start button for host during waiting

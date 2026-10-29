@@ -647,7 +647,7 @@
       `).join('');
 
       const my = state.myPlayer;
-      const isHost = my && my.isHost;
+      const isHost = (state.isHost !== undefined) ? state.isHost : ((my && my.isHost) || sessionStorage.getItem('isHost') === 'true');
       document.getElementById('hostControlsBox').classList.toggle('hidden', !isHost);
       document.getElementById('waitingNotice').classList.toggle('hidden', !!isHost);
 

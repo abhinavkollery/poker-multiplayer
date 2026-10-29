@@ -316,7 +316,7 @@
     function updateUI(state) {
       if (!state) return;
 
-      const isHost = state.players[0]?.id === myPlayerId;
+      const isHost = (state.isHost !== undefined) ? state.isHost : (state.players[0]?.id === myPlayerId || sessionStorage.getItem('isHost') === 'true');
       document.getElementById('startBtn').style.display = (isHost && (state.state === 'waiting' || state.state === 'podium')) ? 'block' : 'none';
 
       // Update question indicator

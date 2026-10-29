@@ -309,7 +309,7 @@
       document.getElementById('roundBadge').textContent = `Round ${state.roundNumber}`;
       document.getElementById('totalDiceCount').textContent = state.totalDiceInPlay;
 
-      const isHost = state.players[0]?.id === myPlayerId;
+      const isHost = (state.isHost !== undefined) ? state.isHost : (state.players[0]?.id === myPlayerId || sessionStorage.getItem('isHost') === 'true');
       document.getElementById('startBtn').style.display = (isHost && (state.state === 'waiting' || state.state === 'game_over')) ? 'block' : 'none';
 
       // Current bid

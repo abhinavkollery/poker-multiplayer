@@ -1258,6 +1258,16 @@
       }
     };
 
+    // Host Controls UI updater
+    function updateHostControlsUI(hostStatus) {
+      isHost = !!hostStatus;
+      sessionStorage.setItem('isHost', isHost ? 'true' : 'false');
+      const hostBox = document.getElementById('hostControlsBox');
+      const nonHostBox = document.getElementById('nonHostWaitingBox');
+      if (hostBox) hostBox.classList.toggle('hidden', !isHost);
+      if (nonHostBox) nonHostBox.classList.toggle('hidden', isHost);
+    }
+
     // Initialization on load
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -1269,7 +1279,7 @@
       localStorage.setItem('party_player_name', playerName);
       localStorage.setItem('playerName', playerName);
       if (roomId) sessionStorage.setItem('roomId', roomId);
-      isHost = sessionStorage.getItem('isHost') === 'true';
+      isHost = urlParams.get('host') === 'true' || sessionStorage.getItem('isHost') === 'true';
 
       if (!roomId) {
         window.location.href = '/?game=poker';
@@ -1280,14 +1290,8 @@
       document.getElementById('lobbyRoomCode').textContent = roomId;
       document.getElementById('shareLinkInput').value = window.getCleanInviteUrl ? window.getCleanInviteUrl(roomId, 'poker') : `${window.location.origin}/?join=${encodeURIComponent(roomId)}`;
 
-      // Update host controls visibility
-      if (isHost) {
-        document.getElementById('hostControlsBox').classList.remove('hidden');
-        document.getElementById('nonHostWaitingBox').classList.add('hidden');
-      } else {
-        document.getElementById('hostControlsBox').classList.add('hidden');
-        document.getElementById('nonHostWaitingBox').classList.remove('hidden');
-      }
+      // Update host controls visibility immediately
+      updateHostControlsUI(isHost);
 
       initSocket();
     });
@@ -1305,7 +1309,10 @@
         socket.emit('join-room', { roomId, name: playerName });
       });
 
-      socket.on('room-joined', ({ roomId: joinedRoom, reconnected }) => {
+      socket.on('room-joined', ({ roomId: joinedRoom, reconnected, isHost: serverIsHost }) => {
+        if (serverIsHost !== undefined) {
+          updateHostControlsUI(serverIsHost);
+        }
         showToast(reconnected ? 'Reconnected to game' : 'Joined table successfully', 'success');
       });
 
@@ -1319,11 +1326,23 @@
       });
 
       socket.on('game-state', (state) => {
+        if (state && state.isHost !== undefined) {
+          updateHostControlsUI(state.isHost);
+        }
         handleGameState(state);
       });
 
-      socket.on('lobby-update', ({ players, maxPlayers }) => {
-        updateLobbyUI(players, maxPlayers);
+      socket.on('lobby-update', (data) => {
+        if (data && data.hostId && socket) {
+          const amHost = (data.hostId === socket.id) || (data.hostName && playerName && data.hostName.toLowerCase() === playerName.toLowerCase());
+          updateHostControlsUI(amHost);
+        } else if (data && data.players) {
+          const me = data.players.find(p => p.id === socket?.id || (p.name && playerName && p.name.toLowerCase() === playerName.toLowerCase()));
+          if (me && me.isHost !== undefined) {
+            updateHostControlsUI(me.isHost);
+          }
+        }
+        updateLobbyUI(data.players || [], data.maxPlayers || 6, data.hostId);
       });
 
       socket.on('player-joined', ({ name }) => {
@@ -1806,19 +1825,21 @@
     }
 
     // Lobby Overlay UI
-    function updateLobbyUI(players, maxPlayers) {
+    function updateLobbyUI(players, maxPlayers, hostId) {
       const list = document.getElementById('lobbyPlayersList');
       list.innerHTML = '';
       const total = players.length;
       document.getElementById('playerCountLabel').textContent = `${total}/${maxPlayers || 6}`;
 
       players.forEach(p => {
+        const isThisHost = p.isHost || (hostId && p.id === hostId);
         const item = document.createElement('div');
         item.className = 'lobby-player-item';
         item.innerHTML = `
           <div class="lobby-player-info">
             <div class="lobby-avatar">${(p.name || 'P').substring(0, 2).toUpperCase()}</div>
             <span style="font-weight: 600; font-size: 14px;">${escapeHTML(p.name)}</span>
+            ${isThisHost ? '<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: 6px;">👑 Host</span>' : ''}
           </div>
           <span class="chip-badge">
             <span class="chip-icon"></span>

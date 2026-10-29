@@ -44,8 +44,11 @@ class PokerGame {
     if (!trimmedName) {
       return { error: 'Player name is required' };
     }
-    if (this.players.some(p => p.name.toLowerCase() === trimmedName.toLowerCase())) {
-      return { error: 'Player name already taken' };
+    const existing = this.players.find(p => p.name.toLowerCase() === trimmedName.toLowerCase());
+    if (existing) {
+      existing.id = socketId;
+      existing.connected = true;
+      return { success: true, player: existing, reconnected: true };
     }
 
     const player = {
@@ -837,8 +840,15 @@ class PokerGame {
 
   getStateForPlayer(playerId) {
     const baseState = this.getPublicState();
+    const hostPlayer = (this.hostName ? this.players.find(p => p.name && p.name.toLowerCase() === this.hostName.toLowerCase()) : null) || this.players[0];
+    const hostId = hostPlayer ? hostPlayer.id : null;
+    baseState.isHost = hostId ? (hostId === playerId) : false;
+    baseState.hostId = hostId;
+    baseState.hostName = hostPlayer ? hostPlayer.name : null;
+
     baseState.players = this.players.map(p => {
       const isMe = p.id === playerId;
+      const isThisHost = hostPlayer ? (p.id === hostPlayer.id) : false;
       return {
         id: p.id,
         name: p.name,
@@ -848,7 +858,9 @@ class PokerGame {
         folded: p.folded,
         allIn: p.allIn,
         connected: p.connected,
+        isBot: p.isBot || false,
         seatIndex: p.seatIndex,
+        isHost: isThisHost,
         holeCards:
           isMe || this.showingShowdown
             ? p.holeCards
