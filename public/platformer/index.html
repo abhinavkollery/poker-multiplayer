@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Co-op Platformer | Team Jump</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 15%, #0e2417 0%, #08140d 50%, #040805 100%);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      font-family: 'Outfit', sans-serif;
+      touch-action: manipulation;
+    }
+
+    /* Top Navigation */
+    .game-nav {
+      height: 60px;
+      background: rgba(8, 20, 13, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(46, 204, 113, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-left, .nav-center, .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .room-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .room-badge:hover {
+      background: rgba(46, 204, 113, 0.2);
+      border-color: #2ecc71;
+    }
+
+    .level-pill {
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(46, 204, 113, 0.15);
+      border: 1px solid #2ecc71;
+      color: #7bed9f;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Game Container */
+    .game-arena {
+      flex: 1;
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 16px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    /* Canvas Frame */
+    .canvas-container {
+      width: 100%;
+      background: #09130d;
+      border: 2px solid rgba(46, 204, 113, 0.35);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(46, 204, 113, 0.15);
+      position: relative;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #0a140e;
+    }
+
+    /* Overlays on Canvas */
+    .canvas-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6, 14, 9, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 10;
+      padding: 24px;
+      text-align: center;
+    }
+
+    /* Level info & controls bar below canvas */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: rgba(12, 28, 18, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 12px 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .key-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 11px;
+      font-weight: 700;
+      margin: 0 2px;
+    }
+
+    /* On-Screen Touch Controls (Mobile Friendly) */
+    .touch-controls {
+      display: none;
+      width: 100%;
+      justify-content: space-between;
+      padding: 10px 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .touch-dpad, .touch-action {
+      display: flex;
+      gap: 12px;
+    }
+
+    .touch-btn {
+      width: 64px;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #ffffff;
+      touch-action: none;
+      outline: none;
+    }
+
+    .touch-btn:active {
+      background: rgba(46, 204, 113, 0.4);
+      border-color: #2ecc71;
+      transform: scale(0.95);
+    }
+
+    .touch-btn-jump {
+      width: 74px;
+      height: 74px;
+      background: rgba(46, 204, 113, 0.25);
+      border-color: #2ecc71;
+    }
+
+    @media (hover: none) and (pointer: coarse), (max-width: 800px) {
+      .touch-controls { display: flex; }
+    }
+
+    /* Chat Drawer */
+    .chat-drawer {
+      position: fixed;
+      top: 60px;
+      right: -360px;
+      width: 340px;
+      height: calc(100vh - 60px);
+      background: rgba(8, 20, 13, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      z-index: 150;
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .chat-drawer.open { right: 0; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-msg {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .chat-msg .author {
+      font-weight: 700;
+      color: #2ecc71;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .chat-input-box {
+      padding: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header -->
+  <header class="game-nav">
+    <div class="nav-left">
+      <button class="btn btn-ghost" onclick="window.location.href='/'" style="padding: 6px 12px; font-size: 13px;">
+        <span>🎮 Games Hub</span>
+      </button>
+      <div class="room-badge" onclick="copyRoomCode()" title="Click to copy room code">
+        <span>ROOM:</span>
+        <span id="navRoomCode" style="color: #7bed9f;">------</span>
+        <span>📋</span>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <div id="levelPill" class="level-pill">
+        <span id="levelNameText">Level 1: Buddy System</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="btn btn-ghost" onclick="restartLevel()" style="padding: 6px 12px; font-size: 13px;" title="Reset Level (R)">
+        <span>🔄 Restart</span>
+      </button>
+      <button class="btn btn-ghost" onclick="toggleChat()">
+        <span>💬 Chat</span>
+      </button>
+      <button class="btn btn-danger" onclick="leaveRoom()" style="padding: 6px 12px; font-size: 13px;">
+        <span>Leave</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Game Arena -->
+  <main class="game-arena">
+
+    <!-- Canvas Frame -->
+    <div class="canvas-container">
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+      <!-- LOBBY OVERLAY -->
+      <div id="lobbyOverlay" class="canvas-overlay">
+        <span style="font-size: 52px; margin-bottom: 8px;">🏃‍♂️🤝</span>
+        <h2 style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">Co-op Platformer Lobby</h2>
+        <p style="color: var(--text-muted); font-size: 15px; max-width: 460px; margin-bottom: 24px;">
+          Work together to press buttons, push crates, retrieve keys, and reach the exit portal!
+        </p>
+
+        <div style="margin-bottom: 24px; width: 100%; max-width: 500px;">
+          <h4 style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Connected Players (<span id="lobbyPlayerCount">0</span>/6)</h4>
+          <div id="lobbyPlayerGrid" class="player-card-grid"></div>
+        </div>
+
+        <div id="hostControlsBox" class="hidden">
+          <button id="btnStartGame" class="btn btn-success" style="padding: 14px 44px; font-size: 16px;" onclick="startGame()">
+            <span>Start Adventure (Need 2+ Players)</span>
+          </button>
+        </div>
+        <div id="waitingNotice" class="text-muted" style="font-size: 14px;">
+          Waiting for the room host to start...
+        </div>
+      </div>
+
+      <!-- LEVEL CLEARED OVERLAY -->
+      <div id="clearedOverlay" class="canvas-overlay hidden">
+        <span style="font-size: 54px; margin-bottom: 8px;">🎉</span>
+        <h2 style="font-size: 36px; font-weight: 800; color: #7bed9f; margin-bottom: 8px;">LEVEL CLEARED!</h2>
+        <p style="color: #f0e6d3; font-size: 16px; margin-bottom: 16px;">Awesome teamwork! Everyone made it to the exit portal.</p>
+        <div style="font-size: 13px; color: var(--text-muted);">Next stage loading in a moment...</div>
+      </div>
+
+      <!-- GAME OVER (VICTORY) OVERLAY -->
+      <div id="victoryOverlay" class="canvas-overlay hidden">
+        <span style="font-size: 64px; margin-bottom: 8px;">🏆</span>
+        <h2 style="font-size: 38px; font-weight: 800; color: #ffd700; margin-bottom: 8px;">GAUNTLET CONQUERED!</h2>
+        <p style="color: #f0e6d3; font-size: 16px; max-width: 500px; margin-bottom: 24px;">
+          You and your squad completed every cooperative challenge! Master of teamwork and synchronization!
+        </p>
+        <button class="btn btn-gold" style="padding: 14px 40px; font-size: 16px;" onclick="playAgain()">
+          <span>Play Again from Level 1</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <div>
+        <span style="font-weight: 700; color: #7bed9f;">💡 Objective: </span>
+        <span id="levelHintText" style="color: #f0e6d3; font-size: 13px;">One player steps on the pressure plate to open the gate for their partner!</span>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted);">
+        <span>Move: <span class="key-badge">A</span><span class="key-badge">D</span> or <span class="key-badge">◀</span><span class="key-badge">▶</span></span>
+        <span style="margin-left: 12px;">Jump: <span class="key-badge">SPACE</span> or <span class="key-badge">W</span></span>
+        <span style="margin-left: 12px;">Reset: <span class="key-badge">R</span></span>
+      </div>
+    </div>
+
+    <!-- On-Screen Mobile Touch Controls -->
+    <div class="touch-controls">
+      <div class="touch-dpad">
+        <button class="touch-btn" id="btnTouchLeft" aria-label="Move Left">◀</button>
+        <button class="touch-btn" id="btnTouchRight" aria-label="Move Right">▶</button>
+      </div>
+      <div class="touch-action">
+        <button class="touch-btn touch-btn-jump" id="btnTouchJump" aria-label="Jump">▲</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Side Chat Drawer -->
+  <aside id="chatDrawer" class="chat-drawer">
+    <div style="padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 700; font-size: 15px;">💬 Co-op Chat</span>
+      <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 12px;" onclick="toggleChat()">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <form class="chat-input-box" onsubmit="sendChatMessage(event)">
+      <input type="text" id="chatInput" placeholder="Team chat..." maxlength="140" style="flex: 1; height: 38px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0 10px; color: #fff; font-size: 13px; outline: none;">
+      <button type="submit" class="btn btn-success" style="padding: 0 12px; font-size: 12px;">Send</button>
+    </form>
+  </aside>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket = null;
+    let roomId = null;
+    let playerName = null;
+    let gameState = null;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const AVATARS = ['🐱', '🐶', '🦊', '🐼', '🐨', '🐯'];
+
+    // Input tracking
+    const keys = { left: false, right: false, jump: false };
+
+    // Local player physics state (predicted client-side for zero latency)
+    const localPhysics = {
+      x: 2,
+      y: 9,
+      vx: 0,
+      vy: 0,
+      width: 0.8,
+      height: 0.9,
+      isGrounded: false,
+      coyoteTimer: 0,
+      jumpBuffer: 0,
+      facing: 'right'
+    };
+
+    // Remote players state for smooth interpolation
+    const remotePlayers = new Map(); // socketId -> { x, y, targetX, targetY, vx, vy, color, name, facing, isGrounded }
+
+    // Interactive level entities in pixel/tile units
+    let levelGrid = [];
+    let buttons = [];
+    let doors = [];
+    let lockedDoors = [];
+    let crates = [];
+    let keysList = [];
+    let exitPortal = null;
+    let hazards = [];
+
+    // Particles system
+    const particles = [];
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      roomId = (params.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
+      playerName = sessionStorage.getItem('playerName') || 'Player_' + Math.floor(Math.random() * 1000);
+
+      if (!roomId) {
+        window.location.href = '/?game=platformer';
+        return;
+      }
+
+      document.getElementById('navRoomCode').textContent = roomId;
+      setupInputListeners();
+      setupTouchControls();
+
+      socket = io();
+
+      socket.on('connect', () => {
+        socket.emit('join-room', { roomId, name: playerName });
+      });
+
+      socket.on('join-error', (msg) => {
+        showToast(msg, 'error');
+        setTimeout(() => { window.location.href = '/?game=platformer'; }, 2000);
+      });
+
+      socket.on('action-error', (msg) => {
+        showToast(msg, 'error');
+      });
+
+      socket.on('game-state', (state) => {
+        onGameStateUpdate(state);
+      });
+
+      // Live position updates from other players for silky 60fps movement
+      socket.on('platformer:player-moved', (data) => {
+        if (data.playerId === socket.id) return;
+        const p = remotePlayers.get(data.playerId);
+        if (p) {
+          p.targetX = data.x;
+          p.targetY = data.y;
+          p.vx = data.vx;
+          p.vy = data.vy;
+          p.facing = data.facing;
+          p.isGrounded = data.isGrounded;
+          p.reachedExit = data.reachedExit;
+        }
+        // Update doors and buttons from server sync
+        if (data.buttonStates && gameState) gameState.buttonStates = data.buttonStates;
+        if (data.doorStates && gameState) gameState.doorStates = data.doorStates;
+        if (data.collectedKeys && gameState) gameState.collectedKeys = data.collectedKeys;
+      });
+
+      socket.on('chat-message', ({ name, message }) => {
+        addChatMessage(name, message);
+      });
+
+      // Start 60fps render and physics loop
+      requestAnimationFrame(gameLoop);
+
+      // 25Hz server position sync
+      setInterval(syncPositionToServer, 40);
+    });
+
+    function setupInputListeners() {
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') { keys.left = true; }
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') { keys.right = true; }
+        if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+          keys.jump = true;
+          localPhysics.jumpBuffer = 6;
+          e.preventDefault();
+        }
+        if (e.code === 'KeyR') { restartLevel(); }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') { keys.left = false; }
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') { keys.right = false; }
+        if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') { keys.jump = false; }
+      });
+    }
+
+    function setupTouchControls() {
+      const btnLeft = document.getElementById('btnTouchLeft');
+      const btnRight = document.getElementById('btnTouchRight');
+      const btnJump = document.getElementById('btnTouchJump');
+
+      btnLeft.addEventListener('pointerdown', (e) => { e.preventDefault(); keys.left = true; });
+      btnLeft.addEventListener('pointerup', (e) => { e.preventDefault(); keys.left = false; });
+      btnLeft.addEventListener('pointerleave', () => { keys.left = false; });
+
+      btnRight.addEventListener('pointerdown', (e) => { e.preventDefault(); keys.right = true; });
+      btnRight.addEventListener('pointerup', (e) => { e.preventDefault(); keys.right = false; });
+      btnRight.addEventListener('pointerleave', () => { keys.right = false; });
+
+      btnJump.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        keys.jump = true;
+        localPhysics.jumpBuffer = 6;
+      });
+      btnJump.addEventListener('pointerup', (e) => { e.preventDefault(); keys.jump = false; });
+      btnJump.addEventListener('pointerleave', () => { keys.jump = false; });
+    }
+
+    function onGameStateUpdate(state) {
+      const prevLevelId = gameState?.currentLevel?.id;
+      gameState = state;
+
+      // Update header
+      if (state.currentLevel) {
+        document.getElementById('levelNameText').textContent = state.currentLevel.name;
+        document.getElementById('levelHintText').textContent = state.currentLevel.hint || '';
+      }
+
+      // Check overlays
+      const lobbyOverlay = document.getElementById('lobbyOverlay');
+      const clearedOverlay = document.getElementById('clearedOverlay');
+      const victoryOverlay = document.getElementById('victoryOverlay');
+
+      lobbyOverlay.classList.toggle('hidden', state.state !== 'waiting');
+      clearedOverlay.classList.toggle('hidden', state.state !== 'level_cleared');
+      victoryOverlay.classList.toggle('hidden', state.state !== 'game_over');
+
+      if (state.state === 'waiting') {
+        renderLobby(state);
+      }
+
+      // If new level loaded, initialize entities and reset local player to spawn
+      if (state.currentLevel && state.currentLevel.id !== prevLevelId) {
+        initLevelData(state.currentLevel);
+        const myIndex = state.players.findIndex(p => p.id === socket.id);
+        const spawn = state.currentLevel.spawns[Math.max(0, myIndex) % state.currentLevel.spawns.length] || { x: 2, y: 9 };
+        localPhysics.x = spawn.x;
+        localPhysics.y = spawn.y;
+        localPhysics.vx = 0;
+        localPhysics.vy = 0;
+      }
+
+      // Update remote players list
+      state.players.forEach(p => {
+        if (p.id === socket.id) return;
+        let r = remotePlayers.get(p.id);
+        if (!r) {
+          r = {
+            id: p.id,
+            name: p.name,
+            color: p.color,
+            x: p.x,
+            y: p.y,
+            targetX: p.x,
+            targetY: p.y,
+            vx: p.vx,
+            vy: p.vy,
+            facing: p.facing || 'right',
+            isGrounded: p.isGrounded
+          };
+          remotePlayers.set(p.id, r);
+        } else {
+          r.targetX = p.x;
+          r.targetY = p.y;
+          r.color = p.color;
+          r.name = p.name;
+        }
+      });
+
+      // Remove disconnected remote players
+      for (const id of Array.from(remotePlayers.keys())) {
+        if (!state.players.some(p => p.id === id)) {
+          remotePlayers.delete(id);
+        }
+      }
+    }
+
+    function renderLobby(state) {
+      document.getElementById('lobbyPlayerCount').textContent = state.players.length;
+      const grid = document.getElementById('lobbyPlayerGrid');
+      grid.innerHTML = state.players.map((p, i) => `
+        <div class="p-card" style="border-color: ${p.color};">
+          <div class="p-avatar" style="border-color: ${p.color}; background: rgba(0,0,0,0.5);">
+            ${AVATARS[i % AVATARS.length]}
+          </div>
+          <div class="p-name">${escapeHtml(p.name)}</div>
+          <div class="p-status" style="color: ${p.color}; font-weight: 700;">${p.isHost ? '👑 Host' : 'Ready'}</div>
+        </div>
+      `).join('');
+
+      const my = state.myPlayer;
+      const isHost = my && my.isHost;
+      document.getElementById('hostControlsBox').classList.toggle('hidden', !isHost);
+      document.getElementById('waitingNotice').classList.toggle('hidden', !!isHost);
+
+      const startBtn = document.getElementById('btnStartGame');
+      if (startBtn) {
+        startBtn.disabled = !state.canStart;
+        startBtn.innerHTML = state.canStart
+          ? `<span>Start Co-op Adventure (${state.players.length} Players) ▶</span>`
+          : `<span>Need 2 or more players (${state.players.length}/2)</span>`;
+      }
+    }
+
+    function initLevelData(level) {
+      levelGrid = level.map;
+      buttons = level.buttons ? JSON.parse(JSON.stringify(level.buttons)) : [];
+      doors = level.doors ? JSON.parse(JSON.stringify(level.doors)) : [];
+      lockedDoors = level.lockedDoors ? JSON.parse(JSON.stringify(level.lockedDoors)) : [];
+      crates = level.crates ? JSON.parse(JSON.stringify(level.crates)) : [];
+      keysList = level.keys ? JSON.parse(JSON.stringify(level.keys)) : [];
+      exitPortal = level.exit;
+      hazards = level.hazards || [];
+    }
+
+    // Main 60fps Game Loop
+    let lastTime = performance.now();
+    function gameLoop(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      if (gameState && gameState.state === 'playing') {
+        updatePhysics(dt);
+      }
+
+      interpolateRemotePlayers(dt);
+      render();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Local Player Physics & Tile Collision
+    function updatePhysics(dt) {
+      const ACCEL = 28;
+      const MAX_SPEED = 6.2;
+      const FRICTION = 22;
+      const GRAVITY = 24;
+      const JUMP_POWER = -11.5;
+
+      // Horizontal movement
+      if (keys.left) {
+        localPhysics.vx -= ACCEL * dt;
+        localPhysics.facing = 'left';
+      } else if (keys.right) {
+        localPhysics.vx += ACCEL * dt;
+        localPhysics.facing = 'right';
+      } else {
+        if (localPhysics.vx > 0) {
+          localPhysics.vx = Math.max(0, localPhysics.vx - FRICTION * dt);
+        } else if (localPhysics.vx < 0) {
+          localPhysics.vx = Math.min(0, localPhysics.vx + FRICTION * dt);
+        }
+      }
+      localPhysics.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, localPhysics.vx));
+
+      // Gravity
+      localPhysics.vy += GRAVITY * dt;
+      if (localPhysics.vy > 18) localPhysics.vy = 18;
+
+      // Coyote time & Jump buffer
+      if (localPhysics.isGrounded) {
+        localPhysics.coyoteTimer = 0.12; // 120ms coyote time
+      } else {
+        localPhysics.coyoteTimer -= dt;
+      }
+
+      if (localPhysics.jumpBuffer > 0) {
+        localPhysics.jumpBuffer -= 1;
+        if (localPhysics.coyoteTimer > 0) {
+          localPhysics.vy = JUMP_POWER;
+          localPhysics.coyoteTimer = 0;
+          localPhysics.jumpBuffer = 0;
+          spawnDustParticles(localPhysics.x, localPhysics.y + 0.45);
+        }
+      }
+
+      // Variable jump height
+      if (!keys.jump && localPhysics.vy < -3) {
+        localPhysics.vy *= 0.6;
+      }
+
+      // X Movement & Collision
+      localPhysics.x += localPhysics.vx * dt;
+      checkTileCollisionX();
+      checkCrateCollisionX();
+
+      // Y Movement & Collision
+      localPhysics.y += localPhysics.vy * dt;
+      localPhysics.isGrounded = false;
+      checkTileCollisionY();
+      checkCrateCollisionY();
+      checkPlayerPiggyback();
+
+      // Check Hazards (Spikes)
+      checkHazardCollision();
+
+      // Check Buttons & Pressure Plates
+      checkButtonPresses();
+
+      // Check Keys
+      checkKeyCollect();
+    }
+
+    function isTileSolid(tx, ty) {
+      if (!levelGrid || ty < 0 || ty >= levelGrid.length) return false;
+      const row = levelGrid[Math.floor(ty)];
+      if (!row || tx < 0 || tx >= row.length) return false;
+      if (row[Math.floor(tx)] === '#') return true;
+
+      // Check linked doors
+      if (doors) {
+        for (const d of doors) {
+          const isOpen = gameState?.doorStates?.[d.id];
+          if (!isOpen && Math.floor(tx) === d.x && ty >= d.y && ty < d.y + d.height) {
+            return true;
+          }
+        }
+      }
+
+      // Check locked key doors
+      if (lockedDoors) {
+        for (const ld of lockedDoors) {
+          const isOpen = gameState?.doorStates?.[ld.id];
+          if (!isOpen && Math.floor(tx) === ld.x && ty >= ld.y && ty < ld.y + ld.height) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function checkTileCollisionX() {
+      const halfW = localPhysics.width / 2;
+      const halfH = localPhysics.height / 2;
+
+      // Check left
+      if (isTileSolid(localPhysics.x - halfW, localPhysics.y - halfH + 0.1) ||
+          isTileSolid(localPhysics.x - halfW, localPhysics.y + halfH - 0.1)) {
+        localPhysics.x = Math.floor(localPhysics.x - halfW) + 1 + halfW;
+        localPhysics.vx = 0;
+      }
+      // Check right
+      if (isTileSolid(localPhysics.x + halfW, localPhysics.y - halfH + 0.1) ||
+          isTileSolid(localPhysics.x + halfW, localPhysics.y + halfH - 0.1)) {
+        localPhysics.x = Math.floor(localPhysics.x + halfW) - halfW;
+        localPhysics.vx = 0;
+      }
+    }
+
+    function checkTileCollisionY() {
+      const halfW = localPhysics.width / 2;
+      const halfH = localPhysics.height / 2;
+
+      // Check ceiling
+      if (isTileSolid(localPhysics.x - halfW + 0.1, localPhysics.y - halfH) ||
+          isTileSolid(localPhysics.x + halfW - 0.1, localPhysics.y - halfH)) {
+        localPhysics.y = Math.floor(localPhysics.y - halfH) + 1 + halfH;
+        localPhysics.vy = 0;
+      }
+      // Check floor
+      if (isTileSolid(localPhysics.x - halfW + 0.1, localPhysics.y + halfH) ||
+          isTileSolid(localPhysics.x + halfW - 0.1, localPhysics.y + halfH)) {
+        localPhysics.y = Math.floor(localPhysics.y + halfH) - halfH;
+        localPhysics.vy = 0;
+        localPhysics.isGrounded = true;
+      }
+    }
+
+    function checkCrateCollisionX() {
+      if (!crates) return;
+      crates.forEach(c => {
+        const cratePos = gameState?.cratePositions?.[c.id] || { x: c.x, y: c.y };
+        const dx = localPhysics.x - cratePos.x;
+        const dy = Math.abs(localPhysics.y - cratePos.y);
+
+        if (dy < 0.8 && Math.abs(dx) < 0.9) {
+          // Push crate horizontally!
+          const pushDir = dx < 0 ? 1 : -1;
+          const nextCrateX = cratePos.x + pushDir * 0.05;
+          if (!isTileSolid(nextCrateX + (pushDir > 0 ? 0.5 : -0.5), cratePos.y)) {
+            cratePos.x = nextCrateX;
+            if (gameState) {
+              if (!gameState.cratePositions) gameState.cratePositions = {};
+              gameState.cratePositions[c.id] = cratePos;
+            }
+          }
+        }
+      });
+    }
+
+    function checkCrateCollisionY() {
+      if (!crates) return;
+      crates.forEach(c => {
+        const cratePos = gameState?.cratePositions?.[c.id] || { x: c.x, y: c.y };
+        const dx = Math.abs(localPhysics.x - cratePos.x);
+        const dy = localPhysics.y - cratePos.y;
+
+        // Landing on top of crate
+        if (dx < 0.85 && dy < 0 && dy > -1.0 && localPhysics.vy > 0) {
+          localPhysics.y = cratePos.y - 0.95;
+          localPhysics.vy = 0;
+          localPhysics.isGrounded = true;
+        }
+      });
+    }
+
+    // Stand on other players' heads (Piggyback Jump!)
+    function checkPlayerPiggyback() {
+      remotePlayers.forEach(rp => {
+        const dx = Math.abs(localPhysics.x - rp.x);
+        const dy = localPhysics.y - rp.y;
+        if (dx < 0.7 && dy < 0 && dy > -1.0 && localPhysics.vy > 0) {
+          localPhysics.y = rp.y - 0.92;
+          localPhysics.vy = 0;
+          localPhysics.isGrounded = true;
+        }
+      });
+    }
+
+    function checkHazardCollision() {
+      if (!hazards) return;
+      for (const h of hazards) {
+        if (localPhysics.x >= h.x - 0.4 && localPhysics.x <= h.x + h.width + 0.4 &&
+            localPhysics.y >= h.y - 0.4 && localPhysics.y <= h.y + h.height + 0.4) {
+          // Hit spikes! Respawn at level spawn
+          respawnPlayer();
+          showToast('Ouch! Spikes hit, respawned at start.', 'error');
+          break;
+        }
+      }
+    }
+
+    function respawnPlayer() {
+      if (!gameState?.currentLevel?.spawns) return;
+      const spawns = gameState.currentLevel.spawns;
+      const spawn = spawns[0] || { x: 2, y: 9 };
+      localPhysics.x = spawn.x;
+      localPhysics.y = spawn.y;
+      localPhysics.vx = 0;
+      localPhysics.vy = 0;
+    }
+
+    function checkButtonPresses() {
+      if (!buttons || !gameState) return;
+      const newButtonStates = {};
+
+      buttons.forEach(b => {
+        let pressed = false;
+        // Check local player
+        if (Math.hypot(localPhysics.x - b.x, localPhysics.y - b.y) < 0.7) {
+          pressed = true;
+        }
+        // Check remote players
+        remotePlayers.forEach(rp => {
+          if (Math.hypot(rp.x - b.x, rp.y - b.y) < 0.7) {
+            pressed = true;
+          }
+        });
+        // Check crates on buttons
+        crates.forEach(c => {
+          const cratePos = gameState?.cratePositions?.[c.id] || { x: c.x, y: c.y };
+          if (Math.hypot(cratePos.x - b.x, cratePos.y - b.y) < 0.8) {
+            pressed = true;
+          }
+        });
+
+        newButtonStates[b.id] = pressed;
+        gameState.buttonStates[b.id] = pressed;
+        if (b.linkedDoorId) {
+          gameState.doorStates[b.linkedDoorId] = pressed;
+        }
+      });
+    }
+
+    function checkKeyCollect() {
+      if (!keysList || !gameState) return;
+      keysList.forEach(k => {
+        if (!gameState.collectedKeys?.includes(k.id)) {
+          if (Math.hypot(localPhysics.x - k.x, localPhysics.y - k.y) < 0.8) {
+            if (!gameState.collectedKeys) gameState.collectedKeys = [];
+            gameState.collectedKeys.push(k.id);
+            showToast('🔑 Key collected! Door unlocked!', 'success');
+            // Inform server
+            socket.emit('platformer:sync', { collectedKeyId: k.id });
+          }
+        }
+      });
+    }
+
+    function syncPositionToServer() {
+      if (!socket || !gameState || gameState.state !== 'playing') return;
+      socket.emit('platformer:sync', {
+        x: Math.round(localPhysics.x * 100) / 100,
+        y: Math.round(localPhysics.y * 100) / 100,
+        vx: Math.round(localPhysics.vx * 10) / 10,
+        vy: Math.round(localPhysics.vy * 10) / 10,
+        facing: localPhysics.facing,
+        isGrounded: localPhysics.isGrounded,
+        buttonStates: gameState.buttonStates,
+        cratePositions: gameState.cratePositions
+      });
+    }
+
+    function interpolateRemotePlayers(dt) {
+      remotePlayers.forEach(rp => {
+        rp.x += (rp.targetX - rp.x) * Math.min(1, dt * 15);
+        rp.y += (rp.targetY - rp.y) * Math.min(1, dt * 15);
+      });
+    }
+
+    // ==========================================
+    // RENDERER (60 FPS HTML5 Canvas)
+    // ==========================================
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!levelGrid || levelGrid.length === 0) {
+        // Draw waiting grid background
+        ctx.fillStyle = '#08110b';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      const mapW = levelGrid[0].length;
+      const mapH = levelGrid.length;
+      const tileSize = Math.min(canvas.width / mapW, canvas.height / mapH);
+
+      const offsetX = (canvas.width - mapW * tileSize) / 2;
+      const offsetY = (canvas.height - mapH * tileSize) / 2;
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+
+      // 1. Draw Tilemap
+      for (let y = 0; y < mapH; y++) {
+        for (let x = 0; x < mapW; x++) {
+          const char = levelGrid[y][x];
+          const px = x * tileSize;
+          const py = y * tileSize;
+
+          if (char === '#') {
+            // Solid Wall Tile
+            ctx.fillStyle = '#102619';
+            ctx.fillRect(px, py, tileSize, tileSize);
+            ctx.strokeStyle = '#1e4d33';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(px + 0.5, py + 0.5, tileSize - 1, tileSize - 1);
+            // Neon accent top border
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.4)';
+            ctx.fillRect(px, py, tileSize, 2);
+          } else if (char === 'X') {
+            // Hazard spikes
+            drawSpikes(px, py, tileSize);
+          }
+        }
+      }
+
+      // 2. Draw Hazards
+      if (hazards) {
+        hazards.forEach(h => {
+          for (let i = 0; i < h.width; i++) {
+            drawSpikes((h.x + i) * tileSize, h.y * tileSize, tileSize);
+          }
+        });
+      }
+
+      // 3. Draw Linked & Key Doors
+      drawDoors(tileSize);
+
+      // 4. Draw Pressure Buttons
+      drawButtons(tileSize);
+
+      // 5. Draw Crates
+      drawCrates(tileSize);
+
+      // 6. Draw Keys
+      drawKeys(tileSize);
+
+      // 7. Draw Exit Portal
+      drawExitPortal(tileSize);
+
+      // 8. Draw Remote Players
+      remotePlayers.forEach(rp => {
+        drawPlayerCharacter(rp.x * tileSize, rp.y * tileSize, tileSize, rp.color, rp.name, rp.facing, false);
+      });
+
+      // 9. Draw Local Player
+      const myColor = gameState?.myPlayer?.color || '#3498db';
+      drawPlayerCharacter(
+        localPhysics.x * tileSize,
+        localPhysics.y * tileSize,
+        tileSize,
+        myColor,
+        playerName,
+        localPhysics.facing,
+        true
+      );
+
+      // 10. Draw Particles
+      drawParticles();
+
+      ctx.restore();
+    }
+
+    function drawSpikes(px, py, size) {
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath();
+      const count = 3;
+      const w = size / count;
+      for (let i = 0; i < count; i++) {
+        ctx.moveTo(px + i * w, py + size);
+        ctx.lineTo(px + (i + 0.5) * w, py + size * 0.3);
+        ctx.lineTo(px + (i + 1) * w, py + size);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawButtons(tileSize) {
+      if (!buttons) return;
+      buttons.forEach(b => {
+        const isPressed = gameState?.buttonStates?.[b.id];
+        const px = b.x * tileSize;
+        const py = b.y * tileSize;
+
+        ctx.fillStyle = isPressed ? '#2ecc71' : '#f1c40f';
+        ctx.shadowColor = isPressed ? '#2ecc71' : '#f1c40f';
+        ctx.shadowBlur = 8;
+        // Button plate
+        ctx.fillRect(px + tileSize * 0.15, py + tileSize * (isPressed ? 0.8 : 0.65), tileSize * 0.7, tileSize * (isPressed ? 0.2 : 0.35));
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    function drawDoors(tileSize) {
+      if (doors) {
+        doors.forEach(d => {
+          const isOpen = gameState?.doorStates?.[d.id];
+          const px = d.x * tileSize;
+          const py = d.y * tileSize;
+          const h = d.height * tileSize;
+          const w = (d.width || 1) * tileSize;
+
+          if (!isOpen) {
+            // Closed door / laser gate
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.3)';
+            ctx.fillRect(px, py, w, h);
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px + 2, py, w - 4, h);
+
+            // Laser beams effect
+            ctx.strokeStyle = 'rgba(255, 107, 107, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(px + w / 2, py);
+            ctx.lineTo(px + w / 2, py + h);
+            ctx.stroke();
+          } else {
+            // Open door outline
+            ctx.strokeStyle = 'rgba(46, 204, 113, 0.4)';
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(px + 2, py, w - 4, h);
+            ctx.setLineDash([]);
+          }
+        });
+      }
+
+      if (lockedDoors) {
+        lockedDoors.forEach(ld => {
+          const isOpen = gameState?.doorStates?.[ld.id];
+          const px = ld.x * tileSize;
+          const py = ld.y * tileSize;
+          const h = ld.height * tileSize;
+          const w = tileSize;
+
+          if (!isOpen) {
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(px, py, w, h);
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px + 2, py, w - 4, h);
+            // Keyhole icon
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(px + w / 2, py + h / 2 - 4, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(px + w / 2 - 2, py + h / 2 - 2, 4, 8);
+          }
+        });
+      }
+    }
+
+    function drawCrates(tileSize) {
+      if (!crates) return;
+      crates.forEach(c => {
+        const pos = gameState?.cratePositions?.[c.id] || { x: c.x, y: c.y };
+        const px = (pos.x - 0.4) * tileSize;
+        const py = (pos.y - 0.4) * tileSize;
+        const s = tileSize * 0.8;
+
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(px, py, s, s);
+        ctx.strokeStyle = '#d2b48c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px, py, s, s);
+
+        // Crate cross
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px + s, py + s);
+        ctx.moveTo(px + s, py);
+        ctx.lineTo(px, py + s);
+        ctx.stroke();
+      });
+    }
+
+    function drawKeys(tileSize) {
+      if (!keysList) return;
+      const bob = Math.sin(performance.now() / 250) * 4;
+      keysList.forEach(k => {
+        if (!gameState?.collectedKeys?.includes(k.id)) {
+          const px = k.x * tileSize;
+          const py = k.y * tileSize + bob;
+
+          ctx.fillStyle = '#f1c40f';
+          ctx.shadowColor = '#f1c40f';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(px, py, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillRect(px, py, 14, 4);
+          ctx.fillRect(px + 8, py + 4, 3, 4);
+          ctx.fillRect(px + 12, py + 4, 3, 5);
+          ctx.shadowBlur = 0;
+        }
+      });
+    }
+
+    function drawExitPortal(tileSize) {
+      if (!exitPortal) return;
+      const px = exitPortal.x * tileSize;
+      const py = exitPortal.y * tileSize;
+      const pulse = Math.sin(performance.now() / 200) * 0.15 + 1;
+
+      // Swirling portal
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.scale(pulse, pulse);
+
+      const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, tileSize * 0.9);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.4, '#2ecc71');
+      grad.addColorStop(0.8, '#1abc9c');
+      grad.addColorStop(1, 'transparent');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, tileSize * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Portal swirl rings
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, tileSize * 0.5, 0, Math.PI * 1.5);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Exit sign
+      ctx.fillStyle = '#7bed9f';
+      ctx.font = 'bold 11px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('EXIT PORTAL', px, py - tileSize * 0.8);
+    }
+
+    function drawPlayerCharacter(px, py, tileSize, color, name, facing, isSelf) {
+      const w = tileSize * 0.72;
+      const h = tileSize * 0.82;
+
+      ctx.save();
+      ctx.translate(px, py);
+
+      // Floating name tag
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(name + (isSelf ? ' (You)' : ''), 0, -h * 0.7);
+
+      // Character body (cute bean)
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = isSelf ? 10 : 4;
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h / 2, w, h, [12, 12, 8, 8]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Cute animated eyes looking in movement direction
+      const eyeOffset = facing === 'left' ? -4 : 4;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(-5 + eyeOffset, -4, 4, 0, Math.PI * 2);
+      ctx.arc(5 + eyeOffset, -4, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupils
+      ctx.fillStyle = '#0a140e';
+      ctx.beginPath();
+      ctx.arc(-5 + eyeOffset * 1.4, -4, 2, 0, Math.PI * 2);
+      ctx.arc(5 + eyeOffset * 1.4, -4, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function spawnDustParticles(x, y) {
+      for (let i = 0; i < 4; i++) {
+        particles.push({
+          x: x + (Math.random() - 0.5) * 0.4,
+          y: y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -Math.random() * 1.5,
+          alpha: 0.6,
+          life: 0.3
+        });
+      }
+    }
+
+    function drawParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * 0.016;
+        p.y += p.vy * 0.016;
+        p.life -= 0.016;
+        p.alpha = Math.max(0, p.life / 0.3);
+
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x * 40, p.y * 40, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Actions
+    function startGame() {
+      socket.emit('start-game');
+    }
+
+    function restartLevel() {
+      socket.emit('platformer:restart-level');
+    }
+
+    function playAgain() {
+      socket.emit('player-action', { action: 'play-again' });
+    }
+
+    function copyRoomCode() {
+      navigator.clipboard.writeText(roomId).then(() => {
+        showToast(`Copied room code: ${roomId}`, 'success');
+      }).catch(() => {
+        showToast(`Room code: ${roomId}`);
+      });
+    }
+
+    function toggleChat() {
+      document.getElementById('chatDrawer').classList.toggle('open');
+    }
+
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      socket.emit('chat-message', { message: msg });
+      input.value = '';
+    }
+
+    function addChatMessage(author, text) {
+      const box = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      div.innerHTML = `<div class="author">${escapeHtml(author)}</div><div>${escapeHtml(text)}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function leaveRoom() {
+      if (confirm('Leave this game?')) {
+        if (socket) socket.disconnect();
+        sessionStorage.clear();
+        window.location.href = '/?game=platformer';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+  </script>
+</body>
+</html>

@@ -562,6 +562,19 @@ html, body {
   color: #7de7ff;
 }
 
+.game-tab-btn.tab-platformer.active {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.25) 0%, rgba(52, 152, 219, 0.3) 100%);
+  border-color: rgba(46, 204, 113, 0.5);
+  box-shadow: 0 4px 18px rgba(46, 204, 113, 0.3);
+  color: #7bed9f;
+}
+
+.platformer-accent .game-meta-icon {
+  background: radial-gradient(circle, #2ecc71 0%, #16a085 100%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
 /* Nav Header for all games */
 .game-top-nav {
   height: 58px;

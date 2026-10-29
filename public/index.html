@@ -337,6 +337,10 @@
         <span class="tab-icon">🌊</span>
         <span>Wavelength</span>
       </button>
+      <button id="tabPlatformer" class="game-tab-btn tab-platformer" onclick="switchGame('platformer')" role="tab">
+        <span class="tab-icon">🏃‍♂️</span>
+        <span>Co-op Platformer</span>
+      </button>
     </nav>
 
     <!-- Main Game Card -->
@@ -482,6 +486,30 @@
             </div>
           </div>
 
+          <!-- PLATFORMER SPECIFIC SETTINGS -->
+          <div id="platformerSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="platformerStartingLevel">Starting Level</label>
+                <select id="platformerStartingLevel" class="form-select">
+                  <option value="0" selected>Level 1: Buddy System</option>
+                  <option value="1">Level 2: Heavy Lifting</option>
+                  <option value="2">Level 3: The Golden Key</option>
+                  <option value="3">Level 4: Dual Towers</option>
+                  <option value="4">Level 5: Master Vault</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="platformerMaxPlayers">Max Players</label>
+                <select id="platformerMaxPlayers" class="form-select">
+                  <option value="2">2 Players (Duo)</option>
+                  <option value="4" selected>4 Players (Party)</option>
+                  <option value="6">6 Players (Chaos)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <button type="submit" id="btnSubmitCreate" class="btn btn-gold submit-btn">
             <span>Create Room & Play</span>
           </button>
@@ -548,6 +576,15 @@
         btnClass: "btn-purple",
         badges: ["👥 2 - 16 Players", "🧠 Telepathy Party", "🎯 Rotating Dial"],
         rules: "A spectrum card is drawn (e.g., 'Cold <---> Hot'). The Psychic secretly sees where the target bullseye is located and gives a clue that matches that position. The team rotates the interactive dial to where they think the clue belongs. Open the shutter to reveal the score!"
+      },
+      platformer: {
+        title: "Co-op Platformer",
+        desc: "Work together to solve puzzle platforming levels! Push crates, press buttons, grab keys, and reach the exit portal.",
+        icon: "🏃‍♂️",
+        accent: "platformer-accent",
+        btnClass: "btn-success",
+        badges: ["👥 2 - 6 Players", "🤝 Puzzle Platformer", "🎮 WASD / Touch"],
+        rules: "Collaborative teamwork platformer! One player steps on pressure buttons to keep gates open, pushes crates to create stairs, and retrieves keys over spike pits. All players must reach the exit portal together to clear the stage!"
       }
     };
 
@@ -611,6 +648,7 @@
       document.getElementById('pokerSettings').classList.toggle('hidden', gameType !== 'poker');
       document.getElementById('imposterSettings').classList.toggle('hidden', gameType !== 'imposter');
       document.getElementById('wavelengthSettings').classList.toggle('hidden', gameType !== 'wavelength');
+      document.getElementById('platformerSettings').classList.toggle('hidden', gameType !== 'platformer');
     }
 
     // Switch between Create and Join
@@ -712,6 +750,9 @@
         } else {
           payload.totalRounds = goalVal;
         }
+      } else if (currentGame === 'platformer') {
+        payload.levelIndex = parseInt(document.getElementById('platformerStartingLevel').value, 10);
+        payload.maxPlayers = parseInt(document.getElementById('platformerMaxPlayers').value, 10);
       }
 
       const btn = document.getElementById('btnSubmitCreate');
@@ -778,6 +819,8 @@
         window.location.href = `/imposter/game.html?room=${encoded}`;
       } else if (gameType === 'wavelength') {
         window.location.href = `/wavelength/game.html?room=${encoded}`;
+      } else if (gameType === 'platformer') {
+        window.location.href = `/platformer/game.html?room=${encoded}`;
       } else {
         window.location.href = `/poker/game.html?room=${encoded}`;
       }

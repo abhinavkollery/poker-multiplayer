@@ -2,6 +2,8 @@ const assert = require('assert');
 const ImposterGame = require('./server/games/imposter/game');
 const WavelengthGame = require('./server/games/wavelength/game');
 const PokerGame = require('./server/games/poker/game');
+const PlatformerGame = require('./server/games/platformer/game');
+const { LEVELS, getLevel } = require('./server/games/platformer/levels');
 const { getRandomWordPair } = require('./server/games/imposter/words');
 const { getRandomSpectrumCard } = require('./server/games/wavelength/cards');
 
@@ -175,9 +177,51 @@ assert.strictEqual(poker.players[0].holeCards.length, 2);
 assert.strictEqual(poker.players[1].holeCards.length, 2);
 console.log('  ✓ Poker preflop dealt 2 hole cards to players');
 
-console.log('\n🎉 ALL 6 TEST SUITES PASSED FLAWLESSLY!');
+// ==========================================
+// Test 7: Co-op Platformer Game Engine
+// ==========================================
+console.log('\nTest 7: Co-op Platformer Game Engine & Levels');
+assert(LEVELS.length >= 5, 'Should have at least 5 co-op levels');
+const lvl1 = getLevel(0);
+assert.strictEqual(lvl1.id, 1);
+assert(lvl1.buttons.length > 0, 'Level 1 must contain pressure buttons');
+assert(lvl1.doors.length > 0, 'Level 1 must contain linked doors');
+
+const plat = new PlatformerGame('PLATTEST');
+assert.strictEqual(plat.gameType, 'platformer');
+assert.strictEqual(plat.canStart(), false);
+
+plat.addPlayer('pl1', 'Mario');
+plat.addPlayer('pl2', 'Luigi');
+assert.strictEqual(plat.players.length, 2);
+assert.strictEqual(plat.canStart(), true);
+
+plat.startGame();
+assert.strictEqual(plat.state, 'playing');
+assert.strictEqual(plat.currentLevelIndex, 0);
+
+// Test button press and door opening
+plat.updatePlayerState('pl1', {
+  x: lvl1.buttons[0].x,
+  y: lvl1.buttons[0].y,
+  buttonStates: { [lvl1.buttons[0].id]: true }
+});
+assert.strictEqual(plat.buttonStates[lvl1.buttons[0].id], true);
+assert.strictEqual(plat.doorStates[lvl1.buttons[0].linkedDoorId], true);
+console.log('  ✓ Pressure plate triggered and opened linked door');
+
+// Test level completion when all players reach exit
+plat.updatePlayerState('pl1', { x: lvl1.exit.x, y: lvl1.exit.y });
+plat.updatePlayerState('pl2', { x: lvl1.exit.x, y: lvl1.exit.y });
+assert.strictEqual(plat.players[0].reachedExit, true);
+assert.strictEqual(plat.players[1].reachedExit, true);
+assert.strictEqual(plat.state, 'level_cleared');
+console.log('  ✓ Level cleared when all co-op partners reached exit portal');
+
+console.log('\n🎉 ALL 7 TEST SUITES PASSED FLAWLESSLY!');
 imposter.clearTimer();
 waveCoop.clearTimer();
 waveTeams.clearTimer();
 poker.clearTurnTimer();
+clearTimeout(plat.timer);
 process.exit(0);

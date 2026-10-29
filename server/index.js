@@ -7,6 +7,7 @@ const path = require('path');
 const PokerGame = require('./games/poker/game');
 const ImposterGame = require('./games/imposter/game');
 const WavelengthGame = require('./games/wavelength/game');
+const PlatformerGame = require('./games/platformer/game');
 
 const app = express();
 const server = http.createServer(app);
@@ -38,6 +39,12 @@ app.get(['/wavelength', '/wavelength/'], (req, res) => {
 });
 app.get(['/wavelength/game', '/wavelength/game.html'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/wavelength/game.html'));
+});
+app.get(['/platformer', '/platformer/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/platformer/game.html'));
+});
+app.get(['/platformer/game', '/platformer/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/platformer/game.html'));
 });
 
 app.use(express.static(path.join(__dirname, '../public')));
@@ -104,6 +111,8 @@ io.on('connection', socket => {
       game = new ImposterGame(roomId, payload);
     } else if (gameType === 'wavelength') {
       game = new WavelengthGame(roomId, payload);
+    } else if (gameType === 'platformer') {
+      game = new PlatformerGame(roomId, payload);
     } else {
       // Poker
       game = new PokerGame(roomId, {
@@ -353,7 +362,50 @@ io.on('connection', socket => {
     }
   });
 
-  // 7. Chat Message (All Games)
+  // 7. Co-op Platformer Game Specific Events
+  socket.on('platformer:sync', (data = {}) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'platformer') {
+      game.updatePlayerState(socket.id, data);
+      socket.to(roomId).emit('platformer:player-moved', {
+        playerId: socket.id,
+        x: data.x,
+        y: data.y,
+        vx: data.vx,
+        vy: data.vy,
+        facing: data.facing,
+        isGrounded: data.isGrounded,
+        reachedExit: data.reachedExit,
+        buttonStates: game.buttonStates,
+        doorStates: game.doorStates,
+        collectedKeys: Array.from(game.collectedKeys),
+        cratePositions: game.cratePositions
+      });
+    }
+  });
+
+  socket.on('platformer:restart-level', () => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'platformer') {
+      const res = game.handleAction(socket.id, 'restart-level');
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  socket.on('platformer:next-level', () => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'platformer') {
+      const res = game.handleAction(socket.id, 'next-level');
+      if (res && res.error) socket.emit('action-error', res.error);
+      else emitPersonalizedStates(game, io);
+    }
+  });
+
+  // 8. Chat Message (All Games)
   socket.on('chat-message', ({ message }) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
@@ -402,6 +454,7 @@ if (require.main === module) {
     console.log(`   🃏 Poker: http://localhost:${PORT}/poker`);
     console.log(`   🕵️ Imposter: http://localhost:${PORT}/imposter`);
     console.log(`   🌊 Wavelength: http://localhost:${PORT}/wavelength`);
+    console.log(`   🏃 Co-op Platformer: http://localhost:${PORT}/platformer`);
   });
 }
 
