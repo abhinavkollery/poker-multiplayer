@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liar's Dice 🎲 | Party Games</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    :root {
+      --accent: #f59e0b;
+      --felt: #064e3b;
+      --felt-border: #047857;
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.9);
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #090d16 100%);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .table-felt {
+      background: radial-gradient(circle at 50% 50%, #065f46 0%, #064e3b 100%);
+      border: 6px solid #047857;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      min-height: 320px;
+      position: relative;
+    }
+
+    .bid-display {
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #f59e0b;
+      border-radius: 16px;
+      padding: 16px 32px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .die-face {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 8px;
+      font-size: 1.8rem;
+      font-weight: 900;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      margin: 0 4px;
+      user-select: none;
+    }
+
+    .die-face.hidden {
+      background: #334155;
+      color: #94a3b8;
+    }
+
+    .players-tray {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+
+    .player-card {
+      background: var(--card-bg);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .player-card.active-turn {
+      border-color: #f59e0b;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .player-card.eliminated {
+      opacity: 0.4;
+      filter: grayscale(1);
+    }
+
+    .controls-panel {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-bid {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 800;
+      border: none;
+    }
+
+    .btn-liar {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: #fff;
+      font-weight: 800;
+      border: none;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 24px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h1 style="font-size: 1.25rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #f59e0b, #e11d48); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🎲 LIAR'S DICE</h1>
+        <span id="roundBadge" style="padding: 4px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-weight: 700; font-size: 0.85rem;">Round 1</span>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="font-weight: 700; color: #94a3b8;">ROOM:</span>
+        <span id="roomCodeDisplay" style="font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 2px;">------</span>
+        <button class="btn" onclick="copyInviteLink()">🔗 Invite</button>
+        <button class="btn" onclick="showQRCode()">📱 QR</button>
+        <a href="/" class="btn" style="text-decoration: none;">🏠 Hub</a>
+      </div>
+    </div>
+
+    <!-- Table Felt (Center) -->
+    <div class="table-felt">
+      <div style="font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; color: #a7f3d0; text-transform: uppercase;">
+        Total Dice In Play: <span id="totalDiceCount" style="color: #fff; font-size: 1.1rem;">0</span>
+      </div>
+
+      <div class="bid-display" id="currentBidContainer">
+        <div style="color: #94a3b8; font-size: 0.9rem; font-weight: 700; margin-bottom: 6px;" id="bidderNameLabel">Current Bid</div>
+        <div style="font-size: 2.2rem; font-weight: 900; color: #fbbf24;" id="bidContent">
+          No Bids Yet
+        </div>
+      </div>
+
+      <div id="turnIndicator" style="font-size: 1.1rem; font-weight: 800; color: #38bdf8;">
+        Waiting for game to begin...
+      </div>
+
+      <!-- Reveal Modal -->
+      <div id="revealModal" class="modal-overlay" style="display: none;">
+        <h2 style="font-size: 2rem; color: #f59e0b; margin-bottom: 8px;" id="revealTitle">Cups Lifted! 🎲</h2>
+        <p id="revealReason" style="font-size: 1.2rem; color: #e2e8f0; max-width: 600px; line-height: 1.4; margin-bottom: 20px;"></p>
+        <button class="btn btn-bid" id="nextRoundBtn" onclick="nextRound()" style="padding: 12px 28px; font-size: 1.1rem;">Next Round ➔</button>
+      </div>
+    </div>
+
+    <!-- Players & Cups -->
+    <div class="players-tray" id="playersContainer">
+      <!-- Dynamically filled with player dice trays -->
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel" id="controlsPanel">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-weight: 700; color: #94a3b8;">Count:</span>
+          <button class="btn" onclick="adjustCount(-1)">-</button>
+          <span id="bidCountDisplay" style="font-size: 1.3rem; font-weight: 800; min-width: 32px; text-align: center;">2</span>
+          <button class="btn" onclick="adjustCount(1)">+</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-weight: 700; color: #94a3b8;">Face:</span>
+          <select id="bidFaceSelect" style="padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(30,41,59,1); color: #fff; font-size: 1rem; font-weight: 700;">
+            <option value="2">⚁ Twos</option>
+            <option value="3">⚂ Threes</option>
+            <option value="4">⚃ Fours</option>
+            <option value="5">⚄ Fives</option>
+            <option value="6">⚅ Sixes</option>
+            <option value="1">⚀ Ones (Aces)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-bid" id="placeBidBtn" onclick="placeBid()">Place Bid</button>
+        <button class="btn btn-liar" id="callLiarBtn" onclick="challenge('liar')">Liar! 🤥</button>
+        <button class="btn" id="startBtn" style="background: #10b981; color: #fff; display: none;" onclick="startGame()">Start Game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/sounds.js"></script>
+  <script src="/shared/reactions.js"></script>
+  <script src="/shared/qrcode.js"></script>
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
+    const playerName = urlParams.get('name') || localStorage.getItem('party_player_name') || 'Pirate';
+
+    let myPlayerId = null;
+    let bidCount = 2;
+    const DICE_ICONS = { 1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅' };
+
+    socket.on('connect', () => {
+      myPlayerId = socket.id;
+      if (roomId) {
+        socket.emit('join-room', { roomId, name: playerName });
+      }
+    });
+
+    socket.on('room-joined', (data) => {
+      document.getElementById('roomCodeDisplay').textContent = data.roomId;
+    });
+
+    socket.on('game-state', (state) => {
+      updateUI(state);
+    });
+
+    socket.on('party:reaction', ({ emoji }) => {
+      if (window.Reactions) window.Reactions.showParticle(emoji);
+    });
+
+    function updateUI(state) {
+      if (!state) return;
+
+      document.getElementById('roundBadge').textContent = `Round ${state.roundNumber}`;
+      document.getElementById('totalDiceCount').textContent = state.totalDiceInPlay;
+
+      const isHost = state.players[0]?.id === myPlayerId;
+      document.getElementById('startBtn').style.display = (isHost && (state.state === 'waiting' || state.state === 'game_over')) ? 'block' : 'none';
+
+      // Current bid
+      if (state.currentBid) {
+        document.getElementById('bidderNameLabel').textContent = `${state.currentBid.playerName}'s Bid`;
+        document.getElementById('bidContent').innerHTML = `${state.currentBid.count} × <span style="font-size: 2.8rem;">${DICE_ICONS[state.currentBid.face]}</span>`;
+        // Suggest next bid count
+        if (state.isMyTurn) {
+          bidCount = Math.max(bidCount, state.currentBid.count);
+          document.getElementById('bidCountDisplay').textContent = bidCount;
+        }
+      } else {
+        document.getElementById('bidderNameLabel').textContent = 'Opening Bid';
+        document.getElementById('bidContent').textContent = state.state === 'bidding' ? 'Waiting for 1st bid' : 'No Active Bid';
+      }
+
+      // Turn indicator
+      const turnInd = document.getElementById('turnIndicator');
+      if (state.state === 'waiting') {
+        turnInd.textContent = 'Waiting for players to join...';
+      } else if (state.state === 'game_over') {
+        turnInd.innerHTML = `🏆 <span style="color: #fbbf24;">${state.winner ? state.winner.name : 'Nobody'}</span> WINS THE GAME!`;
+        sounds.play('winFanfare');
+      } else if (state.isMyTurn) {
+        turnInd.innerHTML = `⭐ <span style="color: #f59e0b;">YOUR TURN TO BID OR CALL LIAR!</span>`;
+      } else {
+        turnInd.textContent = `⏳ ${state.currentTurnPlayer ? state.currentTurnPlayer.name : 'Player'}'s turn...`;
+      }
+
+      // Buttons enable/disable
+      const canBid = state.state === 'bidding' && state.isMyTurn;
+      document.getElementById('placeBidBtn').disabled = !canBid;
+      document.getElementById('callLiarBtn').disabled = !canBid || !state.currentBid;
+
+      // Reveal modal
+      const revModal = document.getElementById('revealModal');
+      if (state.state === 'reveal') {
+        revModal.style.display = 'flex';
+        document.getElementById('revealReason').textContent = state.lastChallenge?.reason || 'Cups revealed!';
+        document.getElementById('nextRoundBtn').style.display = isHost ? 'block' : 'none';
+      } else {
+        revModal.style.display = 'none';
+      }
+
+      // Render players
+      const container = document.getElementById('playersContainer');
+      container.innerHTML = '';
+      state.players.forEach(p => {
+        const isCurrent = state.currentTurnPlayer?.id === p.id;
+        const card = document.createElement('div');
+        card.className = 'player-card' + (isCurrent ? ' active-turn' : '') + (p.eliminated ? ' eliminated' : '');
+
+        let diceHtml = '';
+        if (Array.isArray(p.dice)) {
+          p.dice.forEach(d => {
+            if (d === '?') {
+              diceHtml += `<div class="die-face hidden">?</div>`;
+            } else {
+              diceHtml += `<div class="die-face">${DICE_ICONS[d] || d}</div>`;
+            }
+          });
+        }
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 800;">${p.name} ${p.id === myPlayerId ? '(You)' : ''}</span>
+            <span style="font-size: 0.85rem; color: #f59e0b; font-weight: 700;">${p.diceCount} dice</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+            ${diceHtml}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function adjustCount(delta) {
+      bidCount = Math.max(1, bidCount + delta);
+      document.getElementById('bidCountDisplay').textContent = bidCount;
+      sounds.play('click');
+    }
+
+    function placeBid() {
+      const face = document.getElementById('bidFaceSelect').value;
+      socket.emit('player-action', { action: 'bid', count: bidCount, face });
+      sounds.play('click');
+    }
+
+    function challenge(type) {
+      socket.emit('player-action', { action: 'challenge', type });
+      sounds.play('buzzer');
+    }
+
+    function nextRound() {
+      socket.emit('player-action', { action: 'next-round' });
+      sounds.play('click');
+    }
+
+    function startGame() {
+      socket.emit('start-game');
+      sounds.play('diceRoll');
+    }
+
+    function copyInviteLink() {
+      navigator.clipboard.writeText(window.location.href);
+      sounds.play('success');
+      alert('Room invite link copied to clipboard!');
+    }
+
+    function showQRCode() {
+      if (window.QRCodeModal) {
+        window.QRCodeModal.show(window.location.href, roomId);
+      }
+    }
+  </script>
+</body>
+</html>
+

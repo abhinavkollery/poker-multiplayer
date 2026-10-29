@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speed Trivia ⚡ | Party Games</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    :root {
+      --q-red: #ef4444;
+      --q-blue: #3b82f6;
+      --q-yellow: #eab308;
+      --q-green: #10b981;
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.9);
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 10%, #312e81 0%, #090d16 100%);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .timer-bar-container {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .timer-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+      transition: width 1s linear;
+    }
+
+    .question-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .category-badge {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .question-text {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      flex: 1;
+    }
+
+    @media (max-width: 640px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+      .question-text {
+        font-size: 1.35rem;
+      }
+    }
+
+    .option-btn {
+      border: 2px solid transparent;
+      border-radius: 14px;
+      padding: 24px 20px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      text-align: left;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .option-btn.opt-0 { background: linear-gradient(135deg, #e11d48, #be123c); }
+    .option-btn.opt-1 { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .option-btn.opt-2 { background: linear-gradient(135deg, #d97706, #b45309); }
+    .option-btn.opt-3 { background: linear-gradient(135deg, #059669, #047857); }
+
+    .option-btn.selected {
+      border-color: #ffffff;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+    }
+
+    .option-btn.correct {
+      border-color: #4ade80 !important;
+      background: linear-gradient(135deg, #15803d, #166534) !important;
+      box-shadow: 0 0 25px rgba(74, 222, 128, 0.6) !important;
+    }
+
+    .option-btn.dimmed {
+      opacity: 0.35;
+      transform: scale(0.98);
+    }
+
+    .opt-icon {
+      font-size: 1.5rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .leaderboard-drawer {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .leaderboard-player {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h1 style="font-size: 1.25rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⚡ SPEED TRIVIA</h1>
+        <span id="questionCounter" style="padding: 4px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-weight: 700; font-size: 0.85rem;">Q 1 / 8</span>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="font-weight: 700; color: #94a3b8;">ROOM:</span>
+        <span id="roomCodeDisplay" style="font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 2px;">------</span>
+        <button class="btn" onclick="copyInviteLink()">🔗 Invite</button>
+        <button class="btn" onclick="showQRCode()">📱 QR</button>
+        <a href="/" class="btn" style="text-decoration: none;">🏠 Hub</a>
+      </div>
+    </div>
+
+    <!-- Timer Bar -->
+    <div class="timer-bar-container">
+      <div id="timerBar" class="timer-bar-fill"></div>
+    </div>
+
+    <!-- Question Card -->
+    <div class="question-card" id="questionCard">
+      <span class="category-badge" id="categoryBadge">Science & Nature</span>
+      <h2 class="question-text" id="questionText">Waiting for game to begin...</h2>
+      <div id="roundAlert" style="font-weight: 700; font-size: 1.1rem; color: #38bdf8;"></div>
+    </div>
+
+    <!-- Options 2x2 Grid -->
+    <div class="options-grid" id="optionsGrid">
+      <button class="option-btn opt-0" id="optBtn0" onclick="chooseOption(0)">
+        <span class="opt-icon">▲</span>
+        <span id="optText0" style="flex: 1;">Choice A</span>
+        <span id="optCount0" style="font-size: 0.9rem; opacity: 0.8;"></span>
+      </button>
+
+      <button class="option-btn opt-1" id="optBtn1" onclick="chooseOption(1)">
+        <span class="opt-icon">◆</span>
+        <span id="optText1" style="flex: 1;">Choice B</span>
+        <span id="optCount1" style="font-size: 0.9rem; opacity: 0.8;"></span>
+      </button>
+
+      <button class="option-btn opt-2" id="optBtn2" onclick="chooseOption(2)">
+        <span class="opt-icon">●</span>
+        <span id="optText2" style="flex: 1;">Choice C</span>
+        <span id="optCount2" style="font-size: 0.9rem; opacity: 0.8;"></span>
+      </button>
+
+      <button class="option-btn opt-3" id="optBtn3" onclick="chooseOption(3)">
+        <span class="opt-icon">■</span>
+        <span id="optText3" style="flex: 1;">Choice D</span>
+        <span id="optCount3" style="font-size: 0.9rem; opacity: 0.8;"></span>
+      </button>
+    </div>
+
+    <!-- Leaderboard & Controls -->
+    <div class="leaderboard-drawer">
+      <div id="leaderboardList" style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <!-- Top players dynamically rendered -->
+      </div>
+      <div>
+        <button id="startBtn" class="btn" style="background: #10b981; color: #fff; font-weight: 800; display: none;" onclick="startGame()">Start Trivia</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/sounds.js"></script>
+  <script src="/shared/reactions.js"></script>
+  <script src="/shared/qrcode.js"></script>
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
+    const playerName = urlParams.get('name') || localStorage.getItem('party_player_name') || 'TriviaBuff';
+
+    let myPlayerId = null;
+    let selectedOption = null;
+
+    socket.on('connect', () => {
+      myPlayerId = socket.id;
+      if (roomId) {
+        socket.emit('join-room', { roomId, name: playerName });
+      }
+    });
+
+    socket.on('room-joined', (data) => {
+      document.getElementById('roomCodeDisplay').textContent = data.roomId;
+    });
+
+    socket.on('game-state', (state) => {
+      updateUI(state);
+    });
+
+    socket.on('party:reaction', ({ emoji }) => {
+      if (window.Reactions) window.Reactions.showParticle(emoji);
+    });
+
+    function updateUI(state) {
+      if (!state) return;
+
+      const isHost = state.players[0]?.id === myPlayerId;
+      document.getElementById('startBtn').style.display = (isHost && (state.state === 'waiting' || state.state === 'podium')) ? 'block' : 'none';
+
+      // Update question indicator
+      document.getElementById('questionCounter').textContent = `Q ${state.questionIndex || 1} / ${state.totalQuestions || 8}`;
+
+      // Timer bar percentage
+      if (state.state === 'question') {
+        const pct = Math.max(0, Math.min(100, (state.timeLeft / (state.timeLimit || 15)) * 100));
+        document.getElementById('timerBar').style.width = `${pct}%`;
+        if (state.timeLeft <= 3) sounds.play('timerTick');
+      } else {
+        document.getElementById('timerBar').style.width = '100%';
+      }
+
+      // Question card
+      if (state.state === 'waiting') {
+        document.getElementById('categoryBadge').textContent = 'LOBBY';
+        document.getElementById('questionText').textContent = 'Waiting for host to start the game!';
+        document.getElementById('roundAlert').textContent = '';
+      } else if (state.state === 'podium') {
+        document.getElementById('categoryBadge').textContent = 'GAME OVER';
+        document.getElementById('questionText').textContent = '🏆 Trivia Champions!';
+        document.getElementById('roundAlert').textContent = 'Check out the final podium below!';
+        sounds.play('winFanfare');
+      } else if (state.question) {
+        document.getElementById('categoryBadge').textContent = state.question.category || 'General';
+        document.getElementById('questionText').textContent = state.question.question;
+
+        // Reveal alerts
+        if (state.state === 'reveal') {
+          const myPlayer = state.players.find(p => p.id === myPlayerId);
+          if (myPlayer && myPlayer.lastPoints > 0) {
+            document.getElementById('roundAlert').innerHTML = `<span style="color: #4ade80;">🎉 Correct! +${myPlayer.lastPoints} pts!</span>`;
+            sounds.play('success');
+          } else {
+            document.getElementById('roundAlert').innerHTML = `<span style="color: #f87171;">❌ Missed!</span>`;
+            sounds.play('buzzer');
+          }
+        } else {
+          document.getElementById('roundAlert').textContent = state.hasAnswered ? 'Answer locked in! Waiting for others...' : '';
+        }
+      }
+
+      // Update options buttons
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`optBtn${i}`);
+        const textSpan = document.getElementById(`optText${i}`);
+        const countSpan = document.getElementById(`optCount${i}`);
+
+        if (state.question && state.question.options[i]) {
+          textSpan.textContent = state.question.options[i];
+          btn.style.display = 'flex';
+        } else {
+          btn.style.display = 'none';
+        }
+
+        // Reset classes
+        btn.classList.remove('selected', 'correct', 'dimmed');
+        btn.disabled = state.hasAnswered || state.state !== 'question';
+
+        if (state.myAnswer === i) {
+          btn.classList.add('selected');
+        }
+
+        // Reveal styling
+        if (state.state === 'reveal' || state.state === 'podium') {
+          if (state.question && state.question.correctAnswer === i) {
+            btn.classList.add('correct');
+          } else {
+            btn.classList.add('dimmed');
+          }
+
+          if (state.optionCounts && state.optionCounts[i] !== undefined) {
+            countSpan.textContent = `(${state.optionCounts[i]} votes)`;
+          }
+        } else {
+          countSpan.textContent = '';
+        }
+      }
+
+      // Render Leaderboard
+      const lb = document.getElementById('leaderboardList');
+      lb.innerHTML = '';
+      const sorted = [...state.players].sort((a, b) => b.score - a.score);
+      sorted.slice(0, 5).forEach((p, idx) => {
+        const item = document.createElement('div');
+        item.className = 'leaderboard-player';
+        item.innerHTML = `
+          <span style="color: #fbbf24; font-weight: 800;">#${idx + 1}</span>
+          <span>${p.name} ${p.streak > 1 ? `🔥${p.streak}` : ''}</span>
+          <span style="color: #38bdf8; font-weight: 800;">${p.score} pts</span>
+        `;
+        lb.appendChild(item);
+      });
+    }
+
+    function chooseOption(idx) {
+      selectedOption = idx;
+      socket.emit('player-action', { action: 'submit-answer', optionIndex: idx });
+      sounds.play('click');
+    }
+
+    function startGame() {
+      socket.emit('start-game');
+      sounds.play('click');
+    }
+
+    function copyInviteLink() {
+      navigator.clipboard.writeText(window.location.href);
+      sounds.play('success');
+      alert('Room invite link copied to clipboard!');
+    }
+
+    function showQRCode() {
+      if (window.QRCodeModal) {
+        window.QRCodeModal.show(window.location.href, roomId);
+      }
+    }
+  </script>
+</body>
+</html>
+

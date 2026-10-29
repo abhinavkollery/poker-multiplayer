@@ -1106,6 +1106,11 @@
 
         <!-- Host Start Controls -->
         <div id="hostControlsBox">
+          <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button id="btnAddBot" class="btn btn-ghost" style="flex: 1; padding: 10px; font-size: 14px;" onclick="addBot()">
+              🤖 Add CPU Bot
+            </button>
+          </div>
           <button id="btnStartGame" class="btn btn-gold" style="width: 100%; padding: 14px; font-size: 16px;" onclick="startGame()" disabled>
             Start Game (Min 2 Players)
           </button>
@@ -1154,8 +1159,11 @@
     <div id="toastContainer" class="toast-container" aria-live="polite"></div>
   </div>
 
-  <!-- Socket.io Library -->
+  <!-- Shared & Socket.io Libraries -->
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/sounds.js"></script>
+  <script src="/shared/reactions.js"></script>
+  <script src="/shared/qrcode.js"></script>
 
   <script>
     // Predefined seat coordinate arrays (left%, top%) for N total seats:
@@ -1346,6 +1354,14 @@
         if (Array.isArray(log)) {
           renderLog(log);
         }
+      });
+
+      socket.on('party:reaction', ({ emoji }) => {
+        if (window.Reactions) window.Reactions.showParticle(emoji);
+      });
+
+      socket.on('party:game-switched', ({ url }) => {
+        window.location.href = url;
       });
     }
 
@@ -1800,6 +1816,11 @@
     function startGame() {
       if (!socket) return;
       socket.emit('start-game', {});
+    }
+
+    function addBot() {
+      if (!socket) return;
+      socket.emit('poker:add-bot', {});
     }
 
     // Game Log

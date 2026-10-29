@@ -147,6 +147,11 @@ class WavelengthGame {
     if (customOptions.mode) this.mode = customOptions.mode;
     if (customOptions.pointsToWin) this.pointsToWin = Number(customOptions.pointsToWin);
     if (customOptions.totalRounds) this.totalRounds = Number(customOptions.totalRounds);
+    if (customOptions.customLeft && customOptions.customRight) {
+      this.pendingCustomCard = { id: 'custom', left: String(customOptions.customLeft).trim(), right: String(customOptions.customRight).trim() };
+    } else {
+      this.pendingCustomCard = null;
+    }
 
     this.startNewRound();
     return true;
@@ -167,10 +172,15 @@ class WavelengthGame {
     // Pick next psychic
     this.nextPsychic();
 
-    // Pick new spectrum card
-    this.currentCard = getRandomSpectrumCard(this.usedCardIds);
-    this.usedCardIds.push(this.currentCard.id);
-    if (this.usedCardIds.length > 40) this.usedCardIds.shift();
+    // Pick new spectrum card (or custom card if provided)
+    if (this.pendingCustomCard) {
+      this.currentCard = this.pendingCustomCard;
+      this.pendingCustomCard = null;
+    } else {
+      this.currentCard = getRandomSpectrumCard(this.usedCardIds);
+      this.usedCardIds.push(this.currentCard.id);
+      if (this.usedCardIds.length > 40) this.usedCardIds.shift();
+    }
 
     // Pick secret target position between 12% and 88%
     this.target = Math.floor(Math.random() * 77) + 12;

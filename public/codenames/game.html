@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codenames 🕵️ | Party Games</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    :root {
+      --red-team: #ef4444;
+      --blue-team: #3b82f6;
+      --neutral: #64748b;
+      --assassin: #09090b;
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.9);
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 15%, #1e1b4b 0%, #090d16 100%);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .score-banner {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .score-badge {
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-badge.red {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid #ef4444;
+      color: #f87171;
+    }
+
+    .score-badge.blue {
+      background: rgba(59, 130, 246, 0.2);
+      border: 2px solid #3b82f6;
+      color: #60a5fa;
+    }
+
+    .turn-bar {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      flex: 1;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-container {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+      .card-word {
+        font-size: 0.75rem !important;
+      }
+    }
+
+    .code-card {
+      aspect-ratio: 1.5;
+      background: #1e293b;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      position: relative;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .code-card:hover:not(.revealed) {
+      transform: translateY(-2px);
+      border-color: #38bdf8;
+      box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Revealed States */
+    .code-card.revealed.red {
+      background: #b91c1c;
+      border-color: #ef4444;
+      color: #fee2e2;
+    }
+
+    .code-card.revealed.blue {
+      background: #1d4ed8;
+      border-color: #3b82f6;
+      color: #dbeafe;
+    }
+
+    .code-card.revealed.neutral {
+      background: #475569;
+      border-color: #64748b;
+      color: #cbd5e1;
+      opacity: 0.8;
+    }
+
+    .code-card.revealed.assassin {
+      background: #09090b;
+      border-color: #ef4444;
+      color: #ef4444;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Spymaster Secret Highlights (for unrevealed cards) */
+    .spymaster-mode .code-card:not(.revealed).spy-red {
+      border: 2px dashed #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .spymaster-mode .code-card:not(.revealed).spy-blue {
+      border: 2px dashed #3b82f6;
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .spymaster-mode .code-card:not(.revealed).spy-neutral {
+      border: 2px dashed #64748b;
+      background: rgba(100, 116, 139, 0.15);
+    }
+
+    .spymaster-mode .code-card:not(.revealed).spy-assassin {
+      border: 2px solid #ef4444;
+      background: rgba(0, 0, 0, 0.8);
+      color: #f87171;
+    }
+
+    .role-badge {
+      font-size: 0.8rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .action-panel {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-red {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #f87171;
+    }
+
+    .btn-blue {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: #3b82f6;
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h1 style="font-size: 1.25rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #ef4444, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🕵️ CODENAMES</h1>
+        <div class="score-banner">
+          <div class="score-badge red">RED: <span id="redCount">9</span></div>
+          <div class="score-badge blue">BLUE: <span id="blueCount">8</span></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="font-weight: 700; color: #94a3b8;">ROOM:</span>
+        <span id="roomCodeDisplay" style="font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 2px;">------</span>
+        <button class="btn" onclick="copyInviteLink()">🔗 Invite</button>
+        <button class="btn" onclick="showQRCode()">📱 QR</button>
+        <a href="/" class="btn" style="text-decoration: none;">🏠 Hub</a>
+      </div>
+    </div>
+
+    <!-- Turn Banner -->
+    <div class="turn-bar">
+      <div id="turnStatus" style="font-size: 1.2rem; font-weight: 800;">Waiting for game...</div>
+      <div id="clueDisplay" style="font-size: 1.1rem; color: #38bdf8; font-weight: 700;"></div>
+      <div id="turnActions"></div>
+    </div>
+
+    <!-- 5x5 Grid -->
+    <div id="cardGrid" class="grid-container">
+      <!-- 25 cards populated dynamically -->
+    </div>
+
+    <!-- Bottom Controls & Role Selection -->
+    <div class="action-panel">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="color: #94a3b8; font-weight: 600;">My Role:</span>
+        <span id="myRoleBadge" class="role-badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">RED OPERATIVE</span>
+        <button class="btn" onclick="toggleRole()">Switch Spymaster/Operative</button>
+        <button class="btn" onclick="toggleTeam()">Switch Team</button>
+      </div>
+
+      <div id="spymasterControls" style="display: none; align-items: center; gap: 8px;">
+        <input type="text" id="clueWord" placeholder="ONE-WORD CLUE" maxlength="20" style="padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.4); color: #fff; text-transform: uppercase;">
+        <select id="clueCount" style="padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(30, 41, 59, 1); color: #fff;">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="0">0 (Unlimited)</option>
+        </select>
+        <button class="btn" style="background: #10b981; color: #fff;" onclick="submitClue()">Give Clue</button>
+      </div>
+
+      <div id="hostControls">
+        <button id="startBtn" class="btn" style="background: #38bdf8; color: #000; font-weight: 800; display: none;" onclick="startGame()">Start New Game</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/sounds.js"></script>
+  <script src="/shared/reactions.js"></script>
+  <script src="/shared/qrcode.js"></script>
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
+    const playerName = urlParams.get('name') || localStorage.getItem('party_player_name') || 'Agent';
+
+    let myPlayerId = null;
+    let currentGameState = null;
+
+    socket.on('connect', () => {
+      myPlayerId = socket.id;
+      if (roomId) {
+        socket.emit('join-room', { roomId, name: playerName });
+      }
+    });
+
+    socket.on('room-joined', (data) => {
+      document.getElementById('roomCodeDisplay').textContent = data.roomId;
+    });
+
+    socket.on('game-state', (state) => {
+      currentGameState = state;
+      updateUI(state);
+    });
+
+    socket.on('party:reaction', ({ emoji }) => {
+      if (window.Reactions) window.Reactions.showParticle(emoji);
+    });
+
+    function updateUI(state) {
+      if (!state) return;
+
+      document.getElementById('redCount').textContent = state.redRemaining;
+      document.getElementById('blueCount').textContent = state.blueRemaining;
+
+      const grid = document.getElementById('cardGrid');
+      grid.className = 'grid-container' + (state.isSpymaster ? ' spymaster-mode' : '');
+
+      // Turn status
+      const turnStatus = document.getElementById('turnStatus');
+      const teamColor = state.currentTeam === 'red' ? '#ef4444' : '#3b82f6';
+      const teamName = state.currentTeam.toUpperCase();
+
+      if (state.state === 'waiting') {
+        turnStatus.innerHTML = 'Waiting for players...';
+      } else if (state.state === 'game_over') {
+        turnStatus.innerHTML = `🏆 <span style="color: ${state.winner === 'red' ? '#ef4444' : '#3b82f6'}">${state.winner.toUpperCase()} TEAM WINS!</span> ${state.winReason}`;
+        sounds.play('winFanfare');
+      } else if (state.phase === 'clue') {
+        turnStatus.innerHTML = `<span style="color: ${teamColor}">${teamName} Spymaster</span> is thinking of a clue...`;
+      } else {
+        turnStatus.innerHTML = `<span style="color: ${teamColor}">${teamName} Operatives</span> guessing! (${state.remainingGuesses} guesses left)`;
+      }
+
+      // Clue display
+      const clueDisplay = document.getElementById('clueDisplay');
+      if (state.currentClue) {
+        clueDisplay.textContent = `CLUE: "${state.currentClue.word}" (${state.currentClue.count})`;
+      } else {
+        clueDisplay.textContent = '';
+      }
+
+      // Turn action buttons (e.g. End Turn for Operatives)
+      const turnActions = document.getElementById('turnActions');
+      turnActions.innerHTML = '';
+      if (state.state === 'playing' && state.phase === 'guessing' && state.myTeam === state.currentTeam && state.myRole === 'operative') {
+        const endBtn = document.createElement('button');
+        endBtn.className = 'btn';
+        endBtn.style.background = '#f59e0b';
+        endBtn.style.color = '#000';
+        endBtn.textContent = 'End Turn (Pass)';
+        endBtn.onclick = () => socket.emit('player-action', { action: 'end-turn' });
+        turnActions.appendChild(endBtn);
+      }
+
+      // Render 25 Cards
+      grid.innerHTML = '';
+      state.cards.forEach(card => {
+        const el = document.createElement('div');
+        let classes = 'code-card';
+
+        if (card.revealed) {
+          classes += ` revealed ${card.color}`;
+        } else if (state.isSpymaster && card.color) {
+          classes += ` spy-${card.color}`;
+        }
+
+        el.className = classes;
+        el.innerHTML = `<span class="card-word">${card.word}</span>`;
+
+        // Card click handler for active operatives
+        if (state.state === 'playing' && state.phase === 'guessing' && state.myTeam === state.currentTeam && state.myRole === 'operative' && !card.revealed) {
+          el.onclick = () => {
+            socket.emit('player-action', { action: 'pick-card', cardId: card.id });
+            sounds.play('cardFlip');
+          };
+        }
+
+        grid.appendChild(el);
+      });
+
+      // Role badge
+      const roleBadge = document.getElementById('myRoleBadge');
+      roleBadge.textContent = `${state.myTeam.toUpperCase()} ${state.myRole.toUpperCase()}`;
+      roleBadge.style.color = state.myTeam === 'red' ? '#f87171' : '#60a5fa';
+      roleBadge.style.background = state.myTeam === 'red' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)';
+
+      // Spymaster controls visibility
+      const spyControls = document.getElementById('spymasterControls');
+      if (state.state === 'playing' && state.phase === 'clue' && state.myTeam === state.currentTeam && state.myRole === 'spymaster') {
+        spyControls.style.display = 'flex';
+      } else {
+        spyControls.style.display = 'none';
+      }
+
+      // Start / Restart button for host
+      const isHost = state.players[0]?.id === myPlayerId;
+      const startBtn = document.getElementById('startBtn');
+      if (isHost && (state.state === 'waiting' || state.state === 'game_over')) {
+        startBtn.style.display = 'block';
+      } else {
+        startBtn.style.display = 'none';
+      }
+    }
+
+    function submitClue() {
+      const word = document.getElementById('clueWord').value.trim();
+      const count = document.getElementById('clueCount').value;
+      if (!word) return;
+      socket.emit('player-action', { action: 'give-clue', word, count });
+      document.getElementById('clueWord').value = '';
+      sounds.play('click');
+    }
+
+    function toggleRole() {
+      if (!currentGameState) return;
+      const newRole = currentGameState.myRole === 'spymaster' ? 'operative' : 'spymaster';
+      socket.emit('player-action', { action: 'set-role', role: newRole });
+      sounds.play('click');
+    }
+
+    function toggleTeam() {
+      if (!currentGameState) return;
+      const newTeam = currentGameState.myTeam === 'red' ? 'blue' : 'red';
+      socket.emit('player-action', { action: 'switch-team', team: newTeam });
+      sounds.play('click');
+    }
+
+    function startGame() {
+      socket.emit('start-game');
+      sounds.play('click');
+    }
+
+    function copyInviteLink() {
+      navigator.clipboard.writeText(window.location.href);
+      sounds.play('success');
+      alert('Room invite link copied to clipboard!');
+    }
+
+    function showQRCode() {
+      if (window.QRCodeModal) {
+        window.QRCodeModal.show(window.location.href, roomId);
+      }
+    }
+  </script>
+</body>
+</html>
+

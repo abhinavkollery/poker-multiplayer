@@ -369,11 +369,15 @@
   </aside>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/sounds.js"></script>
+  <script src="/shared/qrcode.js"></script>
+  <script src="/shared/reactions.js"></script>
   <script>
     let socket = null;
     let roomId = null;
     let playerName = null;
     let gameState = null;
+    let partyReactions = null;
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -407,6 +411,7 @@
     let lockedDoors = [];
     let crates = [];
     let keysList = [];
+    let bouncePads = [];
     let exitPortal = null;
     let hazards = [];
 
@@ -441,6 +446,8 @@
       setupTouchControls();
 
       socket = io();
+      partyReactions = new PartyReactions(socket);
+      partyReactions.renderBar();
 
       socket.on('connect', () => {
         socket.emit('join-room', { roomId, name: playerName });
@@ -480,6 +487,10 @@
 
       socket.on('chat-message', ({ name, message }) => {
         addChatMessage(name, message);
+      });
+
+      socket.on('party:game-switched', ({ url }) => {
+        window.location.href = url;
       });
 
       // Start 60fps render and physics loop
@@ -635,6 +646,7 @@
       lockedDoors = level.lockedDoors ? JSON.parse(JSON.stringify(level.lockedDoors)) : [];
       crates = level.crates ? JSON.parse(JSON.stringify(level.crates)) : [];
       keysList = level.keys ? JSON.parse(JSON.stringify(level.keys)) : [];
+      bouncePads = level.bouncePads ? JSON.parse(JSON.stringify(level.bouncePads)) : [];
       exitPortal = level.exit;
       hazards = level.hazards || [];
     }
@@ -722,6 +734,19 @@
 
       // Check Buttons & Pressure Plates
       checkButtonPresses();
+
+      // Check Bounce Pads
+      if (bouncePads) {
+        for (const bp of bouncePads) {
+          if (Math.abs(localPhysics.x - bp.x) < 0.8 && Math.abs(localPhysics.y - bp.y) < 0.6 && localPhysics.vy > 0) {
+            localPhysics.vy = bp.power || -17;
+            localPhysics.isGrounded = false;
+            spawnDustParticles(localPhysics.x, localPhysics.y + 0.4);
+            if (window.partySounds) window.partySounds.bounce();
+            break;
+          }
+        }
+      }
 
       // Check Keys
       checkKeyCollect();
@@ -997,6 +1022,9 @@
       // 4. Draw Pressure Buttons
       drawButtons(tileSize);
 
+      // 4b. Draw Bounce Pads
+      drawBouncePads(tileSize);
+
       // 5. Draw Crates
       drawCrates(tileSize);
 
@@ -1056,6 +1084,24 @@
         // Button plate
         ctx.fillRect(px + tileSize * 0.15, py + tileSize * (isPressed ? 0.8 : 0.65), tileSize * 0.7, tileSize * (isPressed ? 0.2 : 0.35));
         ctx.shadowBlur = 0;
+      });
+    }
+
+    function drawBouncePads(tileSize) {
+      if (!bouncePads) return;
+      bouncePads.forEach(bp => {
+        const px = bp.x * tileSize;
+        const py = bp.y * tileSize;
+        ctx.fillStyle = '#ff9f43';
+        ctx.fillRect(px + tileSize * 0.1, py + tileSize * 0.75, tileSize * 0.8, tileSize * 0.25);
+        ctx.fillStyle = '#fed330';
+        ctx.beginPath();
+        ctx.arc(px + tileSize * 0.5, py + tileSize * 0.75, tileSize * 0.35, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('▲', px + tileSize * 0.5, py + tileSize * 0.7);
       });
     }
 

@@ -72,6 +72,9 @@ const LEVELS = [
     buttons: [
       { id: 'b1', x: 9, y: 9, linkedDoorId: 'd1', type: 'hold' }
     ],
+    bouncePads: [
+      { x: 10, y: 9, power: -16.5 }
+    ],
     doors: [
       { id: 'd1', x: 13, y: 6, height: 4, open: false }
     ],
@@ -159,6 +162,9 @@ const LEVELS = [
       { id: 'b1', x: 4, y: 11, linkedDoorId: 'd1', type: 'toggle' },
       { id: 'b2', x: 18, y: 8, linkedDoorId: 'd2', type: 'toggle' },
       { id: 'b3', x: 4, y: 5, linkedDoorId: 'd3', type: 'toggle' }
+    ],
+    bouncePads: [
+      { x: 11, y: 11, power: -17.5 }
     ],
     doors: [
       { id: 'd1', x: 15, y: 9, height: 3, open: false },

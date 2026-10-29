@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spyfall 🕵️‍♂️ | Party Games</title>
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    :root {
+      --accent: #ef4444;
+      --bg: #090d16;
+      --card-bg: rgba(30, 41, 59, 0.9);
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 15%, #271b38 0%, #090d16 100%);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .secret-id-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+      border: 2px solid #ef4444;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
+    }
+
+    .secret-title {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin: 0 0 8px 0;
+      color: #38bdf8;
+    }
+
+    .secret-role {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f87171;
+    }
+
+    .location-matrix {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      flex: 1;
+    }
+
+    .location-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, transform 0.1s, opacity 0.2s;
+    }
+
+    .location-chip:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .location-chip.crossed-out {
+      text-decoration: line-through;
+      opacity: 0.35;
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-accuse {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-guess {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      font-weight: 800;
+      border: none;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 24px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h1 style="font-size: 1.25rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #ef4444, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🕵️ SPYFALL</h1>
+        <span id="timerDisplay" style="padding: 4px 12px; border-radius: 999px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; font-weight: 800; font-size: 1.1rem;">08:00</span>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="font-weight: 700; color: #94a3b8;">ROOM:</span>
+        <span id="roomCodeDisplay" style="font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 2px;">------</span>
+        <button class="btn" onclick="copyInviteLink()">🔗 Invite</button>
+        <button class="btn" onclick="showQRCode()">📱 QR</button>
+        <a href="/" class="btn" style="text-decoration: none;">🏠 Hub</a>
+      </div>
+    </div>
+
+    <!-- Secret ID Card -->
+    <div class="secret-id-card" id="idCard">
+      <button class="btn" style="position: absolute; top: 12px; right: 12px; font-size: 0.8rem; padding: 4px 10px;" onclick="toggleHideCard()">👁️ Hide/Show</button>
+      <div id="cardDetails">
+        <div class="secret-title" id="locationTitle">LOCATION: AIRPLANE</div>
+        <div class="secret-role" id="roleTitle">ROLE: FLIGHT ATTENDANT</div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-accuse" onclick="openAccuseModal()">Accuse Suspect 🔍</button>
+        <button class="btn btn-guess" id="spyGuessBtn" style="display: none;" onclick="openSpyGuessModal()">Guess Location 🚨</button>
+      </div>
+
+      <div>
+        <button class="btn" id="startBtn" style="background: #10b981; color: #fff; font-weight: 800; display: none;" onclick="startGame()">Start Game</button>
+      </div>
+    </div>
+
+    <!-- Location Reference Matrix -->
+    <div style="background: var(--card-bg); border-radius: 12px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 1rem; color: #94a3b8; text-transform: uppercase;">Location Reference (Click to cross out)</h3>
+        <button class="btn" style="font-size: 0.8rem; padding: 4px 8px;" onclick="resetCrossouts()">Reset Crossouts</button>
+      </div>
+      <div class="location-matrix" id="locationGrid">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
+    <!-- Accusation Modal -->
+    <div id="accuseModal" class="modal-overlay" style="display: none;">
+      <h2 style="font-size: 1.8rem; color: #f87171; margin-bottom: 12px;">Accuse a Suspect</h2>
+      <p style="color: #94a3b8; margin-bottom: 16px;">Who do you believe is the Spy?</p>
+      <div id="suspectsList" style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 300px; margin-bottom: 16px;"></div>
+      <button class="btn" onclick="closeModals()">Cancel</button>
+    </div>
+
+    <!-- Trial Voting Modal -->
+    <div id="voteModal" class="modal-overlay" style="display: none;">
+      <h2 style="font-size: 1.8rem; color: #fbbf24; margin-bottom: 8px;">Trial In Session!</h2>
+      <p id="trialNotice" style="font-size: 1.2rem; color: #fff; margin-bottom: 24px;"></p>
+      <div style="display: flex; gap: 16px;">
+        <button class="btn btn-accuse" style="padding: 12px 32px; font-size: 1.1rem;" onclick="castVote(true)">Guilty (Yes)</button>
+        <button class="btn" style="padding: 12px 32px; font-size: 1.1rem;" onclick="castVote(false)">Innocent (No)</button>
+      </div>
+    </div>
+
+    <!-- Spy Location Guess Modal -->
+    <div id="spyGuessModal" class="modal-overlay" style="display: none;">
+      <h2 style="font-size: 1.8rem; color: #f59e0b; margin-bottom: 8px;">🚨 Spy Reveal & Guess</h2>
+      <p style="color: #cbd5e1; margin-bottom: 16px;">Select the location where everyone is hiding:</p>
+      <div id="spyGuessOptions" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 350px; overflow-y: auto; width: 100%; max-width: 600px; margin-bottom: 16px;"></div>
+      <button class="btn" onclick="closeModals()">Cancel</button>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-overlay" style="display: none;">
+      <h2 style="font-size: 2.2rem; color: #38bdf8;" id="gameOverTitle">Game Over</h2>
+      <p id="gameOverReason" style="font-size: 1.25rem; color: #e2e8f0; max-width: 600px; line-height: 1.4; margin-bottom: 24px;"></p>
+      <button class="btn" style="background: #10b981; color: #fff; padding: 12px 28px; font-size: 1.1rem;" onclick="startGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/sounds.js"></script>
+  <script src="/shared/reactions.js"></script>
+  <script src="/shared/qrcode.js"></script>
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
+    const playerName = urlParams.get('name') || localStorage.getItem('party_player_name') || 'Agent';
+
+    let myPlayerId = null;
+    let currentGameState = null;
+    let isCardHidden = false;
+    let crossedOut = new Set();
+
+    socket.on('connect', () => {
+      myPlayerId = socket.id;
+      if (roomId) {
+        socket.emit('join-room', { roomId, name: playerName });
+      }
+    });
+
+    socket.on('room-joined', (data) => {
+      document.getElementById('roomCodeDisplay').textContent = data.roomId;
+    });
+
+    socket.on('game-state', (state) => {
+      currentGameState = state;
+      updateUI(state);
+    });
+
+    socket.on('party:reaction', ({ emoji }) => {
+      if (window.Reactions) window.Reactions.showParticle(emoji);
+    });
+
+    function updateUI(state) {
+      if (!state) return;
+
+      const isHost = state.players[0]?.id === myPlayerId;
+      document.getElementById('startBtn').style.display = (isHost && (state.state === 'waiting' || state.state === 'game_over')) ? 'block' : 'none';
+
+      // Timer
+      const mins = Math.floor(state.timeLeft / 60);
+      const secs = state.timeLeft % 60;
+      document.getElementById('timerDisplay').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      // Secret ID Card
+      if (state.state === 'waiting') {
+        document.getElementById('locationTitle').textContent = 'WAITING FOR GAME';
+        document.getElementById('roleTitle').textContent = 'Lobby';
+      } else if (state.isSpy) {
+        document.getElementById('locationTitle').textContent = '🕵️ YOU ARE THE SPY';
+        document.getElementById('roleTitle').textContent = 'Find out where everyone is!';
+        document.getElementById('spyGuessBtn').style.display = (state.state === 'playing') ? 'block' : 'none';
+      } else {
+        document.getElementById('locationTitle').textContent = `LOCATION: ${state.location}`;
+        document.getElementById('roleTitle').textContent = `ROLE: ${state.role}`;
+        document.getElementById('spyGuessBtn').style.display = 'none';
+      }
+
+      // Location matrix
+      const grid = document.getElementById('locationGrid');
+      grid.innerHTML = '';
+      if (Array.isArray(state.allLocations)) {
+        state.allLocations.forEach(loc => {
+          const chip = document.createElement('div');
+          chip.className = 'location-chip' + (crossedOut.has(loc) ? ' crossed-out' : '');
+          chip.textContent = loc;
+          chip.onclick = () => {
+            if (crossedOut.has(loc)) crossedOut.delete(loc);
+            else crossedOut.add(loc);
+            chip.classList.toggle('crossed-out', crossedOut.has(loc));
+            sounds.play('click');
+          };
+          grid.appendChild(chip);
+        });
+      }
+
+      // Trial voting modal
+      const voteModal = document.getElementById('voteModal');
+      if (state.state === 'voting' && state.accusation) {
+        voteModal.style.display = 'flex';
+        document.getElementById('trialNotice').textContent = `${state.accusation.accuserName} accuses ${state.accusation.accusedName} of being the Spy!`;
+      } else {
+        voteModal.style.display = 'none';
+      }
+
+      // Game over modal
+      const goModal = document.getElementById('gameOverModal');
+      if (state.state === 'game_over') {
+        goModal.style.display = 'flex';
+        document.getElementById('gameOverTitle').textContent = state.winner === 'spy' ? '🕵️ SPY WINS!' : '🎉 CIVILIANS WIN!';
+        document.getElementById('gameOverReason').textContent = state.winReason;
+        sounds.play('winFanfare');
+      } else {
+        goModal.style.display = 'none';
+      }
+    }
+
+    function toggleHideCard() {
+      isCardHidden = !isCardHidden;
+      document.getElementById('cardDetails').style.filter = isCardHidden ? 'blur(12px)' : 'none';
+    }
+
+    function resetCrossouts() {
+      crossedOut.clear();
+      document.querySelectorAll('.location-chip').forEach(c => c.classList.remove('crossed-out'));
+      sounds.play('click');
+    }
+
+    function openAccuseModal() {
+      if (!currentGameState) return;
+      const modal = document.getElementById('accuseModal');
+      const list = document.getElementById('suspectsList');
+      list.innerHTML = '';
+      currentGameState.players.filter(p => p.id !== myPlayerId).forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.style.textAlign = 'left';
+        btn.textContent = `Accuse ${p.name}`;
+        btn.onclick = () => {
+          socket.emit('player-action', { action: 'accuse', accusedId: p.id });
+          modal.style.display = 'none';
+          sounds.play('click');
+        };
+        list.appendChild(btn);
+      });
+      modal.style.display = 'flex';
+    }
+
+    function openSpyGuessModal() {
+      if (!currentGameState) return;
+      const modal = document.getElementById('spyGuessModal');
+      const container = document.getElementById('spyGuessOptions');
+      container.innerHTML = '';
+      currentGameState.allLocations.forEach(loc => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = loc;
+        btn.onclick = () => {
+          socket.emit('player-action', { action: 'spy-guess', location: loc });
+          modal.style.display = 'none';
+          sounds.play('buzzer');
+        };
+        container.appendChild(btn);
+      });
+      modal.style.display = 'flex';
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal-overlay').forEach(m => {
+        if (m.id !== 'gameOverModal' && m.id !== 'voteModal') m.style.display = 'none';
+      });
+    }
+
+    function castVote(approve) {
+      socket.emit('player-action', { action: 'vote', approve });
+      document.getElementById('voteModal').style.display = 'none';
+      sounds.play('click');
+    }
+
+    function startGame() {
+      socket.emit('start-game');
+      sounds.play('click');
+    }
+
+    function copyInviteLink() {
+      navigator.clipboard.writeText(window.location.href);
+      sounds.play('success');
+      alert('Room invite link copied to clipboard!');
+    }
+
+    function showQRCode() {
+      if (window.QRCodeModal) {
+        window.QRCodeModal.show(window.location.href, roomId);
+      }
+    }
+  </script>
+</body>
+</html>
+

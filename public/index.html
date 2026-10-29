@@ -3,50 +3,37 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameHub | Poker, Imposter & Wavelength</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Party Games Hub | Multiplayer Games</title>
   <link rel="stylesheet" href="/shared/style.css">
   <style>
-    body {
+    /* Hub-specific Layout & Aesthetic */
+    .hub-container {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 30px 20px 60px;
+      justify-content: center;
+      padding: 32px 16px;
       position: relative;
-      background: radial-gradient(circle at 50% 20%, #111a24 0%, #080d12 70%, #04070a 100%);
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
     }
 
-    .hub-container {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 720px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 28px;
-    }
-
-    /* Top Brand Header */
     .brand-hero {
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin-top: 10px;
+      margin-bottom: 24px;
     }
 
     .brand-title {
       font-size: 42px;
       font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #ffffff 0%, #f0e6d3 50%, var(--gold-light) 100%);
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffeaa7 0%, var(--gold) 50%, #c0392b 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 30px rgba(201, 162, 39, 0.35);
+      margin-bottom: 8px;
       line-height: 1.1;
     }
 
@@ -54,14 +41,15 @@
       font-size: 15px;
       font-weight: 400;
       color: var(--text-muted);
-      max-width: 500px;
+      max-width: 600px;
       line-height: 1.5;
+      margin: 0 auto;
     }
 
     /* Main Hub Card */
     .hub-card {
       width: 100%;
-      background: rgba(15, 23, 32, 0.75);
+      background: rgba(15, 23, 32, 0.85);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -120,6 +108,42 @@
       color: #ffffff;
     }
 
+    .platformer-accent .game-meta-icon {
+      background: radial-gradient(circle, #22c55e 0%, #15803d 100%);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+
+    .drawguess-accent .game-meta-icon {
+      background: radial-gradient(circle, #fbbf24 0%, #d97706 100%);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #0b0f14;
+    }
+
+    .codenames-accent .game-meta-icon {
+      background: radial-gradient(circle, #ef4444 0%, #3b82f6 100%);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+
+    .trivia-accent .game-meta-icon {
+      background: radial-gradient(circle, #f59e0b 0%, #ef4444 100%);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+
+    .liarsdice-accent .game-meta-icon {
+      background: radial-gradient(circle, #10b981 0%, #047857 100%);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+
+    .spyfall-accent .game-meta-icon {
+      background: radial-gradient(circle, #8b5cf6 0%, #4338ca 100%);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+
     .game-meta-title {
       font-size: 24px;
       font-weight: 800;
@@ -163,68 +187,72 @@
     .action-tab-btn {
       flex: 1;
       padding: 10px 16px;
-      border-radius: 8px;
       border: none;
       background: transparent;
       color: var(--text-muted);
-      font-family: 'Outfit', sans-serif;
+      font-family: inherit;
       font-size: 14px;
       font-weight: 700;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
+      text-align: center;
     }
 
     .action-tab-btn.active {
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Forms */
-    .form-group {
+    /* Games Tab Bar Scrollable */
+    .games-tab-bar {
       display: flex;
-      flex-direction: column;
       gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .form-label {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .form-input,
-    .form-select {
       width: 100%;
-      height: 48px;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      padding: 0 16px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      color: #ffffff;
-      outline: none;
-      transition: all 0.2s ease;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
     }
 
-    .form-input:focus,
-    .form-select:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 14px rgba(201, 162, 39, 0.25);
-      background: rgba(0, 0, 0, 0.6);
+    .game-tab-btn {
+      flex: 1;
+      min-width: 110px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      white-space: nowrap;
+    }
+
+    .game-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .game-tab-btn.active {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      border-color: var(--gold-light);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     }
 
     .form-grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 16px;
     }
 
     .form-grid-3 {
@@ -233,9 +261,8 @@
       gap: 12px;
     }
 
-    /* How to Play Accordion */
     .rules-box {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px dashed rgba(255, 255, 255, 0.15);
       border-radius: 14px;
       padding: 16px;
@@ -269,91 +296,72 @@
       margin-top: 16px;
     }
 
-    .footer-links a {
-      color: var(--gold);
-      text-decoration: none;
-    }
-
-    .footer-links a:hover {
-      text-decoration: underline;
+    .hidden {
+      display: none !important;
     }
 
     @media (max-width: 600px) {
       .hub-card {
-        padding: 22px 18px;
+        padding: 20px 16px;
       }
-
-      .form-grid-2,
-      .form-grid-3 {
+      .form-grid-2, .form-grid-3 {
         grid-template-columns: 1fr;
       }
-
       .brand-title {
-        font-size: 32px;
-      }
-
-      .game-tab-btn {
-        padding: 10px 8px;
-        font-size: 13px;
-        gap: 6px;
+        font-size: 30px;
       }
     }
   </style>
 </head>
 
 <body>
-
-  <!-- Background Animated Elements -->
-  <div class="floating-suits" aria-hidden="true">
-    <div class="floating-suit" style="left: 10%; animation-duration: 22s;">♠</div>
-    <div class="floating-suit" style="left: 30%; animation-duration: 28s;">🕵️</div>
-    <div class="floating-suit" style="left: 50%; animation-duration: 19s;">🌊</div>
-    <div class="floating-suit" style="left: 70%; animation-duration: 25s;">♥</div>
-    <div class="floating-suit" style="left: 90%; animation-duration: 31s;">🎯</div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-
   <div class="hub-container">
     <!-- Header -->
     <header class="brand-hero">
       <h1 class="brand-title">PARTY GAMES HUB</h1>
-      <p class="brand-subtitle">Play real-time multiplayer Texas Hold'em, Imposter word deduction, and Wavelength
-        telepathy with friends!</p>
+      <p class="brand-subtitle">Host and play 9 multiplayer games with friends: Texas Hold'em Poker, The Imposter, Wavelength, Platformer, Draw & Guess, Codenames, Trivia, Liar's Dice, & Spyfall!</p>
     </header>
 
-    <!-- Games Tab Bar -->
+    <!-- Games Tab Bar (9 games) -->
     <nav class="games-tab-bar" role="tablist">
-      <button id="tabPoker" class="game-tab-btn tab-poker active" onclick="switchGame('poker')" role="tab">
-        <span class="tab-icon">🃏</span>
-        <span>Poker</span>
+      <button id="tabPoker" class="game-tab-btn active" onclick="switchGame('poker')">
+        <span>🃏 Poker</span>
       </button>
-      <button id="tabImposter" class="game-tab-btn tab-imposter" onclick="switchGame('imposter')" role="tab">
-        <span class="tab-icon">🕵️</span>
-        <span>The Imposter</span>
+      <button id="tabImposter" class="game-tab-btn" onclick="switchGame('imposter')">
+        <span>🕵️ Imposter</span>
       </button>
-      <button id="tabWavelength" class="game-tab-btn tab-wavelength" onclick="switchGame('wavelength')" role="tab">
-        <span class="tab-icon">🌊</span>
-        <span>Wavelength</span>
+      <button id="tabWavelength" class="game-tab-btn" onclick="switchGame('wavelength')">
+        <span>🌊 Wavelength</span>
       </button>
-      <button id="tabPlatformer" class="game-tab-btn tab-platformer" onclick="switchGame('platformer')" role="tab">
-        <span class="tab-icon">🏃‍♂️</span>
-        <span>Co-op Platformer</span>
+      <button id="tabPlatformer" class="game-tab-btn" onclick="switchGame('platformer')">
+        <span>🏃 Platformer</span>
+      </button>
+      <button id="tabDrawguess" class="game-tab-btn" onclick="switchGame('drawguess')">
+        <span>🎨 Draw & Guess</span>
+      </button>
+      <button id="tabCodenames" class="game-tab-btn" onclick="switchGame('codenames')">
+        <span>🕵️ Codenames</span>
+      </button>
+      <button id="tabTrivia" class="game-tab-btn" onclick="switchGame('trivia')">
+        <span>⚡ Speed Trivia</span>
+      </button>
+      <button id="tabLiarsdice" class="game-tab-btn" onclick="switchGame('liarsdice')">
+        <span>🎲 Liar's Dice</span>
+      </button>
+      <button id="tabSpyfall" class="game-tab-btn" onclick="switchGame('spyfall')">
+        <span>🕵️‍♂️ Spyfall</span>
       </button>
     </nav>
 
     <!-- Main Game Card -->
     <main id="mainHubCard" class="hub-card poker-accent">
-
       <!-- Dynamic Game Banner -->
       <div class="game-banner">
         <div class="game-meta-left">
           <div id="gameMetaIcon" class="game-meta-icon">🃏</div>
           <div>
             <h2 id="gameMetaTitle" class="game-meta-title">Texas Hold'em Poker</h2>
-            <p id="gameMetaDesc" class="game-meta-desc">Classic no-limit Texas Hold'em with live chat and smooth
-              betting.</p>
+            <p id="gameMetaDesc" class="game-meta-desc">Classic no-limit Texas Hold'em with live chat and smooth betting.</p>
           </div>
         </div>
         <div id="gameMetaBadges" class="game-badges">
@@ -363,14 +371,13 @@
         </div>
       </div>
 
-      <!-- How to play collapsible summary -->
+      <!-- Quick Rules Box -->
       <div id="rulesSummaryBox" class="rules-box">
         <div class="rules-title">
-          <span>📖 Quick Overview:</span>
+          <span>📖 Overview:</span>
         </div>
         <div id="rulesSummaryText">
-          Standard No-Limit Texas Hold'em. Each player gets 2 hole cards. Bet, raise, or fold across Flop, Turn, and
-          River. Best 5-card poker hand wins the pot!
+          Standard No-Limit Texas Hold'em. Each player gets 2 hole cards. Bet, raise, or fold across Flop, Turn, and River. Best 5-card poker hand wins the pot!
         </div>
       </div>
 
@@ -383,13 +390,12 @@
       <!-- CREATE ROOM SECTION -->
       <section id="sectionCreate" class="action-section">
         <form id="createRoomForm" onsubmit="handleCreateRoom(event)">
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label class="form-label" for="createPlayerName">Your Player Name</label>
-            <input type="text" id="createPlayerName" class="form-input" placeholder="Enter your display name"
-              maxlength="15" required autocomplete="nickname">
+            <input type="text" id="createPlayerName" class="form-input" placeholder="Enter your display name" maxlength="15" required autocomplete="nickname">
           </div>
 
-          <!-- POKER SPECIFIC SETTINGS -->
+          <!-- POKER SETTINGS -->
           <div id="pokerSettings" class="game-specific-settings">
             <div class="form-grid-3">
               <div class="form-group">
@@ -421,72 +427,53 @@
             </div>
           </div>
 
-          <!-- IMPOSTER SPECIFIC SETTINGS -->
+          <!-- IMPOSTER SETTINGS -->
           <div id="imposterSettings" class="game-specific-settings hidden">
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label" for="imposterCount">Imposters</label>
                 <select id="imposterCount" class="form-select">
-                  <option value="1" selected>1 Imposter (Recommended)</option>
+                  <option value="1" selected>1 Imposter</option>
                   <option value="2">2 Imposters (For 6+ players)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" for="imposterCategory">Word Category</label>
+                <label class="form-label" for="imposterCategory">Category</label>
                 <select id="imposterCategory" class="form-select">
-                  <option value="all" selected>🎲 All Categories (Mixed)</option>
+                  <option value="all" selected>🎲 All Categories</option>
                   <option value="Everyday">☕ Everyday Objects</option>
                   <option value="Food & Drink">🍕 Food & Drink</option>
                   <option value="Animals">🦁 Animals</option>
                   <option value="Nature & Places">🌴 Nature & Places</option>
-                  <option value="Pop Culture">🎬 Pop Culture & Heroes</option>
                   <option value="Tech & Transport">🚀 Tech & Transport</option>
                   <option value="People & Jobs">🧑‍⚕️ Roles & Jobs</option>
                 </select>
               </div>
             </div>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label" for="imposterDiscussionTime">Discussion Timer</label>
-                <select id="imposterDiscussionTime" class="form-select">
-                  <option value="45">45 Seconds</option>
-                  <option value="60" selected>60 Seconds</option>
-                  <option value="90">90 Seconds</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="imposterMaxPlayers">Max Players</label>
-                <select id="imposterMaxPlayers" class="form-select">
-                  <option value="6">6 Players</option>
-                  <option value="10" selected>10 Players</option>
-                  <option value="16">16 Players</option>
-                </select>
-              </div>
-            </div>
           </div>
 
-          <!-- WAVELENGTH SPECIFIC SETTINGS -->
+          <!-- WAVELENGTH SETTINGS -->
           <div id="wavelengthSettings" class="game-specific-settings hidden">
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label" for="wavelengthMode">Game Mode</label>
-                <select id="wavelengthMode" class="form-select" onchange="toggleWavelengthModeOptions()">
-                  <option value="coop" selected>🤝 Co-op (Play Together)</option>
+                <select id="wavelengthMode" class="form-select">
+                  <option value="coop" selected>🤝 Co-op (Together)</option>
                   <option value="teams">⚔️ Teams (Red vs Blue)</option>
                 </select>
               </div>
-              <div class="form-group" id="wavelengthGoalGroup">
-                <label class="form-label" for="wavelengthRounds" id="wavelengthGoalLabel">Rounds to Play</label>
+              <div class="form-group">
+                <label class="form-label" for="wavelengthRounds">Rounds</label>
                 <select id="wavelengthRounds" class="form-select">
-                  <option value="5">5 Rounds (Quick)</option>
-                  <option value="7" selected>7 Rounds (Standard)</option>
-                  <option value="10">10 Rounds (Full Deck)</option>
+                  <option value="5">5 Rounds</option>
+                  <option value="7" selected>7 Rounds</option>
+                  <option value="10">10 Rounds</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <!-- PLATFORMER SPECIFIC SETTINGS -->
+          <!-- PLATFORMER SETTINGS -->
           <div id="platformerSettings" class="game-specific-settings hidden">
             <div class="form-grid-2">
               <div class="form-group">
@@ -494,7 +481,7 @@
                 <select id="platformerStartingLevel" class="form-select">
                   <option value="0" selected>Level 1: Buddy System</option>
                   <option value="1">Level 2: Heavy Lifting</option>
-                  <option value="2">Level 3: The Golden Key</option>
+                  <option value="2">Level 3: Golden Key</option>
                   <option value="3">Level 4: Dual Towers</option>
                   <option value="4">Level 5: Master Vault</option>
                 </select>
@@ -510,6 +497,114 @@
             </div>
           </div>
 
+          <!-- DRAW & GUESS SETTINGS -->
+          <div id="drawguessSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="drawguessRounds">Rounds</label>
+                <select id="drawguessRounds" class="form-select">
+                  <option value="2">2 Rounds (Quick)</option>
+                  <option value="3" selected>3 Rounds (Standard)</option>
+                  <option value="5">5 Rounds (Marathon)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="drawguessDrawTime">Draw Time</label>
+                <select id="drawguessDrawTime" class="form-select">
+                  <option value="60">60 Seconds</option>
+                  <option value="75" selected>75 Seconds</option>
+                  <option value="90">90 Seconds</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- CODENAMES SETTINGS -->
+          <div id="codenamesSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="codenamesMaxPlayers">Max Players</label>
+                <select id="codenamesMaxPlayers" class="form-select">
+                  <option value="8">8 Players</option>
+                  <option value="12" selected>12 Players</option>
+                  <option value="16">16 Players</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="codenamesTimer">Turn Style</label>
+                <select id="codenamesTimer" class="form-select">
+                  <option value="relaxed" selected>Relaxed (No limit)</option>
+                  <option value="fast">Blitz (2 min timer)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPEED TRIVIA SETTINGS -->
+          <div id="triviaSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="triviaQuestionCount">Questions</label>
+                <select id="triviaQuestionCount" class="form-select">
+                  <option value="5">5 Questions (Quick Blitz)</option>
+                  <option value="8" selected>8 Questions (Standard)</option>
+                  <option value="12">12 Questions (Party)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="triviaTimeLimit">Timer per Question</label>
+                <select id="triviaTimeLimit" class="form-select">
+                  <option value="10">10 Seconds (Lightning)</option>
+                  <option value="15" selected>15 Seconds (Normal)</option>
+                  <option value="20">20 Seconds (Casual)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIAR'S DICE SETTINGS -->
+          <div id="liarsdiceSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="liarsdiceStartingDice">Starting Dice</label>
+                <select id="liarsdiceStartingDice" class="form-select">
+                  <option value="3">3 Dice (Fast)</option>
+                  <option value="5" selected>5 Dice (Classic)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="liarsdiceMaxPlayers">Max Players</label>
+                <select id="liarsdiceMaxPlayers" class="form-select">
+                  <option value="4">4 Players</option>
+                  <option value="6" selected>6 Players</option>
+                  <option value="8">8 Players</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPYFALL SETTINGS -->
+          <div id="spyfallSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="spyfallDuration">Timer Duration</label>
+                <select id="spyfallDuration" class="form-select">
+                  <option value="300">5 Minutes</option>
+                  <option value="480" selected>8 Minutes (Classic)</option>
+                  <option value="600">10 Minutes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="spyfallMaxPlayers">Max Players</label>
+                <select id="spyfallMaxPlayers" class="form-select">
+                  <option value="6">6 Players</option>
+                  <option value="8" selected>8 Players</option>
+                  <option value="12">12 Players</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <button type="submit" id="btnSubmitCreate" class="btn btn-gold submit-btn">
             <span>Create Room & Play</span>
           </button>
@@ -519,19 +614,17 @@
       <!-- JOIN ROOM SECTION -->
       <section id="sectionJoin" class="action-section hidden">
         <form id="joinRoomForm" onsubmit="handleJoinRoom(event)">
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label class="form-label" for="joinPlayerName">Your Player Name</label>
-            <input type="text" id="joinPlayerName" class="form-input" placeholder="Enter your display name"
-              maxlength="15" required autocomplete="nickname">
+            <input type="text" id="joinPlayerName" class="form-input" placeholder="Enter your display name" maxlength="15" required autocomplete="nickname">
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 16px;">
             <label class="form-label" for="joinRoomCode">
               <span>Room Code</span>
               <span style="font-size: 11px; color: var(--gold-light);">6-LETTER CODE</span>
             </label>
-            <input type="text" id="joinRoomCode" class="form-input" placeholder="e.g. A1B2C3" maxlength="6"
-              style="text-transform: uppercase; letter-spacing: 3px; font-weight: 700; font-size: 18px;" required>
+            <input type="text" id="joinRoomCode" class="form-input" placeholder="e.g. A1B2C3" maxlength="6" style="text-transform: uppercase; letter-spacing: 3px; font-weight: 700; font-size: 18px;" required>
           </div>
 
           <button type="submit" id="btnSubmitJoin" class="btn btn-gold submit-btn">
@@ -548,25 +641,24 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // Game definitions & rules
     const GAME_META = {
       poker: {
         title: "Texas Hold'em Poker",
-        desc: "Classic no-limit Texas Hold'em with real-time pot betting, cards showdown, and chat.",
+        desc: "Classic no-limit Texas Hold'em with real-time pot betting, cards showdown, CPU bots, and live chat.",
         icon: "🃏",
         accent: "poker-accent",
         btnClass: "btn-gold",
-        badges: ["👥 2 - 8 Players", "⏱️ Real-time", "🏆 Chips & Showdown"],
+        badges: ["👥 2 - 8 Players", "⏱️ Real-time", "🤖 CPU Bots Supported"],
         rules: "Standard No-Limit Texas Hold'em. Each player gets 2 private hole cards. Bet, raise, or fold through Flop, Turn, and River. Best 5-card hand wins the pot!"
       },
       imposter: {
         title: "The Imposter",
-        desc: "Everyone receives a secret word. The Imposter gets a slightly different word! Give clues, discuss, and vote out the suspect.",
+        desc: "Everyone gets a secret word. The Imposter gets a different word! Give clues, discuss, and sus out the mole.",
         icon: "🕵️",
         accent: "imposter-accent",
         btnClass: "btn-danger",
         badges: ["👥 3 - 16 Players", "🗣️ Word Deduction", "🔍 Sus Out The Mole"],
-        rules: "Everyone receives a word (e.g., 'Coffee'), but the Imposter gets a closely related word (e.g., 'Tea')! Take turns giving 1-word or short clues. Then discuss and vote on who has the different word. If caught, the Imposter gets one last chance to steal the win by guessing the Civilians' word!"
+        rules: "Everyone receives a secret word, but the Imposter gets a closely related word! Take turns giving clues, vote on who is sus, and if caught, the Imposter can guess the word to steal the win!"
       },
       wavelength: {
         title: "Wavelength",
@@ -575,7 +667,7 @@
         accent: "wavelength-accent",
         btnClass: "btn-purple",
         badges: ["👥 2 - 16 Players", "🧠 Telepathy Party", "🎯 Rotating Dial"],
-        rules: "A spectrum card is drawn (e.g., 'Cold <---> Hot'). The Psychic secretly sees where the target bullseye is located and gives a clue that matches that position. The team rotates the interactive dial to where they think the clue belongs. Open the shutter to reveal the score!"
+        rules: "A spectrum card is drawn ('Cold <---> Hot'). The Psychic secretly sees the bullseye and gives a clue matching that position. The team rotates the dial to match the clue. Open the shutter to reveal the score!"
       },
       platformer: {
         title: "Co-op Platformer",
@@ -584,7 +676,52 @@
         accent: "platformer-accent",
         btnClass: "btn-success",
         badges: ["👥 2 - 6 Players", "🤝 Puzzle Platformer", "🎮 WASD / Touch"],
-        rules: "Collaborative teamwork platformer! One player steps on pressure buttons to keep gates open, pushes crates to create stairs, and retrieves keys over spike pits. All players must reach the exit portal together to clear the stage!"
+        rules: "Collaborative teamwork platformer! Step on pressure plates to open gates, push crates to build stairs, bounce on springs, and grab keys. All players must reach the exit portal together!"
+      },
+      drawguess: {
+        title: "Draw & Guess",
+        desc: "Take turns drawing secret words on an interactive canvas while everyone races to guess in live chat!",
+        icon: "🎨",
+        accent: "drawguess-accent",
+        btnClass: "btn-gold",
+        badges: ["👥 2 - 16 Players", "✏️ Live Canvas", "💬 Real-time Guessing"],
+        rules: "One player chooses a secret word and sketches it on the canvas with color palettes and tools. Other players guess in chat. Faster correct guesses award more points!"
+      },
+      codenames: {
+        title: "Codenames",
+        desc: "Spymasters give one-word clues to guide their operatives to their secret agent cards while avoiding the deadly Assassin!",
+        icon: "🕵️",
+        accent: "codenames-accent",
+        btnClass: "btn-purple",
+        badges: ["👥 2 - 16 Players", "🔴 Red vs 🔵 Blue", "💀 Beware Assassin"],
+        rules: "A 5x5 grid of 25 code words. Spymasters give a 1-word clue and number. Operatives guess cards. Contact all your team's secret agents before the other team. Avoid the Assassin or lose instantly!"
+      },
+      trivia: {
+        title: "Speed Trivia",
+        desc: "Fast-paced Kahoot-style quiz showdown! Answer correctly and quickly to build streaks and conquer the leaderboard.",
+        icon: "⚡",
+        accent: "trivia-accent",
+        btnClass: "btn-danger",
+        badges: ["👥 1 - 24 Players", "⏱️ 15s Blitz", "🔥 Streak Bonuses"],
+        rules: "Compete across multiple fun categories. Pick from 4 colorful answer choices before the timer expires. Speed and consecutive streaks yield massive score multipliers!"
+      },
+      liarsdice: {
+        title: "Liar's Dice",
+        desc: "The classic pirate bluffing dice game (Perudo). Shake your cups, bid on table dice, and call Liar!",
+        icon: "🎲",
+        accent: "liarsdice-accent",
+        btnClass: "btn-success",
+        badges: ["👥 2 - 8 Players", "🤥 Bluff & Deduce", "⚀ Ones Are Wild"],
+        rules: "Players roll 5 dice secretly under cups. Bid on total dice across the table. Bids must escalate. Call 'Liar!' to challenge. Lift cups to count. Ones are wild. Last player with dice wins!"
+      },
+      spyfall: {
+        title: "Spyfall",
+        desc: "Everyone knows the secret location except the Spy! Ask cunning questions to uncover the Spy before they guess where you are.",
+        icon: "🕵️‍♂️",
+        accent: "spyfall-accent",
+        btnClass: "btn-purple",
+        badges: ["👥 3 - 12 Players", "📍 Secret Locations", "🎭 Social Deduction"],
+        rules: "Civilians know the secret location and their assigned roles. The Spy only knows they are the Spy! Ask questions to detect who is bluffing. Accuse the Spy, or the Spy can reveal and guess the location to win!"
       }
     };
 
@@ -598,31 +735,14 @@
       console.warn('Socket.IO connection pending');
     }
 
-    // Toast notifications
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
-      toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
-    }
-
-    // Switch between Poker, Imposter, and Wavelength tabs
     function switchGame(gameType) {
       if (!GAME_META[gameType]) return;
       currentGame = gameType;
 
-      // Update Tab Buttons
       document.querySelectorAll('.game-tab-btn').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`tab${gameType.charAt(0).toUpperCase() + gameType.slice(1)}`);
       if (activeBtn) activeBtn.classList.add('active');
 
-      // Update Card Accent & Meta
       const card = document.getElementById('mainHubCard');
       card.className = `hub-card ${GAME_META[gameType].accent}`;
 
@@ -631,27 +751,17 @@
       document.getElementById('gameMetaDesc').textContent = GAME_META[gameType].desc;
       document.getElementById('activeGameLabel').textContent = GAME_META[gameType].title;
 
-      // Badges
       const badgesContainer = document.getElementById('gameMetaBadges');
       badgesContainer.innerHTML = GAME_META[gameType].badges.map(b => `<span class="badge-pill">${b}</span>`).join('');
-
-      // Rules text
       document.getElementById('rulesSummaryText').textContent = GAME_META[gameType].rules;
 
-      // Buttons styling
-      const btnCreate = document.getElementById('btnSubmitCreate');
-      const btnJoin = document.getElementById('btnSubmitJoin');
-      btnCreate.className = `btn ${GAME_META[gameType].btnClass} submit-btn`;
-      btnJoin.className = `btn ${GAME_META[gameType].btnClass} submit-btn`;
-
       // Show/Hide specific settings
-      document.getElementById('pokerSettings').classList.toggle('hidden', gameType !== 'poker');
-      document.getElementById('imposterSettings').classList.toggle('hidden', gameType !== 'imposter');
-      document.getElementById('wavelengthSettings').classList.toggle('hidden', gameType !== 'wavelength');
-      document.getElementById('platformerSettings').classList.toggle('hidden', gameType !== 'platformer');
+      ['poker', 'imposter', 'wavelength', 'platformer', 'drawguess', 'codenames', 'trivia', 'liarsdice', 'spyfall'].forEach(g => {
+        const el = document.getElementById(`${g}Settings`);
+        if (el) el.classList.toggle('hidden', g !== gameType);
+      });
     }
 
-    // Switch between Create and Join
     function switchAction(action) {
       currentAction = action;
       document.getElementById('btnActionCreate').classList.toggle('active', action === 'create');
@@ -661,28 +771,6 @@
       document.getElementById('sectionJoin').classList.toggle('hidden', action !== 'join');
     }
 
-    function toggleWavelengthModeOptions() {
-      const mode = document.getElementById('wavelengthMode').value;
-      const label = document.getElementById('wavelengthGoalLabel');
-      const select = document.getElementById('wavelengthRounds');
-      if (mode === 'teams') {
-        label.textContent = 'Points to Win';
-        select.innerHTML = `
-          <option value="10" selected>First to 10 Points</option>
-          <option value="12">First to 12 Points</option>
-          <option value="15">First to 15 Points</option>
-        `;
-      } else {
-        label.textContent = 'Rounds to Play';
-        select.innerHTML = `
-          <option value="5">5 Rounds (Quick)</option>
-          <option value="7" selected>7 Rounds (Standard)</option>
-          <option value="10">10 Rounds (Full Deck)</option>
-        `;
-      }
-    }
-
-    // Auto-detect room parameter from URL e.g. /?room=XYZ
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const roomParam = params.get('room');
@@ -695,42 +783,31 @@
       if (roomParam) {
         switchAction('join');
         document.getElementById('joinRoomCode').value = roomParam.trim().toUpperCase();
-        // Check game type for this room from backend API
         fetch(`/api/room/${encodeURIComponent(roomParam.trim().toUpperCase())}`)
           .then(res => res.json())
           .then(data => {
             if (data.gameType && GAME_META[data.gameType]) {
               switchGame(data.gameType);
-              showToast(`Found active room for ${GAME_META[data.gameType].title}!`, 'success');
             }
           })
-          .catch(() => { });
+          .catch(() => {});
       }
 
-      // Pre-fill player name if saved
-      const savedName = sessionStorage.getItem('playerName') || localStorage.getItem('playerName');
+      const savedName = localStorage.getItem('party_player_name');
       if (savedName) {
         document.getElementById('createPlayerName').value = savedName;
         document.getElementById('joinPlayerName').value = savedName;
       }
     });
 
-    // Form Submissions
     function handleCreateRoom(e) {
       e.preventDefault();
       const name = document.getElementById('createPlayerName').value.trim();
-      if (!name) {
-        showToast('Please enter your name', 'error');
-        return;
-      }
+      if (!name) return alert('Please enter your name');
 
-      sessionStorage.setItem('playerName', name);
-      localStorage.setItem('playerName', name);
+      localStorage.setItem('party_player_name', name);
 
-      let payload = {
-        gameType: currentGame,
-        name
-      };
+      let payload = { gameType: currentGame, name };
 
       if (currentGame === 'poker') {
         payload.startingChips = parseInt(document.getElementById('pokerStartingChips').value, 10);
@@ -740,24 +817,31 @@
       } else if (currentGame === 'imposter') {
         payload.imposterCount = parseInt(document.getElementById('imposterCount').value, 10);
         payload.category = document.getElementById('imposterCategory').value;
-        payload.discussionTime = parseInt(document.getElementById('imposterDiscussionTime').value, 10);
-        payload.maxPlayers = parseInt(document.getElementById('imposterMaxPlayers').value, 10);
       } else if (currentGame === 'wavelength') {
         payload.mode = document.getElementById('wavelengthMode').value;
-        const goalVal = parseInt(document.getElementById('wavelengthRounds').value, 10);
-        if (payload.mode === 'teams') {
-          payload.pointsToWin = goalVal;
-        } else {
-          payload.totalRounds = goalVal;
-        }
+        payload.totalRounds = parseInt(document.getElementById('wavelengthRounds').value, 10);
       } else if (currentGame === 'platformer') {
         payload.levelIndex = parseInt(document.getElementById('platformerStartingLevel').value, 10);
         payload.maxPlayers = parseInt(document.getElementById('platformerMaxPlayers').value, 10);
+      } else if (currentGame === 'drawguess') {
+        payload.rounds = parseInt(document.getElementById('drawguessRounds').value, 10);
+        payload.drawTime = parseInt(document.getElementById('drawguessDrawTime').value, 10);
+      } else if (currentGame === 'codenames') {
+        payload.maxPlayers = parseInt(document.getElementById('codenamesMaxPlayers').value, 10);
+      } else if (currentGame === 'trivia') {
+        payload.questionCount = parseInt(document.getElementById('triviaQuestionCount').value, 10);
+        payload.timeLimit = parseInt(document.getElementById('triviaTimeLimit').value, 10);
+      } else if (currentGame === 'liarsdice') {
+        payload.startingDice = parseInt(document.getElementById('liarsdiceStartingDice').value, 10);
+        payload.maxPlayers = parseInt(document.getElementById('liarsdiceMaxPlayers').value, 10);
+      } else if (currentGame === 'spyfall') {
+        payload.duration = parseInt(document.getElementById('spyfallDuration').value, 10);
+        payload.maxPlayers = parseInt(document.getElementById('spyfallMaxPlayers').value, 10);
       }
 
       const btn = document.getElementById('btnSubmitCreate');
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner"></span> Creating Room...`;
+      btn.textContent = 'Creating Room...';
 
       socket.emit('create-room', payload);
     }
@@ -767,79 +851,50 @@
       const name = document.getElementById('joinPlayerName').value.trim();
       const roomId = document.getElementById('joinRoomCode').value.trim().toUpperCase();
 
-      if (!name) {
-        showToast('Please enter your name', 'error');
-        return;
-      }
-      if (!roomId) {
-        showToast('Please enter room code', 'error');
-        return;
-      }
-
-      sessionStorage.setItem('playerName', name);
-      localStorage.setItem('playerName', name);
+      if (!name || !roomId) return alert('Name and room code are required');
+      localStorage.setItem('party_player_name', name);
 
       const btn = document.getElementById('btnSubmitJoin');
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner"></span> Joining Room...`;
+      btn.textContent = 'Joining Room...';
 
       socket.emit('join-room', { roomId, name });
     }
 
-    // Socket Responses
     if (socket) {
       socket.on('room-created', ({ roomId, gameType }) => {
-        sessionStorage.setItem('roomId', roomId);
-        sessionStorage.setItem('gameType', gameType);
-        sessionStorage.setItem('isHost', 'true');
         navigateToGame(gameType, roomId);
       });
 
       socket.on('room-joined', ({ roomId, gameType }) => {
-        sessionStorage.setItem('roomId', roomId);
-        sessionStorage.setItem('gameType', gameType);
-        sessionStorage.setItem('isHost', 'false');
         navigateToGame(gameType, roomId);
       });
 
       socket.on('join-error', (msg) => {
         resetButtons();
-        showToast(msg || 'Unable to join room', 'error');
+        alert(msg || 'Unable to join room');
       });
 
       socket.on('action-error', (msg) => {
         resetButtons();
-        showToast(msg || 'An error occurred', 'error');
-      });
-
-      socket.on('connect_error', () => {
-        resetButtons();
-        showToast('Connection error. Server may still be starting up...', 'error');
+        alert(msg || 'An error occurred');
       });
     }
 
     function navigateToGame(gameType, roomId) {
       const encoded = encodeURIComponent(roomId);
-      if (gameType === 'imposter') {
-        window.location.href = `/imposter/game.html?room=${encoded}`;
-      } else if (gameType === 'wavelength') {
-        window.location.href = `/wavelength/game.html?room=${encoded}`;
-      } else if (gameType === 'platformer') {
-        window.location.href = `/platformer/game.html?room=${encoded}`;
-      } else {
-        window.location.href = `/poker/game.html?room=${encoded}`;
-      }
+      const name = encodeURIComponent(localStorage.getItem('party_player_name') || 'Player');
+      window.location.href = `/${gameType}/game.html?room=${encoded}&name=${name}`;
     }
 
     function resetButtons() {
       const btnCreate = document.getElementById('btnSubmitCreate');
       const btnJoin = document.getElementById('btnSubmitJoin');
       btnCreate.disabled = false;
-      btnCreate.innerHTML = `<span>Create Room & Play</span>`;
+      btnCreate.textContent = 'Create Room & Play';
       btnJoin.disabled = false;
-      btnJoin.innerHTML = `<span>Enter Game Room</span>`;
+      btnJoin.textContent = 'Enter Game Room';
     }
   </script>
 </body>
-
 </html>

@@ -124,6 +124,7 @@ class ImposterGame {
     this.winner = null;
     this.winReason = '';
     this.imposterGuessResult = null;
+    this.blankMode = !!customOptions.blankMode;
 
     // Pick word pair
     if (customOptions.civilianWord && customOptions.imposterWord) {
@@ -151,7 +152,7 @@ class ImposterGame {
       player.alive = true;
       player.ready = false;
       player.isImposter = imposterIds.has(player.id);
-      player.word = player.isImposter ? this.imposterWord : this.civilianWord;
+      player.word = player.isImposter ? (this.blankMode ? '??? (NO WORD - BLUFF!)' : this.imposterWord) : this.civilianWord;
     }
 
     // Turn order for clues
@@ -457,6 +458,7 @@ class ImposterGame {
     this.winner = null;
     this.winReason = '';
     this.imposterGuessResult = null;
+    this.blankMode = !!customOptions.blankMode;
     for (const player of this.players) {
       player.alive = true;
       player.ready = false;

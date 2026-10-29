@@ -67,6 +67,38 @@ class PokerGame {
     return { success: true, player };
   }
 
+  addBot(name = null) {
+    if (this.players.length >= this.maxPlayers) {
+      return { error: 'Room is full' };
+    }
+    if (this.state !== 'waiting') {
+      return { error: 'Cannot add bot during active hand' };
+    }
+
+    const botNames = ['PokerBot Alex', 'ChipMaster Sam', 'BluffQueen Mia', 'HighRoller Leo', 'CardShark Kai'];
+    const botName = name || botNames[this.players.filter(p => p.isBot).length % botNames.length];
+    const botId = 'bot_' + Math.random().toString(36).substring(2, 8);
+
+    const player = {
+      id: botId,
+      name: botName,
+      chips: this.startingChips,
+      holeCards: [],
+      bet: 0,
+      totalBet: 0,
+      folded: false,
+      allIn: false,
+      connected: true,
+      isBot: true,
+      seatIndex: this.players.length,
+      handResult: null
+    };
+
+    this.players.push(player);
+    this.addLog(`${player.name} (CPU) joined the table`);
+    return { success: true, player };
+  }
+
   removePlayer(socketId) {
     const idx = this.players.findIndex(p => p.id === socketId);
     if (idx === -1) return;
@@ -689,6 +721,14 @@ class PokerGame {
       startTime: this.turnStartTime
     });
 
+    // If CPU Bot, take intelligent natural move after brief think time
+    if (currentPlayer.isBot) {
+      this.turnTimer = setTimeout(() => {
+        this.makeBotMove(currentPlayer);
+      }, 900 + Math.random() * 600);
+      return;
+    }
+
     // If disconnected player, auto-fold after 500ms
     if (!currentPlayer.connected) {
       this.turnTimer = setTimeout(() => {
@@ -710,6 +750,36 @@ class PokerGame {
       this.handleAction(playerId, 'check', 0);
     } else {
       this.handleAction(playerId, 'fold', 0);
+    }
+  }
+
+  makeBotMove(bot) {
+    if (this.currentPlayerIndex === -1 || !this.players[this.currentPlayerIndex] || this.players[this.currentPlayerIndex].id !== bot.id) return;
+    if (bot.folded || bot.allIn) return;
+
+    const toCall = this.currentBet - bot.bet;
+    if (toCall === 0) {
+      // 80% check, 20% small raise
+      if (Math.random() < 0.2 && bot.chips >= this.bigBlind * 2) {
+        this.handleAction(bot.id, 'raise', this.bigBlind * 2);
+      } else {
+        this.handleAction(bot.id, 'check', 0);
+      }
+    } else {
+      // Call or Fold based on pot odds
+      const potRatio = toCall / Math.max(1, this.pot);
+      if (potRatio < 0.35 || Math.random() < 0.75) {
+        this.handleAction(bot.id, 'call', 0);
+      } else {
+        this.handleAction(bot.id, 'fold', 0);
+      }
+    }
+
+    if (this.io) {
+      for (const p of this.players) {
+        const sock = this.io.sockets.sockets.get(p.id);
+        if (sock) sock.emit('game-state', this.getStateForPlayer(p.id));
+      }
     }
   }
 

@@ -8,6 +8,11 @@ const PokerGame = require('./games/poker/game');
 const ImposterGame = require('./games/imposter/game');
 const WavelengthGame = require('./games/wavelength/game');
 const PlatformerGame = require('./games/platformer/game');
+const DrawGuessGame = require('./games/drawguess/game');
+const CodenamesGame = require('./games/codenames/game');
+const SpeedTriviaGame = require('./games/trivia/game');
+const LiarsDiceGame = require('./games/liarsdice/game');
+const SpyfallGame = require('./games/spyfall/game');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,18 +33,24 @@ app.get('/game.html', (req, res) => {
   // Backwards compatibility for existing poker links
   res.sendFile(path.join(__dirname, '../public/poker/game.html'));
 });
+
+// Imposter
 app.get(['/imposter', '/imposter/'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/imposter/game.html'));
 });
 app.get(['/imposter/game', '/imposter/game.html'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/imposter/game.html'));
 });
+
+// Wavelength
 app.get(['/wavelength', '/wavelength/'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/wavelength/game.html'));
 });
 app.get(['/wavelength/game', '/wavelength/game.html'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/wavelength/game.html'));
 });
+
+// Platformer
 app.get(['/platformer', '/platformer/'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/platformer/game.html'));
 });
@@ -47,9 +58,85 @@ app.get(['/platformer/game', '/platformer/game.html'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/platformer/game.html'));
 });
 
+// Draw & Guess
+app.get(['/drawguess', '/drawguess/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/drawguess/game.html'));
+});
+app.get(['/drawguess/game', '/drawguess/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/drawguess/game.html'));
+});
+
+// Codenames
+app.get(['/codenames', '/codenames/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/codenames/game.html'));
+});
+app.get(['/codenames/game', '/codenames/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/codenames/game.html'));
+});
+
+// Speed Trivia
+app.get(['/trivia', '/trivia/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/trivia/game.html'));
+});
+app.get(['/trivia/game', '/trivia/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/trivia/game.html'));
+});
+
+// Liar's Dice
+app.get(['/liarsdice', '/liarsdice/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/liarsdice/game.html'));
+});
+app.get(['/liarsdice/game', '/liarsdice/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/liarsdice/game.html'));
+});
+
+// Spyfall
+app.get(['/spyfall', '/spyfall/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/spyfall/game.html'));
+});
+app.get(['/spyfall/game', '/spyfall/game.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/spyfall/game.html'));
+});
+
 app.use(express.static(path.join(__dirname, '../public')));
 
-const rooms = new Map(); // roomId -> GameInstance (PokerGame | ImposterGame | WavelengthGame)
+const rooms = new Map(); // roomId -> GameInstance
+
+function createGameInstance(gameType, roomId, payload = {}) {
+  let game;
+  if (gameType === 'imposter') {
+    game = new ImposterGame(roomId, payload);
+  } else if (gameType === 'wavelength') {
+    game = new WavelengthGame(roomId, payload);
+  } else if (gameType === 'platformer') {
+    game = new PlatformerGame(roomId, payload);
+  } else if (gameType === 'drawguess') {
+    game = new DrawGuessGame(roomId, payload);
+  } else if (gameType === 'codenames') {
+    game = new CodenamesGame(roomId, payload);
+  } else if (gameType === 'trivia') {
+    game = new SpeedTriviaGame(roomId, payload);
+  } else if (gameType === 'liarsdice') {
+    game = new LiarsDiceGame(roomId, payload);
+  } else if (gameType === 'spyfall') {
+    game = new SpyfallGame(roomId, payload);
+  } else {
+    // Poker
+    game = new PokerGame(roomId, {
+      maxPlayers: Math.min(8, Math.max(2, Number(payload.maxPlayers) || 6)),
+      startingChips: Number(payload.startingChips) || 1000,
+      smallBlind: Number(payload.smallBlind) || 10,
+      bigBlind: Number(payload.bigBlind) || 20
+    });
+  }
+
+  if (typeof game.setIO === 'function') {
+    game.setIO(io);
+  } else {
+    game.io = io;
+  }
+  return game;
+}
 
 // REST endpoint to inspect room status
 app.get('/api/room/:roomId', (req, res) => {
@@ -88,6 +175,7 @@ function broadcastLobbyUpdate(game, socketIo) {
       name: p.name,
       chips: p.chips,
       team: p.team,
+      role: p.role,
       ready: p.ready,
       connected: p.connected,
       isHost: p.id === game.players[0]?.id
@@ -106,29 +194,7 @@ io.on('connection', socket => {
     const name = payload.name;
     const roomId = uuidv4().substring(0, 6).toUpperCase();
 
-    let game;
-    if (gameType === 'imposter') {
-      game = new ImposterGame(roomId, payload);
-    } else if (gameType === 'wavelength') {
-      game = new WavelengthGame(roomId, payload);
-    } else if (gameType === 'platformer') {
-      game = new PlatformerGame(roomId, payload);
-    } else {
-      // Poker
-      game = new PokerGame(roomId, {
-        maxPlayers: Math.min(8, Math.max(2, Number(payload.maxPlayers) || 6)),
-        startingChips: Number(payload.startingChips) || 1000,
-        smallBlind: Number(payload.smallBlind) || 10,
-        bigBlind: Number(payload.bigBlind) || 20
-      });
-    }
-
-    if (typeof game.setIO === 'function') {
-      game.setIO(io);
-    } else {
-      game.io = io;
-    }
-
+    const game = createGameInstance(gameType, roomId, payload);
     rooms.set(roomId, game);
 
     const joinResult = game.addPlayer(socket.id, name);
@@ -224,7 +290,7 @@ io.on('connection', socket => {
     }
 
     if (!game.canStart()) {
-      socket.emit('action-error', 'Cannot start: not enough players (need minimum to play)');
+      socket.emit('action-error', 'Cannot start: not enough players to play');
       return;
     }
 
@@ -233,7 +299,7 @@ io.on('connection', socket => {
     broadcastLobbyUpdate(game, io);
   });
 
-  // 4. Player Action (Universal & Poker)
+  // 4. Universal Player Action
   socket.on('player-action', (payload = {}) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
@@ -255,7 +321,64 @@ io.on('connection', socket => {
     }
   });
 
-  // 5. Imposter Game Specific Events
+  // 5. Party Game Switching (Seamless Host Room Migration)
+  socket.on('party:switch-game', ({ newGameType }) => {
+    const roomId = socket.data?.roomId;
+    if (!roomId) return;
+    const oldGame = rooms.get(roomId);
+    if (!oldGame) return;
+
+    if (oldGame.players[0]?.id !== socket.id) {
+      socket.emit('action-error', 'Only the host can switch games');
+      return;
+    }
+
+    if (typeof oldGame.clearTimer === 'function') oldGame.clearTimer();
+    if (typeof oldGame.clearTurnTimer === 'function') oldGame.clearTurnTimer();
+
+    const newGame = createGameInstance(newGameType, roomId);
+    oldGame.players.forEach(p => {
+      newGame.addPlayer(p.id, p.name);
+    });
+
+    rooms.set(roomId, newGame);
+
+    io.to(roomId).emit('party:game-switched', {
+      newGameType,
+      roomId,
+      url: `/${newGameType}/game.html?room=${roomId}`
+    });
+  });
+
+  // 6. Floating Reactions & Poker Bots
+  socket.on('party:reaction', ({ emoji }) => {
+    const roomId = socket.data?.roomId;
+    if (!roomId) return;
+    io.to(roomId).emit('party:reaction', {
+      emoji,
+      senderName: socket.data?.name || 'Someone'
+    });
+  });
+
+  socket.on('poker:add-bot', (payload = {}) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'poker') {
+      if (game.players[0]?.id !== socket.id) {
+        socket.emit('action-error', 'Only the host can add bots');
+        return;
+      }
+      const bot = game.addBot(payload.name);
+      if (bot.error) {
+        socket.emit('action-error', bot.error);
+      } else {
+        emitPersonalizedStates(game, io);
+        broadcastLobbyUpdate(game, io);
+      }
+    }
+  });
+
+  // 7. Imposter Game Specific Events
   socket.on('imposter:ready', () => {
     const roomId = socket.data?.roomId;
     const game = rooms.get(roomId);
@@ -295,7 +418,7 @@ io.on('connection', socket => {
     }
   });
 
-  // 6. Wavelength Game Specific Events
+  // 8. Wavelength Game Specific Events
   socket.on('wavelength:submit-clue', ({ clue }) => {
     const roomId = socket.data?.roomId;
     const game = rooms.get(roomId);
@@ -312,7 +435,6 @@ io.on('connection', socket => {
     if (game && game.gameType === 'wavelength') {
       const res = game.handleAction(socket.id, 'move-dial', { position });
       if (res && !res.error) {
-        // Broadcast immediate live needle update for 60fps team synchronization
         io.to(roomId).emit('wavelength:dial-moved', {
           dialNeedle: game.dialNeedle,
           playerId: socket.id
@@ -364,7 +486,7 @@ io.on('connection', socket => {
     }
   });
 
-  // 7. Co-op Platformer Game Specific Events
+  // 9. Co-op Platformer Game Specific Events
   socket.on('platformer:sync', (data = {}) => {
     const roomId = socket.data?.roomId;
     const game = rooms.get(roomId);
@@ -407,7 +529,26 @@ io.on('connection', socket => {
     }
   });
 
-  // 8. Chat Message (All Games)
+  // 10. Draw & Guess Chat Guess Handler
+  socket.on('drawguess:guess', ({ text }) => {
+    const roomId = socket.data?.roomId;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'drawguess') {
+      const res = game.handleGuess(socket.id, text);
+      if (res && res.error) {
+        socket.emit('action-error', res.error);
+      } else if (res && res.chat) {
+        io.to(roomId).emit('chat-message', {
+          senderId: socket.id,
+          name: socket.data?.name || 'Player',
+          message: text,
+          timestamp: Date.now()
+        });
+      }
+    }
+  });
+
+  // 11. Chat Message (All Games)
   socket.on('chat-message', ({ message }) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
@@ -422,7 +563,7 @@ io.on('connection', socket => {
     });
   });
 
-  // 8. Disconnect
+  // 12. Disconnect
   socket.on('disconnect', () => {
     const roomId = socket.data?.roomId;
     const name = socket.data?.name;
@@ -457,7 +598,12 @@ if (require.main === module) {
     console.log(`   🕵️ Imposter: http://localhost:${PORT}/imposter`);
     console.log(`   🌊 Wavelength: http://localhost:${PORT}/wavelength`);
     console.log(`   🏃 Co-op Platformer: http://localhost:${PORT}/platformer`);
+    console.log(`   🎨 Draw & Guess: http://localhost:${PORT}/drawguess`);
+    console.log(`   🕵️ Codenames: http://localhost:${PORT}/codenames`);
+    console.log(`   ⚡ Speed Trivia: http://localhost:${PORT}/trivia`);
+    console.log(`   🎲 Liar's Dice: http://localhost:${PORT}/liarsdice`);
+    console.log(`   🕵️ Spyfall: http://localhost:${PORT}/spyfall`);
   });
 }
 
-module.exports = { app, server, io, rooms };
+module.exports = { app, server, io, rooms, createGameInstance };
