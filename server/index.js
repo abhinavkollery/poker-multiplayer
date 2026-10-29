@@ -13,6 +13,7 @@ const CodenamesGame = require('./games/codenames/game');
 const SpeedTriviaGame = require('./games/trivia/game');
 const LiarsDiceGame = require('./games/liarsdice/game');
 const SpyfallGame = require('./games/spyfall/game');
+const PartyLobbyGame = require('./games/party/game');
 
 const app = express();
 const server = http.createServer(app);
@@ -115,7 +116,9 @@ const rooms = new Map(); // roomId -> GameInstance
 
 function createGameInstance(gameType, roomId, payload = {}) {
   let game;
-  if (gameType === 'imposter') {
+  if (gameType === 'party' || gameType === 'lobby') {
+    game = new PartyLobbyGame(roomId, payload);
+  } else if (gameType === 'imposter') {
     game = new ImposterGame(roomId, payload);
   } else if (gameType === 'wavelength') {
     game = new WavelengthGame(roomId, payload);
@@ -345,8 +348,31 @@ io.on('connection', socket => {
     }
   });
 
-  // 5. Party Game Switching (Seamless Host Room Migration)
-  socket.on('party:switch-game', ({ newGameType }) => {
+  // 5. Party Game Switching & Real-Time Selection (Seamless Host Room Migration)
+  socket.on('party:select-game', (payload = {}) => {
+    const roomId = socket.data?.roomId;
+    if (!roomId) return;
+    const game = rooms.get(roomId);
+    if (!game) return;
+
+    if (game.players[0]?.id !== socket.id) {
+      socket.emit('action-error', 'Only the host can select games');
+      return;
+    }
+
+    const selectedGame = payload.gameType || payload.game || 'poker';
+    if (typeof game.handleAction === 'function') {
+      game.handleAction(socket.id, 'select-game', { gameType: selectedGame, options: payload.options });
+    }
+
+    io.to(roomId).emit('party:game-selected', {
+      selectedGame,
+      options: payload.options || {}
+    });
+    broadcastLobbyUpdate(game, io);
+  });
+
+  socket.on('party:switch-game', (payload = {}) => {
     const roomId = socket.data?.roomId;
     if (!roomId) return;
     const oldGame = rooms.get(roomId);
@@ -357,10 +383,13 @@ io.on('connection', socket => {
       return;
     }
 
+    const newGameType = payload.newGameType || payload.gameType || 'party';
+    const gameOptions = payload.options || payload.gameOptions || {};
+
     if (typeof oldGame.clearTimer === 'function') oldGame.clearTimer();
     if (typeof oldGame.clearTurnTimer === 'function') oldGame.clearTurnTimer();
 
-    const newGame = createGameInstance(newGameType, roomId);
+    const newGame = createGameInstance(newGameType, roomId, gameOptions);
     // Only migrate active connected human players, eliminating ghosts and bots
     const activePlayers = oldGame.players.filter(p => p.connected && !p.isBot);
     activePlayers.forEach(p => {
@@ -369,11 +398,19 @@ io.on('connection', socket => {
 
     rooms.set(roomId, newGame);
 
+    const redirectUrl = (newGameType === 'party' || newGameType === 'lobby')
+      ? `/?room=${roomId}`
+      : `/${newGameType}/game.html?room=${roomId}`;
+
     io.to(roomId).emit('party:game-switched', {
       newGameType,
       roomId,
-      url: `/${newGameType}/game.html?room=${roomId}`
+      url: redirectUrl
     });
+
+    // Also send updated lobby & game states to the room sockets
+    broadcastLobbyUpdate(newGame, io);
+    emitPersonalizedStates(newGame, io);
   });
 
   // 6. Floating Reactions & Poker Bots

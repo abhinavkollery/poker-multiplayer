@@ -656,12 +656,46 @@
       document.head.appendChild(style);
     },
 
-    show: function (targetUrl, roomId) {
+    getInviteUrl: function (roomId, gameType) {
+      const cleanRoom = String(roomId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('room') : '') || 'ROOM').trim().toUpperCase();
+      const origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : '';
+      let url = `${origin}/?join=${encodeURIComponent(cleanRoom)}`;
+      if (gameType && gameType !== 'party') {
+        url += `&game=${encodeURIComponent(gameType)}`;
+      }
+      if (typeof window !== 'undefined') {
+        const backend = (window.getPartyBackendUrl && window.getPartyBackendUrl()) || localStorage.getItem('party_server_url');
+        if (backend) {
+          url += `&server=${encodeURIComponent(backend)}`;
+        }
+      }
+      return url;
+    },
+
+    sanitizeUrl: function (rawUrl, roomId, gameType) {
+      if (!rawUrl || (typeof window !== 'undefined' && rawUrl === window.location.href)) {
+        return this.getInviteUrl(roomId, gameType);
+      }
+      try {
+        const origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : 'http://localhost:3000';
+        const parsed = new URL(rawUrl, origin);
+        // Stripping 'name' parameter prevents player session hijack and duplicate name collisions
+        parsed.searchParams.delete('name');
+        return parsed.toString();
+      } catch (e) {
+        return String(rawUrl)
+          .replace(/([?&])name=[^&#]*/gi, '$1')
+          .replace(/\?&/, '?')
+          .replace(/[?&]$/, '');
+      }
+    },
+
+    show: function (targetUrl, roomId, gameType) {
       this.injectStyles();
       this.hide(); // Remove existing modal if any
 
-      const url = targetUrl || window.location.href;
-      const cleanRoom = roomId || (new URLSearchParams(window.location.search).get('room') || 'ROOM').toUpperCase();
+      const cleanRoom = (roomId || (new URLSearchParams(window.location.search).get('room') || 'ROOM')).toUpperCase();
+      const url = this.sanitizeUrl(targetUrl, cleanRoom, gameType);
 
       const overlay = document.createElement('div');
       overlay.id = this.modalId;
@@ -675,8 +709,8 @@
       overlay.innerHTML = `
         <div class="qr-modal-card" role="dialog" aria-modal="true">
           <button class="qr-modal-close" onclick="window.QRCodeModal.hide()" title="Close">✕</button>
-          <h2 class="qr-modal-title">📱 Scan to Join</h2>
-          <p class="qr-modal-subtitle">Point your phone camera to join this room</p>
+          <h2 class="qr-modal-title">📱 Scan to Join Team</h2>
+          <p class="qr-modal-subtitle">Point your phone camera to join this party room with your own player name</p>
           
           <div class="qr-code-box">
             ${svgHtml}

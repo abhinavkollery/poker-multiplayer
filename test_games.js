@@ -400,7 +400,31 @@ const switchedTrivia = createGameInstance('trivia', testRoomId);
 originalPoker.players.forEach(p => switchedTrivia.addPlayer(p.id, p.name));
 assert.strictEqual(switchedTrivia.gameType, 'trivia');
 assert.strictEqual(switchedTrivia.players.length, 2);
-console.log(`  ✓ Seamless party room game switching verified`);
+
+// Test Party Lobby game instance & migration
+const partyLobby = createGameInstance('party', 'PARTYROOM1');
+assert.strictEqual(partyLobby.gameType, 'party');
+const p1Res = partyLobby.addPlayer('p1', 'PartyHost');
+const p2Res = partyLobby.addPlayer('p2', 'PartyGuest');
+assert.strictEqual(partyLobby.players.length, 2);
+assert.strictEqual(partyLobby.players[0].name, 'PartyHost');
+
+// Non-host cannot select game
+const nonHostSelect = partyLobby.handleAction('p2', 'select-game', { gameType: 'wavelength' });
+assert(nonHostSelect.error, 'Non-host cannot select game');
+
+// Host selects game
+const hostSelect = partyLobby.handleAction('p1', 'select-game', { gameType: 'wavelength' });
+assert.strictEqual(hostSelect.success, true);
+assert.strictEqual(partyLobby.selectedGame, 'wavelength');
+
+// Launch game with all party players migrating seamlessly under same room code
+const launchedWave = createGameInstance(partyLobby.selectedGame, 'PARTYROOM1');
+partyLobby.players.forEach(p => launchedWave.addPlayer(p.id, p.name));
+assert.strictEqual(launchedWave.gameType, 'wavelength');
+assert.strictEqual(launchedWave.players.length, 2);
+
+console.log(`  ✓ Seamless party room game switching and party lobby engine verified`);
 
 // ==========================================
 // Test 14: QR Code Generator & Modal Engine
@@ -418,7 +442,17 @@ assert(shortQr.includes('viewBox='), 'Must have viewBox for crisp scalability');
 const longUrl = 'https://poker-multiplayer.onrender.com/drawguess/game.html?room=XYZ999&name=Picasso';
 const longQr = QRCodeGenerator.createSVG(longUrl, { size: 240 });
 assert(longQr.length > shortQr.length, 'Longer URL must generate higher density QR matrix');
-console.log('  ✓ Zero-dependency QR Code generator, vector SVG path, and modal engine verified');
+
+// Verification: QR and Share link sanitization
+const cleanInvite = QRCodeModal.getInviteUrl('PARTY99');
+assert(cleanInvite.includes('join=PARTY99'), 'Invite URL must contain join=ROOMCODE');
+assert(!cleanInvite.includes('name='), 'Invite URL must NEVER contain host name');
+
+const dirtyUrl = 'http://localhost:3000/poker/game.html?room=ABCDEF&name=HostAlice';
+const sanitized = QRCodeModal.sanitizeUrl(dirtyUrl, 'ABCDEF', 'poker');
+assert(!sanitized.includes('name='), 'Sanitize URL must delete name parameter to prevent host session hijacking');
+
+console.log('  ✓ Zero-dependency QR Code generator, vector SVG path, and clean anti-hijack invite verified');
 
 // ==========================================
 // Test 15: Reconnection, Anti-Ghost Deduplication, and Lobby Splice

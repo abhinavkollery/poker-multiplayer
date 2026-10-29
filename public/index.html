@@ -682,6 +682,161 @@
       margin-top: 16px;
     }
 
+    /* ==========================================
+       PARTY ROOM HUB & LIVE ROSTER STYLES
+       ========================================== */
+    .party-room-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 20px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
+      flex-wrap: wrap;
+    }
+
+    .party-code-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 8px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .party-code-badge:hover {
+      background: rgba(56, 189, 248, 0.2);
+      transform: scale(1.02);
+    }
+    .party-code-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #38bdf8;
+    }
+
+    .party-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-party-action {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+      transition: all 0.2s ease;
+    }
+    .btn-party-action:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .party-roster-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .party-roster-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .party-roster-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .party-players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .party-player-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 8px 12px;
+      transition: all 0.2s ease;
+    }
+    .party-player-pill.is-me {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .party-player-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .party-player-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .party-player-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .tag-host {
+      background: #f59e0b;
+      color: #000;
+    }
+    .tag-you {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .party-launch-card {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(168, 85, 247, 0.08));
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -1174,9 +1329,14 @@
             </div>
           </div>
 
-          <button type="submit" id="btnSubmitCreate" class="btn btn-gold submit-btn">
-            <span>Create Room & Play</span>
-          </button>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+            <button type="button" id="btnCreatePartyTeam" class="btn btn-gold submit-btn" onclick="handleCreatePartyTeam(event)">
+              <span>🎉 Create Party Room & Invite Friends</span>
+            </button>
+            <button type="submit" id="btnSubmitCreate" class="btn btn-ghost submit-btn" style="border: 1px solid rgba(255,255,255,0.18); font-size: 14px; height: 44px;">
+              <span>⚡ Direct Launch Selected Game</span>
+            </button>
+          </div>
         </form>
       </section>
 
@@ -1190,16 +1350,89 @@
 
           <div class="form-group" style="margin-bottom: 16px;">
             <label class="form-label" for="joinRoomCode">
-              <span>Room Code</span>
+              <span>Party Room Code</span>
               <span style="font-size: 11px; color: var(--gold-light);">6-LETTER CODE</span>
             </label>
             <input type="text" id="joinRoomCode" class="form-input" placeholder="e.g. A1B2C3" maxlength="6" style="text-transform: uppercase; letter-spacing: 3px; font-weight: 700; font-size: 18px;" required>
           </div>
 
           <button type="submit" id="btnSubmitJoin" class="btn btn-gold submit-btn">
-            <span>Enter Game Room</span>
+            <span>🚀 Enter Party Room</span>
           </button>
         </form>
+      </section>
+
+      <!-- PARTY LOBBY SECTION (Active Group/Team Hub) -->
+      <section id="sectionPartyLobby" class="action-section hidden">
+        <div class="party-room-header">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Party Room Code</div>
+            <div class="party-code-badge" onclick="copyPartyRoomCode()" title="Click to copy room code">
+              <span id="partyRoomCodeDisplay" class="party-code-val">------</span>
+              <span style="font-size: 14px;">📋</span>
+            </div>
+          </div>
+          <div class="party-header-actions">
+            <button type="button" class="btn-party-action" onclick="openPartyQRCode()" title="Show QR code for friends to scan">
+              <span>📱 Scan to Join</span>
+            </button>
+            <button type="button" class="btn-party-action" onclick="copyPartyInviteLink()" title="Copy clean invite link">
+              <span>📋 Copy Link</span>
+            </button>
+            <button type="button" class="btn-party-action" onclick="leavePartyRoom()" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;" title="Leave this party">
+              <span>🚪 Leave</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Connected Team Members -->
+        <div class="party-roster-box" style="margin-top: 16px;">
+          <div class="party-roster-title-row">
+            <div class="party-roster-title">
+              <span>👥 Connected Team Members</span>
+              <span id="partyPlayerCountBadge" style="font-size: 11px; background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 999px; padding: 2px 8px; font-weight: 700;">1 Member</span>
+            </div>
+            <div id="partyRoleNotice" style="font-size: 12px; color: #94a3b8;">
+              <span id="partyHostStatusText">👑 You are the Host</span>
+            </div>
+          </div>
+          <div id="partyPlayersGrid" class="party-players-grid">
+            <!-- Dynamic Player Pills populated by lobby-update -->
+          </div>
+        </div>
+
+        <!-- Host Game Launch Controls / Guest Waiting State -->
+        <div id="partyHostControls" class="party-launch-card" style="margin-top: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Selected Game To Launch</div>
+              <div style="font-size: 18px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                <span id="partySelectedGameIcon">🃏</span>
+                <span id="partySelectedGameTitle">Texas Hold'em Poker</span>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8;">
+              Pick any game from the deck above, tune settings, and launch
+            </div>
+          </div>
+
+          <button type="button" id="btnLaunchParty" class="btn btn-gold submit-btn" onclick="handleLaunchPartyGame()">
+            <span>🚀 Launch <span id="launchBtnGameName">Texas Hold'em</span> with Party</span>
+          </button>
+        </div>
+
+        <div id="partyGuestControls" class="party-launch-card hidden" style="margin-top: 16px; text-align: center;">
+          <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">
+            Selected Game: <strong id="guestSelectedGameName" style="color: #38bdf8;">Texas Hold'em Poker</strong>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #cbd5e1; font-weight: 600; font-size: 14px;">
+            <span style="display: inline-block; animation: spin 1.5s linear infinite;">⏳</span>
+            <span>Waiting for the party host to launch the game...</span>
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
+            All team members will automatically be redirected together without entering any code!
+          </div>
+        </div>
       </section>
 
       <div class="footer-links" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px;">
@@ -1228,6 +1461,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/shared/socket-client.js"></script>
+  <script src="/shared/qrcode.js"></script>
   <script>
     const GAME_META = {
       poker: {
@@ -1352,6 +1586,9 @@
     let currentGame = 'poker';
     let currentAction = 'create';
     let currentCategory = 'all';
+    let activePartyRoomId = null;
+    let isPartyHost = false;
+    let myPlayerName = '';
     let socket = null;
 
     try {
@@ -1398,6 +1635,21 @@
         const el = document.getElementById(`${g}Settings`);
         if (el) el.classList.toggle('hidden', g !== gameType);
       });
+
+      updatePartyLobbyGameDisplay(gameType);
+
+      // If currently host of a party room, broadcast game selection in real time
+      if (activePartyRoomId && isPartyHost && socket) {
+        socket.emit('party:select-game', {
+          gameType,
+          options: getSelectedGamePayload()
+        });
+      }
+
+      if (!skipSound && window.sounds && typeof window.sounds.play === 'function') {
+        window.sounds.play('click');
+      }
+    }
 
       if (!skipSound && window.sounds && typeof window.sounds.play === 'function') {
         window.sounds.play('click');
@@ -1542,51 +1794,8 @@
       document.getElementById('sectionJoin').classList.toggle('hidden', action !== 'join');
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedView = localStorage.getItem('party_selector_view');
-      if (savedView === 'slider') {
-        toggleSelectorView('slider');
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const roomParam = params.get('room');
-      const gameParam = params.get('game');
-
-      if (gameParam && GAME_META[gameParam.toLowerCase()]) {
-        switchGame(gameParam.toLowerCase());
-      }
-
-      if (roomParam) {
-        switchAction('join');
-        document.getElementById('joinRoomCode').value = roomParam.trim().toUpperCase();
-        fetch(`/api/room/${encodeURIComponent(roomParam.trim().toUpperCase())}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.gameType && GAME_META[data.gameType]) {
-              switchGame(data.gameType);
-            }
-          })
-          .catch(() => {});
-      }
-
-      const savedName = localStorage.getItem('party_player_name') || localStorage.getItem('playerName') || sessionStorage.getItem('playerName');
-      if (savedName) {
-        document.getElementById('createPlayerName').value = savedName;
-        document.getElementById('joinPlayerName').value = savedName;
-      }
-    });
-
-    function handleCreateRoom(e) {
-      e.preventDefault();
-      const name = document.getElementById('createPlayerName').value.trim();
-      if (!name) return alert('Please enter your name');
-
-      localStorage.setItem('party_player_name', name);
-      localStorage.setItem('playerName', name);
-      sessionStorage.setItem('playerName', name);
-
-      let payload = { gameType: currentGame, name };
-
+    function getSelectedGamePayload() {
+      let payload = {};
       if (currentGame === 'poker') {
         payload.startingChips = parseInt(document.getElementById('pokerStartingChips').value, 10);
         payload.smallBlind = parseInt(document.getElementById('pokerSmallBlind').value, 10);
@@ -1616,10 +1825,89 @@
         payload.duration = parseInt(document.getElementById('spyfallDuration').value, 10);
         payload.maxPlayers = parseInt(document.getElementById('spyfallMaxPlayers').value, 10);
       }
+      return payload;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedView = localStorage.getItem('party_selector_view');
+      if (savedView === 'slider') {
+        toggleSelectorView('slider');
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = (params.get('join') || params.get('room') || params.get('code') || '').trim().toUpperCase();
+      const gameParam = params.get('game');
+
+      if (gameParam && GAME_META[gameParam.toLowerCase()]) {
+        switchGame(gameParam.toLowerCase(), true);
+      }
+
+      const savedName = localStorage.getItem('party_player_name') || localStorage.getItem('playerName') || sessionStorage.getItem('playerName');
+      if (savedName) {
+        myPlayerName = savedName;
+        const createInput = document.getElementById('createPlayerName');
+        const joinInput = document.getElementById('joinPlayerName');
+        if (createInput) createInput.value = savedName;
+        if (joinInput) joinInput.value = savedName;
+      }
+
+      if (roomParam) {
+        switchAction('join');
+        const joinInput = document.getElementById('joinRoomCode');
+        if (joinInput) joinInput.value = roomParam;
+
+        fetch(`/api/room/${encodeURIComponent(roomParam)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.gameType && GAME_META[data.gameType]) {
+              switchGame(data.gameType, true);
+            }
+          })
+          .catch(() => {});
+      }
+    });
+
+    function handleCreatePartyTeam(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('createPlayerName').value.trim();
+      if (!name) return alert('Please enter your player name');
+
+      myPlayerName = name;
+      localStorage.setItem('party_player_name', name);
+      localStorage.setItem('playerName', name);
+      sessionStorage.setItem('playerName', name);
+
+      const btn = document.getElementById('btnCreatePartyTeam');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Creating Party Room...';
+      }
+
+      socket.emit('create-room', {
+        gameType: 'party',
+        name,
+        selectedGame: currentGame,
+        gameOptions: getSelectedGamePayload()
+      });
+    }
+
+    function handleCreateRoom(e) {
+      e.preventDefault();
+      const name = document.getElementById('createPlayerName').value.trim();
+      if (!name) return alert('Please enter your name');
+
+      myPlayerName = name;
+      localStorage.setItem('party_player_name', name);
+      localStorage.setItem('playerName', name);
+      sessionStorage.setItem('playerName', name);
+
+      let payload = Object.assign({ gameType: currentGame, name }, getSelectedGamePayload());
 
       const btn = document.getElementById('btnSubmitCreate');
-      btn.disabled = true;
-      btn.textContent = 'Creating Room...';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Direct Launching...';
+      }
 
       socket.emit('create-room', payload);
     }
@@ -1630,24 +1918,51 @@
       const roomId = document.getElementById('joinRoomCode').value.trim().toUpperCase();
 
       if (!name || !roomId) return alert('Name and room code are required');
+      myPlayerName = name;
       localStorage.setItem('party_player_name', name);
       localStorage.setItem('playerName', name);
       sessionStorage.setItem('playerName', name);
 
       const btn = document.getElementById('btnSubmitJoin');
-      btn.disabled = true;
-      btn.textContent = 'Joining Room...';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Joining Room...';
+      }
 
       socket.emit('join-room', { roomId, name });
     }
 
     if (socket) {
       socket.on('room-created', ({ roomId, gameType }) => {
-        navigateToGame(gameType, roomId);
+        if (gameType === 'party' || gameType === 'lobby') {
+          enterPartyLobbyMode(roomId, true);
+        } else {
+          navigateToGame(gameType, roomId);
+        }
       });
 
       socket.on('room-joined', ({ roomId, gameType }) => {
-        navigateToGame(gameType, roomId);
+        if (gameType === 'party' || gameType === 'lobby') {
+          enterPartyLobbyMode(roomId, false);
+        } else {
+          navigateToGame(gameType, roomId);
+        }
+      });
+
+      socket.on('lobby-update', (data) => {
+        if (activePartyRoomId) {
+          renderPartyLobby(data);
+        }
+      });
+
+      socket.on('party:game-selected', ({ selectedGame }) => {
+        if (selectedGame && GAME_META[selectedGame]) {
+          switchGame(selectedGame, true);
+        }
+      });
+
+      socket.on('party:game-switched', ({ newGameType, roomId }) => {
+        navigateToGame(newGameType, roomId);
       });
 
       socket.on('join-error', (msg) => {
@@ -1659,6 +1974,139 @@
         resetButtons();
         alert(msg || 'An error occurred');
       });
+    }
+
+    function enterPartyLobbyMode(roomId, isHost) {
+      activePartyRoomId = roomId;
+      isPartyHost = isHost;
+      try {
+        window.history.pushState({}, '', `/?room=${encodeURIComponent(roomId)}`);
+      } catch (e) {}
+
+      const codeDisplay = document.getElementById('partyRoomCodeDisplay');
+      if (codeDisplay) codeDisplay.textContent = roomId;
+
+      const tabs = document.querySelector('.action-tabs');
+      if (tabs) tabs.classList.add('hidden');
+      document.getElementById('sectionCreate').classList.add('hidden');
+      document.getElementById('sectionJoin').classList.add('hidden');
+      document.getElementById('sectionPartyLobby').classList.remove('hidden');
+
+      updatePartyHostRoleUI(isHost);
+      updatePartyLobbyGameDisplay(currentGame);
+
+      if (window.sounds && typeof window.sounds.play === 'function') {
+        window.sounds.play('success');
+      }
+    }
+
+    function updatePartyHostRoleUI(isHost) {
+      isPartyHost = isHost;
+      const hostCtrl = document.getElementById('partyHostControls');
+      const guestCtrl = document.getElementById('partyGuestControls');
+      if (hostCtrl) hostCtrl.classList.toggle('hidden', !isHost);
+      if (guestCtrl) guestCtrl.classList.toggle('hidden', isHost);
+
+      const statusText = document.getElementById('partyHostStatusText');
+      if (statusText) {
+        statusText.textContent = isHost ? '👑 You are the Party Host' : '🟢 Connected to Party';
+      }
+    }
+
+    function updatePartyLobbyGameDisplay(gameKey) {
+      const meta = GAME_META[gameKey];
+      if (!meta) return;
+      const iconEl = document.getElementById('partySelectedGameIcon');
+      const titleEl = document.getElementById('partySelectedGameTitle');
+      const launchBtnName = document.getElementById('launchBtnGameName');
+      const guestNameEl = document.getElementById('guestSelectedGameName');
+      if (iconEl) iconEl.textContent = meta.icon;
+      if (titleEl) titleEl.textContent = meta.title;
+      if (launchBtnName) launchBtnName.textContent = meta.title;
+      if (guestNameEl) guestNameEl.textContent = meta.title;
+    }
+
+    function renderPartyLobby(data) {
+      if (!data || !data.players) return;
+      const myId = socket.id;
+      const hostPlayer = data.players.find(p => p.isHost) || data.players[0];
+      const isMeHost = hostPlayer && hostPlayer.id === myId;
+      updatePartyHostRoleUI(isMeHost);
+
+      const guestHostDisplay = document.getElementById('guestHostNameDisplay');
+      if (guestHostDisplay && hostPlayer) {
+        guestHostDisplay.textContent = hostPlayer.name || 'Host';
+      }
+
+      const countBadge = document.getElementById('partyPlayerCountBadge');
+      if (countBadge) {
+        const activeCount = data.players.filter(p => p.connected).length;
+        countBadge.textContent = `${activeCount} Member${activeCount === 1 ? '' : 's'}`;
+      }
+
+      const grid = document.getElementById('partyPlayersGrid');
+      if (!grid) return;
+      grid.innerHTML = data.players.map(p => {
+        const isMe = p.id === myId;
+        const initial = (p.name || 'P').charAt(0).toUpperCase();
+        return `
+          <div class="party-player-pill ${isMe ? 'is-me' : ''}">
+            <div class="party-player-avatar">${initial}</div>
+            <div class="party-player-name" title="${p.name}">${p.name}</div>
+            ${p.isHost ? '<span class="party-player-tag tag-host">👑 Host</span>' : ''}
+            ${isMe ? '<span class="party-player-tag tag-you">You</span>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleLaunchPartyGame() {
+      if (!isPartyHost || !activePartyRoomId) return;
+      const btn = document.getElementById('btnLaunchParty');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = `🚀 Launching ${GAME_META[currentGame]?.title || currentGame}...`;
+      }
+
+      const payload = getSelectedGamePayload();
+      socket.emit('party:switch-game', {
+        newGameType: currentGame,
+        roomId: activePartyRoomId,
+        options: payload
+      });
+    }
+
+    function leavePartyRoom() {
+      activePartyRoomId = null;
+      isPartyHost = false;
+      try {
+        window.history.pushState({}, '', '/');
+      } catch (e) {}
+
+      const tabs = document.querySelector('.action-tabs');
+      if (tabs) tabs.classList.remove('hidden');
+      document.getElementById('sectionPartyLobby').classList.add('hidden');
+      switchAction('create');
+      resetButtons();
+    }
+
+    function openPartyQRCode() {
+      if (window.QRCodeModal && activePartyRoomId) {
+        window.QRCodeModal.show(null, activePartyRoomId, 'party');
+      }
+    }
+
+    function copyPartyRoomCode() {
+      if (!activePartyRoomId) return;
+      navigator.clipboard.writeText(activePartyRoomId);
+      alert(`Party Room Code ${activePartyRoomId} copied!`);
+    }
+
+    function copyPartyInviteLink() {
+      if (!activePartyRoomId) return;
+      const link = window.getCleanInviteUrl(activePartyRoomId, 'party');
+      navigator.clipboard.writeText(link);
+      alert(`Party invite link copied to clipboard!\n${link}`);
     }
 
     function navigateToGame(gameType, roomId) {
@@ -1715,10 +2163,24 @@
     function resetButtons() {
       const btnCreate = document.getElementById('btnSubmitCreate');
       const btnJoin = document.getElementById('btnSubmitJoin');
-      btnCreate.disabled = false;
-      btnCreate.textContent = 'Create Room & Play';
-      btnJoin.disabled = false;
-      btnJoin.textContent = 'Enter Game Room';
+      const btnParty = document.getElementById('btnCreatePartyTeam');
+      const btnLaunch = document.getElementById('btnLaunchParty');
+      if (btnCreate) {
+        btnCreate.disabled = false;
+        btnCreate.textContent = '⚡ Direct Launch Selected Game';
+      }
+      if (btnJoin) {
+        btnJoin.disabled = false;
+        btnJoin.textContent = '🚀 Enter Party Room';
+      }
+      if (btnParty) {
+        btnParty.disabled = false;
+        btnParty.textContent = '🎉 Create Party Room & Invite Friends';
+      }
+      if (btnLaunch) {
+        btnLaunch.disabled = false;
+        btnLaunch.textContent = `🚀 Launch ${GAME_META[currentGame]?.title || currentGame} with Party`;
+      }
     }
   </script>
 </body>

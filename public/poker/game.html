@@ -964,8 +964,11 @@
     <!-- Header -->
     <header class="table-header">
       <div class="header-left">
+        <button class="btn btn-ghost" onclick="window.openPartySwitchModal(socket, roomId, isHost)" style="padding: 6px 12px; font-size: 13px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);" title="Switch Game with Party">
+          <span>🔄 Switch Game</span>
+        </button>
         <button class="btn btn-ghost" onclick="window.location.href='/'" style="padding: 6px 12px; font-size: 13px;" title="Back to Games Hub">
-          <span>🎮 Games Hub</span>
+          <span>🎮 Hub</span>
         </button>
         <div class="room-badge" onclick="copyRoomCode()" title="Click to copy room code">
           <span>ROOM:</span>
@@ -1259,13 +1262,9 @@
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       roomId = (urlParams.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
-      playerName = (
-        urlParams.get('name') ||
-        sessionStorage.getItem('playerName') ||
-        localStorage.getItem('party_player_name') ||
-        localStorage.getItem('playerName') ||
-        'Player'
-      ).trim();
+      playerName = (typeof window.resolvePlayerName === 'function')
+        ? window.resolvePlayerName(false)
+        : (urlParams.get('name') || sessionStorage.getItem('playerName') || 'Player').trim();
       sessionStorage.setItem('playerName', playerName);
       localStorage.setItem('party_player_name', playerName);
       localStorage.setItem('playerName', playerName);
@@ -1279,7 +1278,7 @@
 
       document.getElementById('headerRoomCode').textContent = roomId;
       document.getElementById('lobbyRoomCode').textContent = roomId;
-      document.getElementById('shareLinkInput').value = `${window.location.origin}/?join=${encodeURIComponent(roomId)}`;
+      document.getElementById('shareLinkInput').value = window.getCleanInviteUrl ? window.getCleanInviteUrl(roomId, 'poker') : `${window.location.origin}/?join=${encodeURIComponent(roomId)}`;
 
       // Update host controls visibility
       if (isHost) {
@@ -1376,9 +1375,17 @@
         if (window.Reactions) window.Reactions.showParticle(emoji);
       });
 
-      socket.on('party:game-switched', ({ url }) => {
-        window.location.href = url;
-      });
+      if (window.listenForPartyGameSwitch) {
+        window.listenForPartyGameSwitch(socket, playerName);
+      } else {
+        socket.on('party:game-switched', ({ url }) => {
+          let dest = url;
+          if (!dest.includes('name=')) {
+            dest += (dest.includes('?') ? '&' : '?') + `name=${encodeURIComponent(playerName)}`;
+          }
+          window.location.href = dest;
+        });
+      }
     }
 
     // Game State Handler
@@ -1841,7 +1848,7 @@
 
     function showQRCode() {
       if (window.QRCodeModal) {
-        window.QRCodeModal.show(window.location.href, roomId);
+        window.QRCodeModal.show(null, roomId, 'poker');
       }
     }
 

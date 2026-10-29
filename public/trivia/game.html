@@ -211,6 +211,7 @@
       </div>
 
       <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="btn" onclick="window.openPartySwitchModal(socket, roomId, (currentGameState?.isHost || currentGameState?.players?.[0]?.id === myPlayerId))" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);" title="Switch Game with Party">🔄 Switch Game</button>
         <span style="font-weight: 700; color: #94a3b8;">ROOM:</span>
         <span id="roomCodeDisplay" style="font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 2px;">------</span>
         <button class="btn" onclick="copyInviteLink()">🔗 Invite</button>
@@ -278,19 +279,20 @@
     const socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
-    const playerName = (
-      urlParams.get('name') ||
-      sessionStorage.getItem('playerName') ||
-      localStorage.getItem('party_player_name') ||
-      localStorage.getItem('playerName') ||
-      'Player'
-    ).trim();
+    const playerName = (typeof window.resolvePlayerName === 'function')
+      ? window.resolvePlayerName(false)
+      : (urlParams.get('name') || sessionStorage.getItem('playerName') || 'Player').trim();
     sessionStorage.setItem('playerName', playerName);
     localStorage.setItem('party_player_name', playerName);
     localStorage.setItem('playerName', playerName);
 
     let myPlayerId = null;
     let selectedOption = null;
+    let currentGameState = null;
+
+    if (window.listenForPartyGameSwitch) {
+      window.listenForPartyGameSwitch(socket, playerName);
+    }
 
     socket.on('connect', () => {
       myPlayerId = socket.id;
@@ -423,14 +425,15 @@
     }
 
     function copyInviteLink() {
-      navigator.clipboard.writeText(window.location.href);
+      const link = window.getCleanInviteUrl ? window.getCleanInviteUrl(roomId, 'trivia') : `${window.location.origin}/?join=${encodeURIComponent(roomId)}`;
+      navigator.clipboard.writeText(link);
       sounds.play('success');
-      alert('Room invite link copied to clipboard!');
+      alert(`Room invite link copied to clipboard:\n${link}`);
     }
 
     function showQRCode() {
       if (window.QRCodeModal) {
-        window.QRCodeModal.show(window.location.href, roomId);
+        window.QRCodeModal.show(null, roomId, 'trivia');
       }
     }
   </script>

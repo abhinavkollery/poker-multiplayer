@@ -266,8 +266,11 @@
   <!-- Header -->
   <header class="game-nav">
     <div class="nav-left">
+      <button class="btn btn-ghost" onclick="window.openPartySwitchModal(socket, roomId, (gameState?.myPlayer?.isHost || sessionStorage.getItem('isHost') === 'true'))" style="padding: 6px 12px; font-size: 13px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);" title="Switch Game with Party">
+        <span>🔄 Switch Game</span>
+      </button>
       <button class="btn btn-ghost" onclick="window.location.href='/'" style="padding: 6px 12px; font-size: 13px;">
-        <span>🎮 Games Hub</span>
+        <span>🎮 Hub</span>
       </button>
       <div class="room-badge" onclick="copyRoomCode()" title="Click to copy room code">
         <span>ROOM:</span>
@@ -560,13 +563,9 @@
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       roomId = (params.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
-      playerName = (
-        params.get('name') ||
-        sessionStorage.getItem('playerName') ||
-        localStorage.getItem('party_player_name') ||
-        localStorage.getItem('playerName') ||
-        'Player'
-      ).trim();
+      playerName = (typeof window.resolvePlayerName === 'function')
+        ? window.resolvePlayerName(false)
+        : (params.get('name') || sessionStorage.getItem('playerName') || 'Player').trim();
       sessionStorage.setItem('playerName', playerName);
       localStorage.setItem('party_player_name', playerName);
       localStorage.setItem('playerName', playerName);
@@ -606,9 +605,17 @@
         if (window.Reactions) window.Reactions.showParticle(emoji);
       });
 
-      socket.on('party:game-switched', ({ url }) => {
-        window.location.href = url;
-      });
+      if (window.listenForPartyGameSwitch) {
+        window.listenForPartyGameSwitch(socket, playerName);
+      } else {
+        socket.on('party:game-switched', ({ url }) => {
+          let dest = url;
+          if (!dest.includes('name=')) {
+            dest += (dest.includes('?') ? '&' : '?') + `name=${encodeURIComponent(playerName)}`;
+          }
+          window.location.href = dest;
+        });
+      }
     });
 
     function renderGameState(state) {
@@ -951,7 +958,7 @@
 
     function showQRCode() {
       if (window.QRCodeModal) {
-        window.QRCodeModal.show(window.location.href, roomId);
+        window.QRCodeModal.show(null, roomId, 'imposter');
       }
     }
 
