@@ -1651,11 +1651,6 @@
       }
     }
 
-      if (!skipSound && window.sounds && typeof window.sounds.play === 'function') {
-        window.sounds.play('click');
-      }
-    }
-
     function filterCategory(cat, el) {
       currentCategory = cat;
       document.querySelectorAll('.cat-pill-btn').forEach(btn => btn.classList.remove('active'));
