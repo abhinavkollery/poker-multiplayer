@@ -17,7 +17,7 @@
       padding: 32px 16px;
       position: relative;
       z-index: 1;
-      max-width: 900px;
+      max-width: 980px;
       margin: 0 auto;
     }
 
@@ -205,48 +205,434 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Games Tab Bar Scrollable */
-    .games-tab-bar {
-      display: flex;
-      gap: 8px;
+    /* ==========================================
+       MODERN GAME SELECTOR DECK & GRID
+       ========================================== */
+    .game-selector-section {
       width: 100%;
-      margin-bottom: 16px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .game-tab-btn {
-      flex: 1;
-      min-width: 110px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 700;
-      font-size: 13px;
+    .selector-controls-bar {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-      white-space: nowrap;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .game-tab-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
+    .category-filter-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 2px 0;
+    }
+    .category-filter-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-pill-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .cat-pill-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
       transform: translateY(-1px);
     }
 
-    .game-tab-btn.active {
-      background: rgba(255, 255, 255, 0.18);
+    .cat-pill-btn.active {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(236, 72, 153, 0.25));
+      border-color: rgba(245, 158, 11, 0.6);
       color: #ffffff;
-      border-color: var(--gold-light);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    }
+
+    .selector-right-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-random-game {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      background: rgba(168, 85, 247, 0.15);
+      color: #d8b4fe;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-random-game:hover {
+      background: rgba(168, 85, 247, 0.3);
+      color: #ffffff;
+      transform: scale(1.04);
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-random-game.spinning span:first-child {
+      display: inline-block;
+      animation: diceRollAnim 0.4s ease-in-out infinite;
+    }
+
+    @keyframes diceRollAnim {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.2); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .selector-search-box {
+      position: relative;
+    }
+
+    .selector-search-input {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 6px 12px 6px 28px;
+      color: #fff;
+      font-size: 12px;
+      width: 120px;
+      transition: all 0.2s ease;
+    }
+
+    .selector-search-input:focus {
+      outline: none;
+      width: 170px;
+      border-color: rgba(56, 189, 248, 0.6);
+      background: rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .selector-search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: #64748b;
+      pointer-events: none;
+    }
+
+    .view-toggle-wrap {
+      display: flex;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .view-toggle-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+
+    .view-toggle-btn.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+    }
+
+    /* Game Selector Cards Grid */
+    .game-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .game-cards-grid.slider-view {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 12px;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+    }
+
+    .game-cards-grid.slider-view .game-card-item {
+      min-width: 250px;
+      max-width: 280px;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+    }
+
+    @media (max-width: 860px) {
+      .game-cards-grid:not(.slider-view) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .game-cards-grid:not(.slider-view) {
+        grid-template-columns: 1fr;
+      }
+      .selector-controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .selector-right-tools {
+        justify-content: space-between;
+      }
+    }
+
+    .game-card-item {
+      position: relative;
+      background: rgba(18, 25, 38, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+      user-select: none;
+      outline: none;
+    }
+
+    .game-card-item:hover {
+      transform: translateY(-3px);
+      background: rgba(28, 38, 56, 0.88);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .game-card-item:active {
+      transform: scale(0.98);
+    }
+
+    .game-card-item.active {
+      background: rgba(30, 44, 68, 0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Distinctive Glowing Accents when Active */
+    .game-card-item[data-game="poker"].active {
+      border-color: #f59e0b;
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="imposter"].active {
+      border-color: #ef4444;
+      box-shadow: 0 0 24px rgba(239, 68, 68, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="wavelength"].active {
+      border-color: #38bdf8;
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="platformer"].active {
+      border-color: #22c55e;
+      box-shadow: 0 0 24px rgba(34, 197, 94, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="drawguess"].active {
+      border-color: #f59e0b;
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="codenames"].active {
+      border-color: #a855f7;
+      box-shadow: 0 0 24px rgba(168, 85, 247, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="trivia"].active {
+      border-color: #f97316;
+      box-shadow: 0 0 24px rgba(249, 115, 22, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="liarsdice"].active {
+      border-color: #10b981;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .game-card-item[data-game="spyfall"].active {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 24px rgba(139, 92, 246, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .game-card-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .game-card-item:hover .game-card-icon-wrap {
+      transform: scale(1.12) rotate(-4deg);
+    }
+
+    .game-card-item.active .game-card-icon-wrap {
+      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    .game-card-status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .game-card-item.active .game-card-status-pill {
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+
+    .game-card-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.2px;
+    }
+
+    .game-card-tagline {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 34px;
+    }
+
+    .game-card-footer-tags {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .game-tag-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+    }
+
+    .game-players-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #38bdf8;
+    }
+
+    /* Rules Accordion */
+    .rules-accordion-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .rules-accordion-header {
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #f8fafc;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      user-select: none;
+      transition: background 0.2s ease;
+    }
+
+    .rules-accordion-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .rules-chevron {
+      font-size: 11px;
+      color: #94a3b8;
+      transition: transform 0.25s ease;
+    }
+
+    .rules-chevron.open {
+      transform: rotate(180deg);
+    }
+
+    .rules-accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.25s ease;
+      padding: 0 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #c9d6df;
+    }
+
+    .rules-accordion-body.open {
+      max-height: 300px;
+      padding: 0 18px 16px 18px;
+    }
+
+    /* Legacy tab buttons compatibility fallback */
+    .games-tab-bar {
+      display: none;
     }
 
     .form-grid-2 {
@@ -322,36 +708,213 @@
       <p class="brand-subtitle">Host and play 9 multiplayer games with friends: Texas Hold'em Poker, The Imposter, Wavelength, Platformer, Draw & Guess, Codenames, Trivia, Liar's Dice, & Spyfall!</p>
     </header>
 
-    <!-- Games Tab Bar (9 games) -->
-    <nav class="games-tab-bar" role="tablist">
-      <button id="tabPoker" class="game-tab-btn active" onclick="switchGame('poker')">
-        <span>🃏 Poker</span>
-      </button>
-      <button id="tabImposter" class="game-tab-btn" onclick="switchGame('imposter')">
-        <span>🕵️ Imposter</span>
-      </button>
-      <button id="tabWavelength" class="game-tab-btn" onclick="switchGame('wavelength')">
-        <span>🌊 Wavelength</span>
-      </button>
-      <button id="tabPlatformer" class="game-tab-btn" onclick="switchGame('platformer')">
-        <span>🏃 Platformer</span>
-      </button>
-      <button id="tabDrawguess" class="game-tab-btn" onclick="switchGame('drawguess')">
-        <span>🎨 Draw & Guess</span>
-      </button>
-      <button id="tabCodenames" class="game-tab-btn" onclick="switchGame('codenames')">
-        <span>🕵️ Codenames</span>
-      </button>
-      <button id="tabTrivia" class="game-tab-btn" onclick="switchGame('trivia')">
-        <span>⚡ Speed Trivia</span>
-      </button>
-      <button id="tabLiarsdice" class="game-tab-btn" onclick="switchGame('liarsdice')">
-        <span>🎲 Liar's Dice</span>
-      </button>
-      <button id="tabSpyfall" class="game-tab-btn" onclick="switchGame('spyfall')">
-        <span>🕵️‍♂️ Spyfall</span>
-      </button>
-    </nav>
+    <!-- Game Selector Deck & Toolbar -->
+    <section class="game-selector-section" aria-label="Game Selection">
+      <!-- Toolbar: Categories, Random Pick, View Mode, Search -->
+      <div class="selector-controls-bar">
+        <!-- Category Filters -->
+        <div class="category-filter-pills" role="tablist" aria-label="Game Categories">
+          <button type="button" class="cat-pill-btn active" onclick="filterCategory('all', this)">
+            <span>🌟 All (9)</span>
+          </button>
+          <button type="button" class="cat-pill-btn" onclick="filterCategory('deduction', this)">
+            <span>🕵️ Deduction (3)</span>
+          </button>
+          <button type="button" class="cat-pill-btn" onclick="filterCategory('party', this)">
+            <span>🎨 Creative & Party (2)</span>
+          </button>
+          <button type="button" class="cat-pill-btn" onclick="filterCategory('action', this)">
+            <span>⚡ Action & Trivia (2)</span>
+          </button>
+          <button type="button" class="cat-pill-btn" onclick="filterCategory('classics', this)">
+            <span>🎲 Classics & Dice (2)</span>
+          </button>
+        </div>
+
+        <!-- Right Side Tools -->
+        <div class="selector-right-tools">
+          <button type="button" class="btn-random-game" id="btnRandomPick" onclick="pickRandomGame()" title="Spin and pick a random game">
+            <span id="randomDiceIcon">🎲</span>
+            <span>Pick For Me</span>
+          </button>
+
+          <div class="selector-search-box">
+            <span class="selector-search-icon">🔍</span>
+            <input type="text" id="gameSearchInput" class="selector-search-input" placeholder="Search games..." oninput="handleGameSearch(event)" aria-label="Search games">
+          </div>
+
+          <div class="view-toggle-wrap">
+            <button type="button" id="btnToggleGridView" class="view-toggle-btn active" onclick="toggleSelectorView('grid')" title="Grid View">⊞</button>
+            <button type="button" id="btnToggleSliderView" class="view-toggle-btn" onclick="toggleSelectorView('slider')" title="Compact Slider View">☰</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Game Cards Grid -->
+      <div id="gameCardsGrid" class="game-cards-grid" role="tablist">
+        <!-- 1. Texas Hold'em Poker -->
+        <div class="game-card-item active" id="cardPoker" data-game="poker" onclick="switchGame('poker')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🃏</div>
+            <div class="game-card-status-pill">Selected ✓</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Texas Hold'em</h3>
+            <p class="game-card-tagline">Classic no-limit Hold'em with chips & bot AI</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Cards & Chips</span>
+            <span class="game-players-chip">👥 2 - 8</span>
+          </div>
+        </div>
+
+        <!-- 2. The Imposter -->
+        <div class="game-card-item" id="cardImposter" data-game="imposter" onclick="switchGame('imposter')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🕵️</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">The Imposter</h3>
+            <p class="game-card-tagline">One word differs. Can you catch the mole?</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Social Deduction</span>
+            <span class="game-players-chip">👥 3 - 16</span>
+          </div>
+        </div>
+
+        <!-- 3. Wavelength -->
+        <div class="game-card-item" id="cardWavelength" data-game="wavelength" onclick="switchGame('wavelength')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🌊</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Wavelength</h3>
+            <p class="game-card-tagline">Read your Psychic's mind on the spectrum dial</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Telepathy Party</span>
+            <span class="game-players-chip">👥 2 - 16</span>
+          </div>
+        </div>
+
+        <!-- 4. Co-op Platformer -->
+        <div class="game-card-item" id="cardPlatformer" data-game="platformer" onclick="switchGame('platformer')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🏃‍♂️</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Co-op Platformer</h3>
+            <p class="game-card-tagline">Team up to solve puzzles & reach the portal</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Action & Puzzle</span>
+            <span class="game-players-chip">👥 2 - 6</span>
+          </div>
+        </div>
+
+        <!-- 5. Draw & Guess -->
+        <div class="game-card-item" id="cardDrawguess" data-game="drawguess" onclick="switchGame('drawguess')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🎨</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Draw & Guess</h3>
+            <p class="game-card-tagline">Sketch secret words & speed guess in chat</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Drawing & Party</span>
+            <span class="game-players-chip">👥 2 - 16</span>
+          </div>
+        </div>
+
+        <!-- 6. Codenames -->
+        <div class="game-card-item" id="cardCodenames" data-game="codenames" onclick="switchGame('codenames')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🕵️</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Codenames</h3>
+            <p class="game-card-tagline">Red vs Blue spy showdown. Avoid the Assassin!</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Team Deduction</span>
+            <span class="game-players-chip">👥 2 - 16</span>
+          </div>
+        </div>
+
+        <!-- 7. Speed Trivia -->
+        <div class="game-card-item" id="cardTrivia" data-game="trivia" onclick="switchGame('trivia')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">⚡</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Speed Trivia</h3>
+            <p class="game-card-tagline">15-second blitz questions & streak multipliers</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Fast Quiz Blitz</span>
+            <span class="game-players-chip">👥 1 - 24</span>
+          </div>
+        </div>
+
+        <!-- 8. Liar's Dice -->
+        <div class="game-card-item" id="cardLiarsdice" data-game="liarsdice" onclick="switchGame('liarsdice')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🎲</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Liar's Dice</h3>
+            <p class="game-card-tagline">Shake your cups, bid table totals, call Liar!</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Bluffing & Dice</span>
+            <span class="game-players-chip">👥 2 - 8</span>
+          </div>
+        </div>
+
+        <!-- 9. Spyfall -->
+        <div class="game-card-item" id="cardSpyfall" data-game="spyfall" onclick="switchGame('spyfall')" role="tab" tabindex="0">
+          <div class="game-card-header">
+            <div class="game-card-icon-wrap">🕵️‍♂️</div>
+            <div class="game-card-status-pill">Select</div>
+          </div>
+          <div class="game-card-body">
+            <h3 class="game-card-title">Spyfall</h3>
+            <p class="game-card-tagline">Civilians know the location. The Spy is bluffing!</p>
+          </div>
+          <div class="game-card-footer-tags">
+            <span class="game-tag-chip">Secret Location Hunt</span>
+            <span class="game-players-chip">👥 3 - 12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No games match search notice -->
+      <div id="noGamesFoundMsg" style="display: none; text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+        No games match your current filter. Try a different category or search keyword!
+      </div>
+
+      <!-- Hidden legacy buttons for 100% test & programmatic backwards compatibility -->
+      <nav class="games-tab-bar" style="display: none !important;" aria-hidden="true">
+        <button id="tabPoker" class="game-tab-btn" onclick="switchGame('poker')"></button>
+        <button id="tabImposter" class="game-tab-btn" onclick="switchGame('imposter')"></button>
+        <button id="tabWavelength" class="game-tab-btn" onclick="switchGame('wavelength')"></button>
+        <button id="tabPlatformer" class="game-tab-btn" onclick="switchGame('platformer')"></button>
+        <button id="tabDrawguess" class="game-tab-btn" onclick="switchGame('drawguess')"></button>
+        <button id="tabCodenames" class="game-tab-btn" onclick="switchGame('codenames')"></button>
+        <button id="tabTrivia" class="game-tab-btn" onclick="switchGame('trivia')"></button>
+        <button id="tabLiarsdice" class="game-tab-btn" onclick="switchGame('liarsdice')"></button>
+        <button id="tabSpyfall" class="game-tab-btn" onclick="switchGame('spyfall')"></button>
+      </nav>
+    </section>
 
     <!-- Main Game Card -->
     <main id="mainHubCard" class="hub-card poker-accent">
@@ -371,13 +934,19 @@
         </div>
       </div>
 
-      <!-- Quick Rules Box -->
-      <div id="rulesSummaryBox" class="rules-box">
-        <div class="rules-title">
-          <span>📖 Overview:</span>
-        </div>
-        <div id="rulesSummaryText">
-          Standard No-Limit Texas Hold'em. Each player gets 2 hole cards. Bet, raise, or fold across Flop, Turn, and River. Best 5-card poker hand wins the pot!
+      <!-- Interactive How To Play Accordion -->
+      <div class="rules-accordion-box">
+        <button type="button" class="rules-accordion-header" onclick="toggleRulesAccordion()">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <span>📖</span>
+            <strong id="rulesToggleTitle">How to Play: Texas Hold'em Poker</strong>
+          </span>
+          <span id="rulesChevron" class="rules-chevron open">▲</span>
+        </button>
+        <div id="rulesAccordionBody" class="rules-accordion-body open">
+          <div id="rulesSummaryText">
+            Standard No-Limit Texas Hold'em. Each player gets 2 hole cards. Bet, raise, or fold across Flop, Turn, and River. Best 5-card poker hand wins the pot!
+          </div>
         </div>
       </div>
 
@@ -666,6 +1235,10 @@
         desc: "Classic no-limit Texas Hold'em with real-time pot betting, cards showdown, CPU bots, and live chat.",
         icon: "🃏",
         accent: "poker-accent",
+        category: "classics",
+        categoryLabel: "Cards & Chips",
+        playerRange: "2 - 8 Players",
+        tagline: "Classic no-limit Hold'em with chips & bot AI",
         btnClass: "btn-gold",
         badges: ["👥 2 - 8 Players", "⏱️ Real-time", "🤖 CPU Bots Supported"],
         rules: "Standard No-Limit Texas Hold'em. Each player gets 2 private hole cards. Bet, raise, or fold through Flop, Turn, and River. Best 5-card hand wins the pot!"
@@ -675,6 +1248,10 @@
         desc: "Everyone gets a secret word. The Imposter gets a different word! Give clues, discuss, and sus out the mole.",
         icon: "🕵️",
         accent: "imposter-accent",
+        category: "deduction",
+        categoryLabel: "Social Deduction",
+        playerRange: "3 - 16 Players",
+        tagline: "One word differs. Can you catch the mole?",
         btnClass: "btn-danger",
         badges: ["👥 3 - 16 Players", "🗣️ Word Deduction", "🔍 Sus Out The Mole"],
         rules: "Everyone receives a secret word, but the Imposter gets a closely related word! Take turns giving clues, vote on who is sus, and if caught, the Imposter can guess the word to steal the win!"
@@ -684,6 +1261,10 @@
         desc: "The telepathy party game! Read your Psychic's mind, rotate the dial on the spectrum, and score bullseyes.",
         icon: "🌊",
         accent: "wavelength-accent",
+        category: "party",
+        categoryLabel: "Telepathy Party",
+        playerRange: "2 - 16 Players",
+        tagline: "Read your Psychic's mind on the spectrum dial",
         btnClass: "btn-purple",
         badges: ["👥 2 - 16 Players", "🧠 Telepathy Party", "🎯 Rotating Dial"],
         rules: "A spectrum card is drawn ('Cold <---> Hot'). The Psychic secretly sees the bullseye and gives a clue matching that position. The team rotates the dial to match the clue. Open the shutter to reveal the score!"
@@ -693,6 +1274,10 @@
         desc: "Work together to solve puzzle platforming levels! Push crates, press buttons, grab keys, and reach the exit portal.",
         icon: "🏃‍♂️",
         accent: "platformer-accent",
+        category: "action",
+        categoryLabel: "Action & Puzzle",
+        playerRange: "2 - 6 Players",
+        tagline: "Team up to solve puzzles & reach the portal",
         btnClass: "btn-success",
         badges: ["👥 2 - 6 Players", "🤝 Puzzle Platformer", "🎮 WASD / Touch"],
         rules: "Collaborative teamwork platformer! Step on pressure plates to open gates, push crates to build stairs, bounce on springs, and grab keys. All players must reach the exit portal together!"
@@ -702,6 +1287,10 @@
         desc: "Take turns drawing secret words on an interactive canvas while everyone races to guess in live chat!",
         icon: "🎨",
         accent: "drawguess-accent",
+        category: "party",
+        categoryLabel: "Drawing & Party",
+        playerRange: "2 - 16 Players",
+        tagline: "Sketch secret words & speed guess in chat",
         btnClass: "btn-gold",
         badges: ["👥 2 - 16 Players", "✏️ Live Canvas", "💬 Real-time Guessing"],
         rules: "One player chooses a secret word and sketches it on the canvas with color palettes and tools. Other players guess in chat. Faster correct guesses award more points!"
@@ -711,6 +1300,10 @@
         desc: "Spymasters give one-word clues to guide their operatives to their secret agent cards while avoiding the deadly Assassin!",
         icon: "🕵️",
         accent: "codenames-accent",
+        category: "deduction",
+        categoryLabel: "Team Deduction",
+        playerRange: "2 - 16 Players",
+        tagline: "Red vs Blue spy showdown. Avoid the Assassin!",
         btnClass: "btn-purple",
         badges: ["👥 2 - 16 Players", "🔴 Red vs 🔵 Blue", "💀 Beware Assassin"],
         rules: "A 5x5 grid of 25 code words. Spymasters give a 1-word clue and number. Operatives guess cards. Contact all your team's secret agents before the other team. Avoid the Assassin or lose instantly!"
@@ -720,6 +1313,10 @@
         desc: "Fast-paced Kahoot-style quiz showdown! Answer correctly and quickly to build streaks and conquer the leaderboard.",
         icon: "⚡",
         accent: "trivia-accent",
+        category: "action",
+        categoryLabel: "Fast Quiz Blitz",
+        playerRange: "1 - 24 Players",
+        tagline: "15-second blitz questions & streak multipliers",
         btnClass: "btn-danger",
         badges: ["👥 1 - 24 Players", "⏱️ 15s Blitz", "🔥 Streak Bonuses"],
         rules: "Compete across multiple fun categories. Pick from 4 colorful answer choices before the timer expires. Speed and consecutive streaks yield massive score multipliers!"
@@ -729,6 +1326,10 @@
         desc: "The classic pirate bluffing dice game (Perudo). Shake your cups, bid on table dice, and call Liar!",
         icon: "🎲",
         accent: "liarsdice-accent",
+        category: "classics",
+        categoryLabel: "Bluffing & Dice",
+        playerRange: "2 - 8 Players",
+        tagline: "Shake your cups, bid table totals, call Liar!",
         btnClass: "btn-success",
         badges: ["👥 2 - 8 Players", "🤥 Bluff & Deduce", "⚀ Ones Are Wild"],
         rules: "Players roll 5 dice secretly under cups. Bid on total dice across the table. Bids must escalate. Call 'Liar!' to challenge. Lift cups to count. Ones are wild. Last player with dice wins!"
@@ -738,6 +1339,10 @@
         desc: "Everyone knows the secret location except the Spy! Ask cunning questions to uncover the Spy before they guess where you are.",
         icon: "🕵️‍♂️",
         accent: "spyfall-accent",
+        category: "deduction",
+        categoryLabel: "Social Deduction",
+        playerRange: "3 - 12 Players",
+        tagline: "Civilians know the location. The Spy is bluffing!",
         btnClass: "btn-purple",
         badges: ["👥 3 - 12 Players", "📍 Secret Locations", "🎭 Social Deduction"],
         rules: "Civilians know the secret location and their assigned roles. The Spy only knows they are the Spy! Ask questions to detect who is bluffing. Accuse the Spy, or the Spy can reveal and guess the location to win!"
@@ -746,6 +1351,7 @@
 
     let currentGame = 'poker';
     let currentAction = 'create';
+    let currentCategory = 'all';
     let socket = null;
 
     try {
@@ -754,10 +1360,21 @@
       console.warn('Socket.IO connection pending');
     }
 
-    function switchGame(gameType) {
+    function switchGame(gameType, skipSound = false) {
       if (!GAME_META[gameType]) return;
       currentGame = gameType;
 
+      // Update rich card selectors
+      document.querySelectorAll('.game-card-item').forEach(card => {
+        const isMatch = card.dataset.game === gameType;
+        card.classList.toggle('active', isMatch);
+        const statusPill = card.querySelector('.game-card-status-pill');
+        if (statusPill) {
+          statusPill.textContent = isMatch ? 'Selected ✓' : 'Select';
+        }
+      });
+
+      // Update legacy tab buttons for test / programmatic backward compatibility
       document.querySelectorAll('.game-tab-btn').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`tab${gameType.charAt(0).toUpperCase() + gameType.slice(1)}`);
       if (activeBtn) activeBtn.classList.add('active');
@@ -769,6 +1386,8 @@
       document.getElementById('gameMetaTitle').textContent = GAME_META[gameType].title;
       document.getElementById('gameMetaDesc').textContent = GAME_META[gameType].desc;
       document.getElementById('activeGameLabel').textContent = GAME_META[gameType].title;
+      const rulesTitleEl = document.getElementById('rulesToggleTitle');
+      if (rulesTitleEl) rulesTitleEl.textContent = `How to Play: ${GAME_META[gameType].title}`;
 
       const badgesContainer = document.getElementById('gameMetaBadges');
       badgesContainer.innerHTML = GAME_META[gameType].badges.map(b => `<span class="badge-pill">${b}</span>`).join('');
@@ -779,7 +1398,140 @@
         const el = document.getElementById(`${g}Settings`);
         if (el) el.classList.toggle('hidden', g !== gameType);
       });
+
+      if (!skipSound && window.sounds && typeof window.sounds.play === 'function') {
+        window.sounds.play('click');
+      }
     }
+
+    function filterCategory(cat, el) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-pill-btn').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      const searchInput = document.getElementById('gameSearchInput');
+      const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      applyFilters(cat, query);
+      if (window.sounds && typeof window.sounds.play === 'function') {
+        window.sounds.play('click');
+      }
+    }
+
+    function handleGameSearch(e) {
+      const query = (e.target.value || '').toLowerCase().trim();
+      applyFilters(currentCategory, query);
+    }
+
+    function applyFilters(category, query) {
+      const cards = document.querySelectorAll('.game-card-item');
+      let matchCount = 0;
+      cards.forEach(card => {
+        const game = card.dataset.game;
+        const meta = GAME_META[game];
+        if (!meta) return;
+
+        const matchesCat = (category === 'all' || meta.category === category);
+        const matchesSearch = !query ||
+          meta.title.toLowerCase().includes(query) ||
+          meta.desc.toLowerCase().includes(query) ||
+          (meta.categoryLabel && meta.categoryLabel.toLowerCase().includes(query)) ||
+          meta.badges.some(b => b.toLowerCase().includes(query));
+
+        const isVisible = matchesCat && matchesSearch;
+        card.style.display = isVisible ? 'flex' : 'none';
+        if (isVisible) matchCount++;
+      });
+
+      const emptyMsg = document.getElementById('noGamesFoundMsg');
+      if (emptyMsg) {
+        emptyMsg.style.display = matchCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    let isShufflingRandom = false;
+    function pickRandomGame() {
+      if (isShufflingRandom) return;
+      isShufflingRandom = true;
+
+      const btn = document.getElementById('btnRandomPick');
+      if (btn) btn.classList.add('spinning');
+
+      const games = Object.keys(GAME_META);
+      const otherGames = games.filter(g => g !== currentGame);
+      const targetPick = otherGames[Math.floor(Math.random() * otherGames.length)];
+
+      let iterations = 0;
+      const spinInterval = setInterval(() => {
+        const randomStep = games[Math.floor(Math.random() * games.length)];
+        switchGame(randomStep, true);
+        if (window.sounds && typeof window.sounds.play === 'function') {
+          window.sounds.play('cardFlip');
+        }
+        iterations++;
+
+        if (iterations >= 8) {
+          clearInterval(spinInterval);
+          switchGame(targetPick, false);
+          if (btn) btn.classList.remove('spinning');
+          isShufflingRandom = false;
+          if (window.sounds && typeof window.sounds.play === 'function') {
+            window.sounds.play('success');
+          }
+        }
+      }, 70);
+    }
+
+    function toggleSelectorView(view) {
+      const grid = document.getElementById('gameCardsGrid');
+      const btnGrid = document.getElementById('btnToggleGridView');
+      const btnSlider = document.getElementById('btnToggleSliderView');
+
+      if (view === 'slider') {
+        grid.classList.add('slider-view');
+        btnGrid.classList.remove('active');
+        btnSlider.classList.add('active');
+      } else {
+        grid.classList.remove('slider-view');
+        btnGrid.classList.add('active');
+        btnSlider.classList.remove('active');
+      }
+      localStorage.setItem('party_selector_view', view);
+      if (window.sounds && typeof window.sounds.play === 'function') {
+        window.sounds.play('click');
+      }
+    }
+
+    function toggleRulesAccordion() {
+      const body = document.getElementById('rulesAccordionBody');
+      const chevron = document.getElementById('rulesChevron');
+      const isOpen = body.classList.toggle('open');
+      chevron.classList.toggle('open', isOpen);
+      chevron.textContent = isOpen ? '▲' : '▼';
+      if (window.sounds && typeof window.sounds.play === 'function') {
+        window.sounds.play('click');
+      }
+    }
+
+    // Keyboard Shortcuts (Arrow keys & digits 1-9)
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+      const gameKeys = ['poker', 'imposter', 'wavelength', 'platformer', 'drawguess', 'codenames', 'trivia', 'liarsdice', 'spyfall'];
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= 9) {
+        switchGame(gameKeys[num - 1]);
+        return;
+      }
+
+      const currentIndex = gameKeys.indexOf(currentGame);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        const next = gameKeys[(currentIndex + 1) % gameKeys.length];
+        switchGame(next);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        const prev = gameKeys[(currentIndex - 1 + gameKeys.length) % gameKeys.length];
+        switchGame(prev);
+      }
+    });
 
     function switchAction(action) {
       currentAction = action;
@@ -791,6 +1543,11 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      const savedView = localStorage.getItem('party_selector_view');
+      if (savedView === 'slider') {
+        toggleSelectorView('slider');
+      }
+
       const params = new URLSearchParams(window.location.search);
       const roomParam = params.get('room');
       const gameParam = params.get('game');
