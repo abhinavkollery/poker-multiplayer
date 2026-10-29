@@ -46,6 +46,9 @@ class PokerGame {
     }
     const existing = this.players.find(p => p.name.toLowerCase() === trimmedName.toLowerCase());
     if (existing) {
+      if (existing.connected && existing.id !== socketId) {
+        return { error: `Player name "${trimmedName}" is already taken by an active player.` };
+      }
       existing.id = socketId;
       existing.connected = true;
       return { success: true, player: existing, reconnected: true };
@@ -133,7 +136,10 @@ class PokerGame {
     const trimmedName = (name || '').trim().toLowerCase();
     const player = this.players.find(p => p.name.toLowerCase() === trimmedName);
     if (!player) {
-      return { success: false, error: 'Player not found in this room' };
+      return { success: false };
+    }
+    if (player.connected && player.id !== newSocketId) {
+      return { success: false, collision: true, error: `A player named "${player.name}" is already active in this room. Please choose another name.` };
     }
 
     const oldId = player.id;

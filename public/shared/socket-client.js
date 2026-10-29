@@ -95,7 +95,12 @@
    */
   function getCleanInviteUrl(roomId, gameType) {
     const cleanRoom = String(roomId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('room') : '') || 'ROOM').trim().toUpperCase();
-    const origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : '';
+    let origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : '';
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      if (window._serverNetworkOrigin) {
+        origin = window._serverNetworkOrigin;
+      }
+    }
     let url = `${origin}/?join=${encodeURIComponent(cleanRoom)}`;
     if (gameType && gameType !== 'party') {
       url += `&game=${encodeURIComponent(gameType)}`;

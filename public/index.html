@@ -837,6 +837,109 @@
       gap: 14px;
     }
 
+    /* Screen View Architecture */
+    .screen-view {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .party-entry-card {
+      max-width: 520px;
+      margin: 0 auto;
+      width: 100%;
+      background: rgba(15, 23, 32, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 32px 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    }
+    .party-lobby-card {
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+      background: rgba(15, 23, 32, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    }
+    .invite-banner {
+      max-width: 520px;
+      margin: 0 auto 16px;
+      padding: 12px 18px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 14px;
+      text-align: center;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 600;
+      animation: fadeIn 0.3s ease;
+    }
+    .party-brand-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--gold-light);
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .party-entry-hint {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 14px;
+    }
+    .game-select-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: rgba(18, 25, 38, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      margin-bottom: 4px;
+    }
+    .game-launch-sticky-bar {
+      position: sticky;
+      bottom: 20px;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 20px;
+      padding: 14px 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.2);
+      margin-top: 24px;
+    }
+    .game-launch-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -857,304 +960,88 @@
 
 <body>
   <div class="hub-container">
-    <!-- Header -->
-    <header class="brand-hero">
-      <h1 class="brand-title">PARTY GAMES HUB</h1>
-      <p class="brand-subtitle">Create a room first, invite your friends, and take everyone into any game together!</p>
-    </header>
 
-    <!-- Game Selector Deck & Toolbar -->
-    <section class="game-selector-section" aria-label="Game Selection">
-      <!-- Toolbar: Categories, Random Pick, View Mode, Search -->
-      <div class="selector-controls-bar">
-        <!-- Category Filters -->
-        <div class="category-filter-pills" role="tablist" aria-label="Game Categories">
-          <button type="button" class="cat-pill-btn active" onclick="filterCategory('all', this)">
-            <span>🌟 All (9)</span>
-          </button>
-          <button type="button" class="cat-pill-btn" onclick="filterCategory('deduction', this)">
-            <span>🕵️ Deduction (3)</span>
-          </button>
-          <button type="button" class="cat-pill-btn" onclick="filterCategory('party', this)">
-            <span>🎨 Creative & Party (2)</span>
-          </button>
-          <button type="button" class="cat-pill-btn" onclick="filterCategory('action', this)">
-            <span>⚡ Action & Trivia (2)</span>
-          </button>
-          <button type="button" class="cat-pill-btn" onclick="filterCategory('classics', this)">
-            <span>🎲 Classics & Dice (2)</span>
-          </button>
-        </div>
+    <!-- ======================================================== -->
+    <!-- SCREEN 1: PARTY ENTRY (Separate Join / Create Screen)    -->
+    <!-- ======================================================== -->
+    <div id="screenPartyJoin" class="screen-view">
+      <header class="brand-hero">
+        <div class="party-brand-badge">🎉 MULTIPLAYER PARTY GAMES</div>
+        <h1 class="brand-title">PARTY ROOM HUB</h1>
+        <p class="brand-subtitle">Create a room first, invite your friends, and take everyone into any game together!</p>
+      </header>
 
-        <!-- Right Side Tools -->
-        <div class="selector-right-tools">
-          <button type="button" class="btn-random-game" id="btnRandomPick" onclick="pickRandomGame()" title="Spin and pick a random game">
-            <span id="randomDiceIcon">🎲</span>
-            <span>Pick For Me</span>
-          </button>
-
-          <div class="selector-search-box">
-            <span class="selector-search-icon">🔍</span>
-            <input type="text" id="gameSearchInput" class="selector-search-input" placeholder="Search games..." oninput="handleGameSearch(event)" aria-label="Search games">
-          </div>
-
-          <div class="view-toggle-wrap">
-            <button type="button" id="btnToggleGridView" class="view-toggle-btn active" onclick="toggleSelectorView('grid')" title="Grid View">⊞</button>
-            <button type="button" id="btnToggleSliderView" class="view-toggle-btn" onclick="toggleSelectorView('slider')" title="Compact Slider View">☰</button>
-          </div>
-        </div>
+      <!-- Welcome Banner for scanned QR code or invite link ?join=CODE -->
+      <div id="inviteWelcomeBanner" class="invite-banner hidden">
+        <span>👋 You were invited to join Party Room <strong id="invitedRoomCodeDisplay" style="color: #38bdf8; letter-spacing: 2px;">------</strong>! Enter your name to enter the party.</span>
       </div>
 
-      <!-- Interactive Game Cards Grid -->
-      <div id="gameCardsGrid" class="game-cards-grid" role="tablist">
-        <!-- 1. Texas Hold'em Poker -->
-        <div class="game-card-item active" id="cardPoker" data-game="poker" onclick="switchGame('poker')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🃏</div>
-            <div class="game-card-status-pill">Selected ✓</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Texas Hold'em</h3>
-            <p class="game-card-tagline">Classic no-limit Hold'em with chips & bot AI</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Cards & Chips</span>
-            <span class="game-players-chip">👥 2 - 8</span>
-          </div>
+      <div class="party-entry-card">
+        <!-- Action Tabs: Create Room vs Join Room -->
+        <div class="action-tabs">
+          <button type="button" id="btnActionCreate" class="action-tab-btn active" onclick="switchAction('create')">🎉 Create Room</button>
+          <button type="button" id="btnActionJoin" class="action-tab-btn" onclick="switchAction('join')">🚀 Join Room</button>
         </div>
 
-        <!-- 2. The Imposter -->
-        <div class="game-card-item" id="cardImposter" data-game="imposter" onclick="switchGame('imposter')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🕵️</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">The Imposter</h3>
-            <p class="game-card-tagline">One word differs. Can you catch the mole?</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Social Deduction</span>
-            <span class="game-players-chip">👥 3 - 16</span>
-          </div>
-        </div>
+        <!-- CREATE ROOM SECTION -->
+        <section id="sectionCreate" class="action-section">
+          <form id="createRoomForm" onsubmit="handleCreateRoom(event)">
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label class="form-label" for="createPlayerName">Your Player Name</label>
+              <input type="text" id="createPlayerName" class="form-input" placeholder="Enter your display name (e.g. Host)" maxlength="15" required autocomplete="nickname">
+            </div>
 
-        <!-- 3. Wavelength -->
-        <div class="game-card-item" id="cardWavelength" data-game="wavelength" onclick="switchGame('wavelength')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🌊</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Wavelength</h3>
-            <p class="game-card-tagline">Read your Psychic's mind on the spectrum dial</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Telepathy Party</span>
-            <span class="game-players-chip">👥 2 - 16</span>
-          </div>
-        </div>
+            <button type="submit" id="btnSubmitCreate" class="btn btn-gold submit-btn" style="height: 54px; font-size: 16px; font-weight: 800;">
+              <span>🎉 Create Room & Invite Friends</span>
+            </button>
+            <button type="button" id="btnCreatePartyTeam" class="hidden" onclick="handleCreateRoom(event)"></button>
 
-        <!-- 4. Co-op Platformer -->
-        <div class="game-card-item" id="cardPlatformer" data-game="platformer" onclick="switchGame('platformer')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🏃‍♂️</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Co-op Platformer</h3>
-            <p class="game-card-tagline">Team up to solve puzzles & reach the portal</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Action & Puzzle</span>
-            <span class="game-players-chip">👥 2 - 6</span>
-          </div>
-        </div>
+            <div class="party-entry-hint">
+              ✨ Creates your shared party room with a 6-letter code & QR code. Friends join, then you choose any game and take everyone in!
+            </div>
+          </form>
+        </section>
 
-        <!-- 5. Draw & Guess -->
-        <div class="game-card-item" id="cardDrawguess" data-game="drawguess" onclick="switchGame('drawguess')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🎨</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Draw & Guess</h3>
-            <p class="game-card-tagline">Sketch secret words & speed guess in chat</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Drawing & Party</span>
-            <span class="game-players-chip">👥 2 - 16</span>
-          </div>
-        </div>
+        <!-- JOIN ROOM SECTION -->
+        <section id="sectionJoin" class="action-section hidden">
+          <form id="joinRoomForm" onsubmit="handleJoinRoom(event)">
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" for="joinPlayerName">Your Player Name</label>
+              <input type="text" id="joinPlayerName" class="form-input" placeholder="Enter your display name" maxlength="15" required autocomplete="nickname">
+            </div>
 
-        <!-- 6. Codenames -->
-        <div class="game-card-item" id="cardCodenames" data-game="codenames" onclick="switchGame('codenames')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🕵️</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Codenames</h3>
-            <p class="game-card-tagline">Red vs Blue spy showdown. Avoid the Assassin!</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Team Deduction</span>
-            <span class="game-players-chip">👥 2 - 16</span>
-          </div>
-        </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label class="form-label" for="joinRoomCode">
+                <span>Party Room Code</span>
+                <span style="font-size: 11px; color: var(--gold-light);">6-LETTER CODE</span>
+              </label>
+              <input type="text" id="joinRoomCode" class="form-input" placeholder="e.g. A1B2C3" maxlength="6" style="text-transform: uppercase; letter-spacing: 3px; font-weight: 700; font-size: 18px;" required>
+            </div>
 
-        <!-- 7. Speed Trivia -->
-        <div class="game-card-item" id="cardTrivia" data-game="trivia" onclick="switchGame('trivia')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">⚡</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Speed Trivia</h3>
-            <p class="game-card-tagline">15-second blitz questions & streak multipliers</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Fast Quiz Blitz</span>
-            <span class="game-players-chip">👥 1 - 24</span>
-          </div>
-        </div>
+            <button type="submit" id="btnSubmitJoin" class="btn btn-gold submit-btn" style="height: 54px; font-size: 16px; font-weight: 800;">
+              <span>🚀 Enter Party Room</span>
+            </button>
 
-        <!-- 8. Liar's Dice -->
-        <div class="game-card-item" id="cardLiarsdice" data-game="liarsdice" onclick="switchGame('liarsdice')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🎲</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Liar's Dice</h3>
-            <p class="game-card-tagline">Shake your cups, bid table totals, call Liar!</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Bluffing & Dice</span>
-            <span class="game-players-chip">👥 2 - 8</span>
-          </div>
-        </div>
-
-        <!-- 9. Spyfall -->
-        <div class="game-card-item" id="cardSpyfall" data-game="spyfall" onclick="switchGame('spyfall')" role="tab" tabindex="0">
-          <div class="game-card-header">
-            <div class="game-card-icon-wrap">🕵️‍♂️</div>
-            <div class="game-card-status-pill">Select</div>
-          </div>
-          <div class="game-card-body">
-            <h3 class="game-card-title">Spyfall</h3>
-            <p class="game-card-tagline">Civilians know the location. The Spy is bluffing!</p>
-          </div>
-          <div class="game-card-footer-tags">
-            <span class="game-tag-chip">Secret Location Hunt</span>
-            <span class="game-players-chip">👥 3 - 12</span>
-          </div>
-        </div>
+            <div class="party-entry-hint">
+              👥 Join your friend's party room with their code. Once everyone joins, the host takes everyone into the game together!
+            </div>
+          </form>
+        </section>
       </div>
 
-      <!-- No games match search notice -->
-      <div id="noGamesFoundMsg" style="display: none; text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
-        No games match your current filter. Try a different category or search keyword!
-      </div>
-
-      <!-- Hidden legacy buttons for 100% test & programmatic backwards compatibility -->
-      <nav class="games-tab-bar" style="display: none !important;" aria-hidden="true">
-        <button id="tabPoker" class="game-tab-btn" onclick="switchGame('poker')"></button>
-        <button id="tabImposter" class="game-tab-btn" onclick="switchGame('imposter')"></button>
-        <button id="tabWavelength" class="game-tab-btn" onclick="switchGame('wavelength')"></button>
-        <button id="tabPlatformer" class="game-tab-btn" onclick="switchGame('platformer')"></button>
-        <button id="tabDrawguess" class="game-tab-btn" onclick="switchGame('drawguess')"></button>
-        <button id="tabCodenames" class="game-tab-btn" onclick="switchGame('codenames')"></button>
-        <button id="tabTrivia" class="game-tab-btn" onclick="switchGame('trivia')"></button>
-        <button id="tabLiarsdice" class="game-tab-btn" onclick="switchGame('liarsdice')"></button>
-        <button id="tabSpyfall" class="game-tab-btn" onclick="switchGame('spyfall')"></button>
-      </nav>
-    </section>
-
-    <!-- Main Game Card -->
-    <main id="mainHubCard" class="hub-card poker-accent">
-      <!-- Dynamic Game Banner -->
-      <div class="game-banner">
-        <div class="game-meta-left">
-          <div id="gameMetaIcon" class="game-meta-icon">🃏</div>
-          <div>
-            <h2 id="gameMetaTitle" class="game-meta-title">Texas Hold'em Poker</h2>
-            <p id="gameMetaDesc" class="game-meta-desc">Classic no-limit Texas Hold'em with live chat and smooth betting.</p>
-          </div>
-        </div>
-        <div id="gameMetaBadges" class="game-badges">
-          <span class="badge-pill">👥 2 - 8 Players</span>
-          <span class="badge-pill">⏱️ Real-time</span>
-          <span class="badge-pill">🏆 Chips & Showdown</span>
-        </div>
-      </div>
-
-      <!-- Interactive How To Play Accordion -->
-      <div class="rules-accordion-box">
-        <button type="button" class="rules-accordion-header" onclick="toggleRulesAccordion()">
-          <span style="display: flex; align-items: center; gap: 8px;">
-            <span>📖</span>
-            <strong id="rulesToggleTitle">How to Play: Texas Hold'em Poker</strong>
-          </span>
-          <span id="rulesChevron" class="rules-chevron open">▲</span>
+      <div class="footer-links" style="display: flex; justify-content: center; align-items: center; margin-top: 24px;">
+        <button type="button" onclick="openServerConfigModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; padding: 5px 14px; color: #94a3b8; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          ⚙️ <span>Server:</span> <span id="currentServerDisplay">Origin</span>
         </button>
-        <div id="rulesAccordionBody" class="rules-accordion-body open">
-          <div id="rulesSummaryText">
-            Standard No-Limit Texas Hold'em. Each player gets 2 hole cards. Bet, raise, or fold across Flop, Turn, and River. Best 5-card poker hand wins the pot!
-          </div>
-        </div>
       </div>
+    </div>
 
-      <!-- Action Tabs: Create Room vs Join Room -->
-      <div class="action-tabs">
-        <button id="btnActionCreate" class="action-tab-btn active" onclick="switchAction('create')">Create Room</button>
-        <button id="btnActionJoin" class="action-tab-btn" onclick="switchAction('join')">Join Room</button>
-      </div>
 
-      <!-- CREATE ROOM SECTION -->
-      <section id="sectionCreate" class="action-section">
-        <form id="createRoomForm" onsubmit="handleCreateRoom(event)">
-          <div class="form-group" style="margin-bottom: 20px;">
-            <label class="form-label" for="createPlayerName">Your Player Name</label>
-            <input type="text" id="createPlayerName" class="form-input" placeholder="Enter your display name (e.g. Host)" maxlength="15" required autocomplete="nickname">
-          </div>
-
-          <button type="submit" id="btnSubmitCreate" class="btn btn-gold submit-btn" style="height: 52px; font-size: 16px; font-weight: 800;">
-            <span>🎉 Create Room & Invite Friends</span>
-          </button>
-          <!-- Hidden compatibility button for legacy scripts -->
-          <button type="button" id="btnCreatePartyTeam" class="hidden" onclick="handleCreateRoom(event)"></button>
-
-          <div style="text-align: center; color: #94a3b8; font-size: 13px; line-height: 1.5; margin-top: 12px;">
-            ✨ Creates your group room with a code & QR code. Friends join, then you choose any game and take everyone in!
-          </div>
-        </form>
-      </section>
-
-      <!-- JOIN ROOM SECTION -->
-      <section id="sectionJoin" class="action-section hidden">
-        <form id="joinRoomForm" onsubmit="handleJoinRoom(event)">
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label" for="joinPlayerName">Your Player Name</label>
-            <input type="text" id="joinPlayerName" class="form-input" placeholder="Enter your display name" maxlength="15" required autocomplete="nickname">
-          </div>
-
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label" for="joinRoomCode">
-              <span>Party Room Code</span>
-              <span style="font-size: 11px; color: var(--gold-light);">6-LETTER CODE</span>
-            </label>
-            <input type="text" id="joinRoomCode" class="form-input" placeholder="e.g. A1B2C3" maxlength="6" style="text-transform: uppercase; letter-spacing: 3px; font-weight: 700; font-size: 18px;" required>
-          </div>
-
-          <button type="submit" id="btnSubmitJoin" class="btn btn-gold submit-btn" style="height: 52px; font-size: 16px; font-weight: 800;">
-            <span>🚀 Enter Room</span>
-          </button>
-        </form>
-      </section>
-
-      <!-- PARTY LOBBY SECTION (Active Group/Team Hub) -->
-      <section id="sectionPartyLobby" class="action-section hidden">
+    <!-- ======================================================== -->
+    <!-- SCREEN 2: PARTY LOBBY (Dedicated Hub for Joined Team)    -->
+    <!-- ======================================================== -->
+    <div id="screenPartyLobby" class="screen-view hidden">
+      <div class="party-lobby-card">
         <div class="party-room-header">
           <div>
             <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Party Room Code</div>
@@ -1177,7 +1064,7 @@
         </div>
 
         <!-- Live Connected Team Members -->
-        <div class="party-roster-box" style="margin-top: 16px;">
+        <div class="party-roster-box" style="margin-top: 18px;">
           <div class="party-roster-title-row">
             <div class="party-roster-title">
               <span>👥 Connected Team Members</span>
@@ -1192,274 +1079,567 @@
           </div>
         </div>
 
-        <!-- Host Game Launch Controls / Guest Waiting State -->
-        <div id="partyHostControls" class="party-launch-card" style="margin-top: 16px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+        <!-- Host Launch Controls on Lobby Screen -->
+        <div id="partyHostControls" class="party-launch-card" style="margin-top: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
             <div>
               <div style="font-size: 11px; font-weight: 700; color: #cbd5e1; text-transform: uppercase;">Selected Game To Launch</div>
-              <div style="font-size: 20px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
-                <span id="partySelectedGameIcon">🃏</span>
+              <div style="font-size: 22px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <span id="partySelectedGameIcon" style="font-size: 26px;">🃏</span>
                 <span id="partySelectedGameTitle">Texas Hold'em Poker</span>
               </div>
             </div>
-            <div style="font-size: 12px; color: #94a3b8;">
-              Pick any game from the catalog above, customize options, and take everyone in!
+            <div>
+              <button type="button" class="btn btn-ghost" onclick="showGameSelectionScreen()" style="padding: 8px 16px; font-size: 13px; font-weight: 700; border-color: rgba(56, 189, 248, 0.5); color: #38bdf8;">
+                <span>🎮 Change / Pick Game →</span>
+              </button>
             </div>
           </div>
 
-          <!-- All game options embedded right inside Host Controls -->
-          <div id="lobbyGameSettingsWrapper" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 14px;">
-            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-              <span>⚙️ Game Options for</span>
-              <strong id="configGameNameLabel" style="color: var(--gold-light);">Texas Hold'em Poker</strong>
-            </div>
-
-            <!-- POKER SETTINGS -->
-            <div id="pokerSettings" class="game-specific-settings">
-              <div class="form-grid-3">
-                <div class="form-group">
-                  <label class="form-label" for="pokerStartingChips">Starting Chips</label>
-                  <select id="pokerStartingChips" class="form-select">
-                    <option value="500">500 Chips</option>
-                    <option value="1000" selected>1,000 Chips</option>
-                    <option value="2500">2,500 Chips</option>
-                    <option value="5000">5,000 Chips</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="pokerSmallBlind">Small Blind</label>
-                  <select id="pokerSmallBlind" class="form-select">
-                    <option value="5">5 / 10</option>
-                    <option value="10" selected>10 / 20</option>
-                    <option value="25">25 / 50</option>
-                    <option value="50">50 / 100</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="pokerMaxPlayers">Max Players</label>
-                  <select id="pokerMaxPlayers" class="form-select">
-                    <option value="4">4 Players</option>
-                    <option value="6" selected>6 Players</option>
-                    <option value="8">8 Players</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- IMPOSTER SETTINGS -->
-            <div id="imposterSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="imposterCount">Imposters</label>
-                  <select id="imposterCount" class="form-select">
-                    <option value="1" selected>1 Imposter</option>
-                    <option value="2">2 Imposters (For 6+ players)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="imposterCategory">Category</label>
-                  <select id="imposterCategory" class="form-select">
-                    <option value="all" selected>🎲 All Categories</option>
-                    <option value="Everyday">☕ Everyday Objects</option>
-                    <option value="Food & Drink">🍕 Food & Drink</option>
-                    <option value="Animals">🦁 Animals</option>
-                    <option value="Nature & Places">🌴 Nature & Places</option>
-                    <option value="Tech & Transport">🚀 Tech & Transport</option>
-                    <option value="People & Jobs">🧑‍⚕️ Roles & Jobs</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- WAVELENGTH SETTINGS -->
-            <div id="wavelengthSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="wavelengthMode">Game Mode</label>
-                  <select id="wavelengthMode" class="form-select">
-                    <option value="coop" selected>🤝 Co-op (Together)</option>
-                    <option value="teams">⚔️ Teams (Red vs Blue)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="wavelengthRounds">Rounds</label>
-                  <select id="wavelengthRounds" class="form-select">
-                    <option value="5">5 Rounds</option>
-                    <option value="7" selected>7 Rounds</option>
-                    <option value="10">10 Rounds</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- PLATFORMER SETTINGS -->
-            <div id="platformerSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="platformerStartingLevel">Starting Level</label>
-                  <select id="platformerStartingLevel" class="form-select">
-                    <option value="0" selected>Level 1: Buddy System</option>
-                    <option value="1">Level 2: Heavy Lifting</option>
-                    <option value="2">Level 3: Golden Key</option>
-                    <option value="3">Level 4: Dual Towers</option>
-                    <option value="4">Level 5: Master Vault</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="platformerMaxPlayers">Max Players</label>
-                  <select id="platformerMaxPlayers" class="form-select">
-                    <option value="2">2 Players (Duo)</option>
-                    <option value="4" selected>4 Players (Party)</option>
-                    <option value="6">6 Players (Chaos)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- DRAW & GUESS SETTINGS -->
-            <div id="drawguessSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="drawguessRounds">Rounds</label>
-                  <select id="drawguessRounds" class="form-select">
-                    <option value="2">2 Rounds (Quick)</option>
-                    <option value="3" selected>3 Rounds (Standard)</option>
-                    <option value="5">5 Rounds (Marathon)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="drawguessDrawTime">Draw Time</label>
-                  <select id="drawguessDrawTime" class="form-select">
-                    <option value="60">60 Seconds</option>
-                    <option value="75" selected>75 Seconds</option>
-                    <option value="90">90 Seconds</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- CODENAMES SETTINGS -->
-            <div id="codenamesSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="codenamesMaxPlayers">Max Players</label>
-                  <select id="codenamesMaxPlayers" class="form-select">
-                    <option value="8">8 Players</option>
-                    <option value="12" selected>12 Players</option>
-                    <option value="16">16 Players</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="codenamesTimer">Turn Style</label>
-                  <select id="codenamesTimer" class="form-select">
-                    <option value="relaxed" selected>Relaxed (No limit)</option>
-                    <option value="fast">Blitz (2 min timer)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- SPEED TRIVIA SETTINGS -->
-            <div id="triviaSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="triviaQuestionCount">Questions</label>
-                  <select id="triviaQuestionCount" class="form-select">
-                    <option value="5">5 Questions (Quick Blitz)</option>
-                    <option value="8" selected>8 Questions (Standard)</option>
-                    <option value="12">12 Questions (Party)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="triviaTimeLimit">Timer per Question</label>
-                  <select id="triviaTimeLimit" class="form-select">
-                    <option value="10">10 Seconds (Lightning)</option>
-                    <option value="15" selected>15 Seconds (Normal)</option>
-                    <option value="20">20 Seconds (Casual)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- LIAR'S DICE SETTINGS -->
-            <div id="liarsdiceSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="liarsdiceStartingDice">Starting Dice</label>
-                  <select id="liarsdiceStartingDice" class="form-select">
-                    <option value="3">3 Dice (Fast)</option>
-                    <option value="5" selected>5 Dice (Classic)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="liarsdiceMaxPlayers">Max Players</label>
-                  <select id="liarsdiceMaxPlayers" class="form-select">
-                    <option value="4">4 Players</option>
-                    <option value="6" selected>6 Players</option>
-                    <option value="8">8 Players</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- SPYFALL SETTINGS -->
-            <div id="spyfallSettings" class="game-specific-settings hidden">
-              <div class="form-grid-2">
-                <div class="form-group">
-                  <label class="form-label" for="spyfallDuration">Timer Duration</label>
-                  <select id="spyfallDuration" class="form-select">
-                    <option value="300">5 Minutes</option>
-                    <option value="480" selected>8 Minutes (Classic)</option>
-                    <option value="600">10 Minutes</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="spyfallMaxPlayers">Max Players</label>
-                  <select id="spyfallMaxPlayers" class="form-select">
-                    <option value="6">6 Players</option>
-                    <option value="8" selected>8 Players</option>
-                    <option value="12">12 Players</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px; color: #94a3b8; font-size: 13px; line-height: 1.5;">
+            👑 When everyone has joined, click below to take all players directly into the game! Or click <strong>Change / Pick Game</strong> to choose another game or adjust game options.
           </div>
 
-          <button type="button" id="btnLaunchParty" class="btn btn-gold submit-btn" style="height: 54px; font-size: 16px; font-weight: 800;" onclick="handleLaunchPartyGame()">
+          <button type="button" id="btnLaunchParty" class="btn btn-gold submit-btn" style="height: 56px; font-size: 17px; font-weight: 800;" onclick="handleLaunchPartyGame()">
             <span>🚀 Take Everyone into <span id="launchBtnGameName">Texas Hold'em</span></span>
           </button>
         </div>
 
-        <div id="partyGuestControls" class="party-launch-card hidden" style="margin-top: 16px; text-align: center;">
-          <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">
+        <!-- Guest Waiting State on Lobby Screen -->
+        <div id="partyGuestControls" class="party-launch-card hidden" style="margin-top: 20px; text-align: center; padding: 24px;">
+          <div style="font-size: 14px; color: #94a3b8; margin-bottom: 8px;">
             Selected Game: <strong id="guestSelectedGameName" style="color: #38bdf8;">Texas Hold'em Poker</strong>
           </div>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #cbd5e1; font-weight: 600; font-size: 15px;">
-            <span style="display: inline-block; animation: spin 1.5s linear infinite;">⏳</span>
-            <span>Host <strong id="guestHostNameDisplay" style="color: var(--gold-light);">Host</strong> is picking a game...</span>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #cbd5e1; font-weight: 700; font-size: 16px;">
+            <span style="display: inline-block; animation: spin 1.5s linear infinite; font-size: 18px;">⏳</span>
+            <span>Host <strong id="guestHostNameDisplay" style="color: var(--gold-light);">Host</strong> is picking/starting a game...</span>
           </div>
-          <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
+          <div style="font-size: 13px; color: #64748b; margin-top: 8px;">
             All joined players will automatically be taken into the game together!
           </div>
 
           <!-- Quick Reaction Buttons for guests while waiting in the lobby -->
-          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 14px;">
-            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('🎉')" title="Cheer">🎉</button>
-            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('🔥')" title="Fire">🔥</button>
-            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('🚀')" title="Ready!">🚀</button>
-            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('❤️')" title="Love">❤️</button>
-            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('😂')" title="Laugh">😂</button>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px;">
+            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('🎉')" title="Cheer">🎉 Cheer</button>
+            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('🔥')" title="Fire">🔥 Hype</button>
+            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('🚀')" title="Ready!">🚀 Ready!</button>
+            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('❤️')" title="Love">❤️ Love</button>
+            <button type="button" class="btn-party-action" onclick="sendLobbyReaction('😂')" title="Laugh">😂 Haha</button>
           </div>
         </div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- SCREEN 3: GAME SELECTION & LAUNCH (Separate Screen)      -->
+    <!-- ======================================================== -->
+    <div id="screenGameSelect" class="screen-view hidden">
+      <!-- Header Bar with Back Button & Room Status -->
+      <div class="game-select-header-bar">
+        <button type="button" class="btn btn-ghost" onclick="backToPartyLobby()" style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #cbd5e1;">
+          <span>← Back to Party Lobby</span>
+        </button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 12px; color: #94a3b8; font-weight: 700;">ROOM:</span>
+          <span id="gameSelectRoomCode" style="font-size: 13px; font-weight: 800; color: #38bdf8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 10px; border-radius: 999px;">------</span>
+          <span id="gameSelectMemberBadge" style="font-size: 12px; color: #cbd5e1; background: rgba(255,255,255,0.06); padding: 3px 10px; border-radius: 999px;">1 Member</span>
+        </div>
+      </div>
+
+      <header class="brand-hero" style="margin-bottom: 8px;">
+        <h1 class="brand-title" style="font-size: 28px;">CHOOSE A GAME FOR YOUR PARTY</h1>
+        <p class="brand-subtitle">Select any game, configure settings, and launch for all joined players!</p>
+      </header>
+
+      <!-- Game Selector Deck & Toolbar -->
+      <section class="game-selector-section" aria-label="Game Selection">
+        <!-- Toolbar: Categories, Random Pick, View Mode, Search -->
+        <div class="selector-controls-bar">
+          <!-- Category Filters -->
+          <div class="category-filter-pills" role="tablist" aria-label="Game Categories">
+            <button type="button" class="cat-pill-btn active" onclick="filterCategory('all', this)">
+              <span>🌟 All (9)</span>
+            </button>
+            <button type="button" class="cat-pill-btn" onclick="filterCategory('deduction', this)">
+              <span>🕵️ Deduction (3)</span>
+            </button>
+            <button type="button" class="cat-pill-btn" onclick="filterCategory('party', this)">
+              <span>🎨 Creative & Party (2)</span>
+            </button>
+            <button type="button" class="cat-pill-btn" onclick="filterCategory('action', this)">
+              <span>⚡ Action & Trivia (2)</span>
+            </button>
+            <button type="button" class="cat-pill-btn" onclick="filterCategory('classics', this)">
+              <span>🎲 Classics & Dice (2)</span>
+            </button>
+          </div>
+
+          <!-- Right Side Tools -->
+          <div class="selector-right-tools">
+            <button type="button" class="btn-random-game" id="btnRandomPick" onclick="pickRandomGame()" title="Spin and pick a random game">
+              <span id="randomDiceIcon">🎲</span>
+              <span>Pick For Me</span>
+            </button>
+
+            <div class="selector-search-box">
+              <span class="selector-search-icon">🔍</span>
+              <input type="text" id="gameSearchInput" class="selector-search-input" placeholder="Search games..." oninput="handleGameSearch(event)" aria-label="Search games">
+            </div>
+
+            <div class="view-toggle-wrap">
+              <button type="button" id="btnToggleGridView" class="view-toggle-btn active" onclick="toggleSelectorView('grid')" title="Grid View">⊞</button>
+              <button type="button" id="btnToggleSliderView" class="view-toggle-btn" onclick="toggleSelectorView('slider')" title="Compact Slider View">☰</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Game Cards Grid -->
+        <div id="gameCardsGrid" class="game-cards-grid" role="tablist">
+          <!-- 1. Texas Hold'em Poker -->
+          <div class="game-card-item active" id="cardPoker" data-game="poker" onclick="switchGame('poker')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🃏</div>
+              <div class="game-card-status-pill">Selected ✓</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Texas Hold'em</h3>
+              <p class="game-card-tagline">Classic no-limit Hold'em with chips & bot AI</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Cards & Chips</span>
+              <span class="game-players-chip">👥 2 - 8</span>
+            </div>
+          </div>
+
+          <!-- 2. The Imposter -->
+          <div class="game-card-item" id="cardImposter" data-game="imposter" onclick="switchGame('imposter')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🕵️</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">The Imposter</h3>
+              <p class="game-card-tagline">One word differs. Can you catch the mole?</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Social Deduction</span>
+              <span class="game-players-chip">👥 3 - 16</span>
+            </div>
+          </div>
+
+          <!-- 3. Wavelength -->
+          <div class="game-card-item" id="cardWavelength" data-game="wavelength" onclick="switchGame('wavelength')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🌊</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Wavelength</h3>
+              <p class="game-card-tagline">Read your Psychic's mind on the spectrum dial</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Telepathy Party</span>
+              <span class="game-players-chip">👥 2 - 16</span>
+            </div>
+          </div>
+
+          <!-- 4. Co-op Platformer -->
+          <div class="game-card-item" id="cardPlatformer" data-game="platformer" onclick="switchGame('platformer')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🏃‍♂️</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Co-op Platformer</h3>
+              <p class="game-card-tagline">Team up to solve puzzles & reach the portal</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Action & Puzzle</span>
+              <span class="game-players-chip">👥 2 - 6</span>
+            </div>
+          </div>
+
+          <!-- 5. Draw & Guess -->
+          <div class="game-card-item" id="cardDrawguess" data-game="drawguess" onclick="switchGame('drawguess')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🎨</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Draw & Guess</h3>
+              <p class="game-card-tagline">Sketch secret words & speed guess in chat</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Drawing & Party</span>
+              <span class="game-players-chip">👥 2 - 16</span>
+            </div>
+          </div>
+
+          <!-- 6. Codenames -->
+          <div class="game-card-item" id="cardCodenames" data-game="codenames" onclick="switchGame('codenames')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🕵️</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Codenames</h3>
+              <p class="game-card-tagline">Red vs Blue spy showdown. Avoid the Assassin!</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Team Deduction</span>
+              <span class="game-players-chip">👥 2 - 16</span>
+            </div>
+          </div>
+
+          <!-- 7. Speed Trivia -->
+          <div class="game-card-item" id="cardTrivia" data-game="trivia" onclick="switchGame('trivia')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">⚡</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Speed Trivia</h3>
+              <p class="game-card-tagline">15-second blitz questions & streak multipliers</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Fast Quiz Blitz</span>
+              <span class="game-players-chip">👥 1 - 24</span>
+            </div>
+          </div>
+
+          <!-- 8. Liar's Dice -->
+          <div class="game-card-item" id="cardLiarsdice" data-game="liarsdice" onclick="switchGame('liarsdice')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🎲</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Liar's Dice</h3>
+              <p class="game-card-tagline">Shake your cups, bid table totals, call Liar!</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Bluffing & Dice</span>
+              <span class="game-players-chip">👥 2 - 8</span>
+            </div>
+          </div>
+
+          <!-- 9. Spyfall -->
+          <div class="game-card-item" id="cardSpyfall" data-game="spyfall" onclick="switchGame('spyfall')" role="tab" tabindex="0">
+            <div class="game-card-header">
+              <div class="game-card-icon-wrap">🕵️‍♂️</div>
+              <div class="game-card-status-pill">Select</div>
+            </div>
+            <div class="game-card-body">
+              <h3 class="game-card-title">Spyfall</h3>
+              <p class="game-card-tagline">Civilians know the location. The Spy is bluffing!</p>
+            </div>
+            <div class="game-card-footer-tags">
+              <span class="game-tag-chip">Secret Location Hunt</span>
+              <span class="game-players-chip">👥 3 - 12</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- No games match search notice -->
+        <div id="noGamesFoundMsg" style="display: none; text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+          No games match your current filter. Try a different category or search keyword!
+        </div>
+
+        <!-- Hidden legacy buttons for 100% test & programmatic backwards compatibility -->
+        <nav class="games-tab-bar" style="display: none !important;" aria-hidden="true">
+          <button id="tabPoker" class="game-tab-btn" onclick="switchGame('poker')"></button>
+          <button id="tabImposter" class="game-tab-btn" onclick="switchGame('imposter')"></button>
+          <button id="tabWavelength" class="game-tab-btn" onclick="switchGame('wavelength')"></button>
+          <button id="tabPlatformer" class="game-tab-btn" onclick="switchGame('platformer')"></button>
+          <button id="tabDrawguess" class="game-tab-btn" onclick="switchGame('drawguess')"></button>
+          <button id="tabCodenames" class="game-tab-btn" onclick="switchGame('codenames')"></button>
+          <button id="tabTrivia" class="game-tab-btn" onclick="switchGame('trivia')"></button>
+          <button id="tabLiarsdice" class="game-tab-btn" onclick="switchGame('liarsdice')"></button>
+          <button id="tabSpyfall" class="game-tab-btn" onclick="switchGame('spyfall')"></button>
+        </nav>
       </section>
 
-      <div class="footer-links" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px;">
-        <span>Active Game: <strong id="activeGameLabel" style="color: var(--gold-light);">Texas Hold'em</strong></span>
-        <button type="button" onclick="openServerConfigModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; padding: 4px 12px; color: #94a3b8; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-          ⚙️ <span>Server:</span> <span id="currentServerDisplay" style="color: #38bdf8; font-weight: 600;">Origin</span>
-        </button>
+      <!-- Main Game Card (Rules & Settings) -->
+      <main id="mainHubCard" class="hub-card poker-accent">
+        <!-- Dynamic Game Banner -->
+        <div class="game-banner">
+          <div class="game-meta-left">
+            <div id="gameMetaIcon" class="game-meta-icon">🃏</div>
+            <div>
+              <h2 id="gameMetaTitle" class="game-meta-title">Texas Hold'em Poker</h2>
+              <p id="gameMetaDesc" class="game-meta-desc">Classic no-limit Texas Hold'em with live chat and smooth betting.</p>
+            </div>
+          </div>
+          <div id="gameMetaBadges" class="game-badges">
+            <span class="badge-pill">👥 2 - 8 Players</span>
+            <span class="badge-pill">⏱️ Real-time</span>
+            <span class="badge-pill">🏆 Chips & Showdown</span>
+          </div>
+        </div>
+
+        <!-- Interactive How To Play Accordion -->
+        <div class="rules-accordion-box">
+          <button type="button" class="rules-accordion-header" onclick="toggleRulesAccordion()">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span>📖</span>
+              <strong id="rulesToggleTitle">How to Play: Texas Hold'em Poker</strong>
+            </span>
+            <span id="rulesChevron" class="rules-chevron open">▲</span>
+          </button>
+          <div id="rulesAccordionBody" class="rules-accordion-body open">
+            <div id="rulesSummaryText">
+              Standard No-Limit Texas Hold'em. Each player gets 2 hole cards. Bet, raise, or fold across Flop, Turn, and River. Best 5-card poker hand wins the pot!
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Specific Settings Wrapper -->
+        <div id="lobbyGameSettingsWrapper" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px;">
+          <div style="font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>⚙️ Game Options for</span>
+            <strong id="configGameNameLabel" style="color: var(--gold-light);">Texas Hold'em Poker</strong>
+          </div>
+
+          <!-- POKER SETTINGS -->
+          <div id="pokerSettings" class="game-specific-settings">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="pokerStartingChips">Starting Chips</label>
+                <select id="pokerStartingChips" class="form-select">
+                  <option value="500">500 Chips</option>
+                  <option value="1000" selected>1,000 Chips</option>
+                  <option value="2500">2,500 Chips</option>
+                  <option value="5000">5,000 Chips</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pokerSmallBlind">Small Blind</label>
+                <select id="pokerSmallBlind" class="form-select">
+                  <option value="5">5 / 10</option>
+                  <option value="10" selected>10 / 20</option>
+                  <option value="25">25 / 50</option>
+                  <option value="50">50 / 100</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pokerMaxPlayers">Max Players</label>
+                <select id="pokerMaxPlayers" class="form-select">
+                  <option value="4">4 Players</option>
+                  <option value="6" selected>6 Players</option>
+                  <option value="8">8 Players</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- IMPOSTER SETTINGS -->
+          <div id="imposterSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="imposterCount">Imposters</label>
+                <select id="imposterCount" class="form-select">
+                  <option value="1" selected>1 Imposter</option>
+                  <option value="2">2 Imposters (For 6+ players)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="imposterCategory">Category</label>
+                <select id="imposterCategory" class="form-select">
+                  <option value="all" selected>🎲 All Categories</option>
+                  <option value="Everyday">☕ Everyday Objects</option>
+                  <option value="Food & Drink">🍕 Food & Drink</option>
+                  <option value="Animals">🦁 Animals</option>
+                  <option value="Nature & Places">🌴 Nature & Places</option>
+                  <option value="Tech & Transport">🚀 Tech & Transport</option>
+                  <option value="People & Jobs">🧑‍⚕️ Roles & Jobs</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- WAVELENGTH SETTINGS -->
+          <div id="wavelengthSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="wavelengthMode">Game Mode</label>
+                <select id="wavelengthMode" class="form-select">
+                  <option value="coop" selected>🤝 Co-op (Together)</option>
+                  <option value="teams">⚔️ Teams (Red vs Blue)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="wavelengthRounds">Rounds</label>
+                <select id="wavelengthRounds" class="form-select">
+                  <option value="5">5 Rounds</option>
+                  <option value="7" selected>7 Rounds</option>
+                  <option value="10">10 Rounds</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLATFORMER SETTINGS -->
+          <div id="platformerSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="platformerStartingLevel">Starting Level</label>
+                <select id="platformerStartingLevel" class="form-select">
+                  <option value="0" selected>Level 1: Buddy System</option>
+                  <option value="1">Level 2: Heavy Lifting</option>
+                  <option value="2">Level 3: Golden Key</option>
+                  <option value="3">Level 4: Dual Towers</option>
+                  <option value="4">Level 5: Master Vault</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="platformerMaxPlayers">Max Players</label>
+                <select id="platformerMaxPlayers" class="form-select">
+                  <option value="2">2 Players (Duo)</option>
+                  <option value="4" selected>4 Players (Party)</option>
+                  <option value="6">6 Players (Chaos)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- DRAW & GUESS SETTINGS -->
+          <div id="drawguessSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="drawguessRounds">Rounds</label>
+                <select id="drawguessRounds" class="form-select">
+                  <option value="2">2 Rounds (Quick)</option>
+                  <option value="3" selected>3 Rounds (Standard)</option>
+                  <option value="5">5 Rounds (Marathon)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="drawguessDrawTime">Draw Time</label>
+                <select id="drawguessDrawTime" class="form-select">
+                  <option value="60">60 Seconds</option>
+                  <option value="75" selected>75 Seconds</option>
+                  <option value="90">90 Seconds</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- CODENAMES SETTINGS -->
+          <div id="codenamesSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="codenamesMaxPlayers">Max Players</label>
+                <select id="codenamesMaxPlayers" class="form-select">
+                  <option value="8">8 Players</option>
+                  <option value="12" selected>12 Players</option>
+                  <option value="16">16 Players</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="codenamesTimer">Turn Style</label>
+                <select id="codenamesTimer" class="form-select">
+                  <option value="relaxed" selected>Relaxed (No limit)</option>
+                  <option value="fast">Blitz (2 min timer)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPEED TRIVIA SETTINGS -->
+          <div id="triviaSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="triviaQuestionCount">Questions</label>
+                <select id="triviaQuestionCount" class="form-select">
+                  <option value="5">5 Questions (Quick Blitz)</option>
+                  <option value="8" selected>8 Questions (Standard)</option>
+                  <option value="12">12 Questions (Party)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="triviaTimeLimit">Timer per Question</label>
+                <select id="triviaTimeLimit" class="form-select">
+                  <option value="10">10 Seconds (Lightning)</option>
+                  <option value="15" selected>15 Seconds (Normal)</option>
+                  <option value="20">20 Seconds (Casual)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIAR'S DICE SETTINGS -->
+          <div id="liarsdiceSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="liarsdiceStartingDice">Starting Dice</label>
+                <select id="liarsdiceStartingDice" class="form-select">
+                  <option value="3">3 Dice (Fast)</option>
+                  <option value="5" selected>5 Dice (Classic)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="liarsdiceMaxPlayers">Max Players</label>
+                <select id="liarsdiceMaxPlayers" class="form-select">
+                  <option value="4">4 Players</option>
+                  <option value="6" selected>6 Players</option>
+                  <option value="8">8 Players</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPYFALL SETTINGS -->
+          <div id="spyfallSettings" class="game-specific-settings hidden">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="spyfallDuration">Timer Duration</label>
+                <select id="spyfallDuration" class="form-select">
+                  <option value="300">5 Minutes</option>
+                  <option value="480" selected>8 Minutes (Classic)</option>
+                  <option value="600">10 Minutes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="spyfallMaxPlayers">Max Players</label>
+                <select id="spyfallMaxPlayers" class="form-select">
+                  <option value="6">6 Players</option>
+                  <option value="8" selected>8 Players</option>
+                  <option value="12">12 Players</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-links" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px;">
+          <span>Active Game: <strong id="activeGameLabel" style="color: var(--gold-light);">Texas Hold'em</strong></span>
+          <button type="button" onclick="openServerConfigModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; padding: 4px 12px; color: #94a3b8; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+            ⚙️ <span>Server:</span> <span id="currentServerDisplaySelect" style="color: #38bdf8; font-weight: 600;">Origin</span>
+          </button>
+        </div>
+      </main>
+
+      <!-- Giant Sticky Launch Bar at bottom of Game Select screen -->
+      <div class="game-launch-sticky-bar">
+        <div class="game-launch-summary">
+          <div id="stickySelectedIcon" style="font-size: 32px;">🃏</div>
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Selected Game</div>
+            <div id="stickySelectedTitle" style="font-size: 18px; font-weight: 800; color: #fff;">Texas Hold'em Poker</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button type="button" class="btn btn-ghost" onclick="backToPartyLobby()" style="height: 48px; padding: 0 18px; font-weight: 700;">
+            <span>Back to Lobby</span>
+          </button>
+          <button type="button" id="btnLaunchFromSelect" class="btn btn-gold" style="height: 48px; padding: 0 24px; font-size: 16px; font-weight: 800;" onclick="handleLaunchPartyGame()">
+            <span>🚀 Take Everyone into <span id="stickyLaunchBtnName">Texas Hold'em</span></span>
+          </button>
+        </div>
       </div>
-    </main>
+    </div>
+
   </div>
 
   <!-- Backend Server Configuration Modal (Vercel / Render / Custom) -->
@@ -1841,6 +2021,27 @@
       return payload;
     }
 
+    function showScreen(screenId) {
+      ['screenPartyJoin', 'screenPartyLobby', 'screenGameSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== screenId);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showGameSelectionScreen() {
+      if (!isPartyHost) {
+        alert('Only the party host can select games for the room.');
+        return;
+      }
+      showScreen('screenGameSelect');
+      updatePartyLobbyGameDisplay(currentGame);
+    }
+
+    function backToPartyLobby() {
+      showScreen('screenPartyLobby');
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const savedView = localStorage.getItem('party_selector_view');
       if (savedView === 'slider') {
@@ -1849,31 +2050,41 @@
 
       const params = new URLSearchParams(window.location.search);
       const roomParam = (params.get('join') || params.get('room') || params.get('code') || '').trim().toUpperCase();
+      const nameParam = (params.get('name') || '').trim();
       const gameParam = params.get('game');
 
       if (gameParam && GAME_META[gameParam.toLowerCase()]) {
         switchGame(gameParam.toLowerCase(), true);
       }
 
-      const savedName = localStorage.getItem('party_player_name') || localStorage.getItem('playerName') || sessionStorage.getItem('playerName');
-      if (savedName) {
-        myPlayerName = savedName;
-        const createInput = document.getElementById('createPlayerName');
-        const joinInput = document.getElementById('joinPlayerName');
-        if (createInput) createInput.value = savedName;
-        if (joinInput) joinInput.value = savedName;
-      }
+      // Check if returning together from an in-game session (has nameParam OR active session matches roomParam)
+      const isReturnFromGame = Boolean(nameParam || (roomParam && sessionStorage.getItem('roomId') === roomParam && sessionStorage.getItem('playerName')));
+      const savedName = nameParam || sessionStorage.getItem('playerName') || localStorage.getItem('party_player_name') || '';
 
       if (roomParam) {
-        const joinInput = document.getElementById('joinRoomCode');
-        if (joinInput) joinInput.value = roomParam;
-
-        if (savedName && isReturnFromGame) {
+        if (isReturnFromGame && savedName) {
+          // Automatic re-entry into lobby after game switch / return
+          myPlayerName = savedName;
           activePartyRoomId = roomParam;
           isPartyHost = sessionStorage.getItem('isHost') === 'true';
+          enterPartyLobbyMode(roomParam, isPartyHost);
           socket.emit('join-room', { roomId: roomParam, name: savedName });
         } else {
+          // Dedicated screen for joining party room
+          showScreen('screenPartyJoin');
           switchAction('join');
+          const joinInput = document.getElementById('joinRoomCode');
+          if (joinInput) joinInput.value = roomParam;
+          const banner = document.getElementById('inviteWelcomeBanner');
+          const bannerCode = document.getElementById('invitedRoomCodeDisplay');
+          if (banner) banner.classList.remove('hidden');
+          if (bannerCode) bannerCode.textContent = roomParam;
+          // Clean name input for guest to enter their distinct name
+          const nameInput = document.getElementById('joinPlayerName');
+          if (nameInput) {
+            nameInput.value = '';
+            setTimeout(() => nameInput.focus(), 150);
+          }
         }
 
         fetch(`/api/room/${encodeURIComponent(roomParam)}`)
@@ -1884,6 +2095,13 @@
             }
           })
           .catch(() => {});
+      } else {
+        // Normal homepage load: show Party Entry screen
+        showScreen('screenPartyJoin');
+        if (savedName) {
+          const createInput = document.getElementById('createPlayerName');
+          if (createInput) createInput.value = savedName;
+        }
       }
     });
 
@@ -1993,13 +2211,10 @@
 
       const codeDisplay = document.getElementById('partyRoomCodeDisplay');
       if (codeDisplay) codeDisplay.textContent = roomId;
+      const gameSelectCode = document.getElementById('gameSelectRoomCode');
+      if (gameSelectCode) gameSelectCode.textContent = roomId;
 
-      const tabs = document.querySelector('.action-tabs');
-      if (tabs) tabs.classList.add('hidden');
-      document.getElementById('sectionCreate').classList.add('hidden');
-      document.getElementById('sectionJoin').classList.add('hidden');
-      document.getElementById('sectionPartyLobby').classList.remove('hidden');
-
+      showScreen('screenPartyLobby');
       updatePartyHostRoleUI(isHost);
       updatePartyLobbyGameDisplay(currentGame);
 
@@ -2029,11 +2244,18 @@
       const launchBtnName = document.getElementById('launchBtnGameName');
       const guestNameEl = document.getElementById('guestSelectedGameName');
       const configNameEl = document.getElementById('configGameNameLabel');
+      const stickyIcon = document.getElementById('stickySelectedIcon');
+      const stickyTitle = document.getElementById('stickySelectedTitle');
+      const stickyLaunchBtnName = document.getElementById('stickyLaunchBtnName');
+
       if (iconEl) iconEl.textContent = meta.icon;
       if (titleEl) titleEl.textContent = meta.title;
       if (launchBtnName) launchBtnName.textContent = meta.title;
       if (guestNameEl) guestNameEl.textContent = meta.title;
       if (configNameEl) configNameEl.textContent = meta.title;
+      if (stickyIcon) stickyIcon.textContent = meta.icon;
+      if (stickyTitle) stickyTitle.textContent = meta.title;
+      if (stickyLaunchBtnName) stickyLaunchBtnName.textContent = meta.title;
     }
 
     function renderPartyLobby(data) {
@@ -2049,9 +2271,12 @@
       }
 
       const countBadge = document.getElementById('partyPlayerCountBadge');
-      if (countBadge) {
+      const memberBadgeSelect = document.getElementById('gameSelectMemberBadge');
+      if (countBadge || memberBadgeSelect) {
         const activeCount = data.players.filter(p => p.connected).length;
-        countBadge.textContent = `${activeCount} Member${activeCount === 1 ? '' : 's'}`;
+        const text = `${activeCount} Member${activeCount === 1 ? '' : 's'}`;
+        if (countBadge) countBadge.textContent = text;
+        if (memberBadgeSelect) memberBadgeSelect.textContent = text;
       }
 
       const grid = document.getElementById('partyPlayersGrid');
@@ -2073,9 +2298,15 @@
     function handleLaunchPartyGame() {
       if (!isPartyHost || !activePartyRoomId) return;
       const btn = document.getElementById('btnLaunchParty');
+      const btnSticky = document.getElementById('btnLaunchFromSelect');
+      const text = `🚀 Taking Everyone into ${GAME_META[currentGame]?.title || currentGame}...`;
       if (btn) {
         btn.disabled = true;
-        btn.textContent = `🚀 Taking Everyone into ${GAME_META[currentGame]?.title || currentGame}...`;
+        btn.textContent = text;
+      }
+      if (btnSticky) {
+        btnSticky.disabled = true;
+        btnSticky.textContent = text;
       }
 
       const payload = getSelectedGamePayload();
@@ -2104,9 +2335,7 @@
         window.history.pushState({}, '', '/');
       } catch (e) {}
 
-      const tabs = document.querySelector('.action-tabs');
-      if (tabs) tabs.classList.remove('hidden');
-      document.getElementById('sectionPartyLobby').classList.add('hidden');
+      showScreen('screenPartyJoin');
       switchAction('create');
       resetButtons();
     }
@@ -2131,8 +2360,12 @@
     }
 
     function navigateToGame(gameType, roomId, isHost = false) {
+      if (gameType === 'party' || gameType === 'lobby') {
+        enterPartyLobbyMode(roomId, isHost);
+        return;
+      }
       const encoded = encodeURIComponent(roomId);
-      const name = encodeURIComponent(localStorage.getItem('party_player_name') || 'Player');
+      const name = encodeURIComponent(localStorage.getItem('party_player_name') || sessionStorage.getItem('playerName') || 'Player');
       sessionStorage.setItem('isHost', isHost ? 'true' : 'false');
       sessionStorage.setItem('roomId', roomId);
       let targetUrl = `/${gameType}/game.html?room=${encoded}&name=${name}`;
@@ -2173,17 +2406,10 @@
     window.addEventListener('DOMContentLoaded', () => {
       const backendUrl = window.getPartyBackendUrl && window.getPartyBackendUrl();
       const badge = document.getElementById('currentServerDisplay');
-      if (badge) {
-        if (backendUrl) {
-          try {
-            badge.textContent = new URL(backendUrl).hostname;
-          } catch (e) {
-            badge.textContent = backendUrl;
-          }
-        } else {
-          badge.textContent = 'Origin';
-        }
-      }
+      const badgeSelect = document.getElementById('currentServerDisplaySelect');
+      const text = backendUrl ? (new URL(backendUrl).hostname || backendUrl) : 'Origin';
+      if (badge) badge.textContent = text;
+      if (badgeSelect) badgeSelect.textContent = text;
     });
 
     function resetButtons() {
@@ -2191,13 +2417,14 @@
       const btnJoin = document.getElementById('btnSubmitJoin');
       const btnParty = document.getElementById('btnCreatePartyTeam');
       const btnLaunch = document.getElementById('btnLaunchParty');
+      const btnLaunchSticky = document.getElementById('btnLaunchFromSelect');
       if (btnCreate) {
         btnCreate.disabled = false;
         btnCreate.textContent = '🎉 Create Room & Invite Friends';
       }
       if (btnJoin) {
         btnJoin.disabled = false;
-        btnJoin.textContent = '🚀 Enter Room';
+        btnJoin.textContent = '🚀 Enter Party Room';
       }
       if (btnParty) {
         btnParty.disabled = false;
@@ -2206,6 +2433,10 @@
       if (btnLaunch) {
         btnLaunch.disabled = false;
         btnLaunch.innerHTML = `<span>🚀 Take Everyone into <span id="launchBtnGameName">${GAME_META[currentGame]?.title || currentGame}</span></span>`;
+      }
+      if (btnLaunchSticky) {
+        btnLaunchSticky.disabled = false;
+        btnLaunchSticky.innerHTML = `<span>🚀 Take Everyone into <span id="stickyLaunchBtnName">${GAME_META[currentGame]?.title || currentGame}</span></span>`;
       }
     }
   </script>

@@ -35,6 +35,9 @@ class PartyLobbyGame {
 
     const existing = this.players.find(p => p.name.toLowerCase() === cleanName.toLowerCase());
     if (existing) {
+      if (existing.connected && existing.id !== id) {
+        return { error: `Player name "${cleanName}" is already taken by an active player.` };
+      }
       existing.id = id;
       existing.connected = true;
       return { success: true, player: existing, reconnected: true };
@@ -55,12 +58,15 @@ class PartyLobbyGame {
   reconnectPlayer(id, name) {
     const cleanName = (name || '').trim().toLowerCase();
     const player = this.players.find(p => p.name.toLowerCase() === cleanName);
-    if (player) {
-      player.id = id;
-      player.connected = true;
-      return { success: true, player };
+    if (!player) {
+      return { success: false };
     }
-    return { success: false };
+    if (player.connected && player.id !== id) {
+      return { success: false, collision: true, error: `A player named "${player.name}" is already active in this room. Please choose another name.` };
+    }
+    player.id = id;
+    player.connected = true;
+    return { success: true, player };
   }
 
   removePlayer(id) {

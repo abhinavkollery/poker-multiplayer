@@ -658,7 +658,12 @@
 
     getInviteUrl: function (roomId, gameType) {
       const cleanRoom = String(roomId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('room') : '') || 'ROOM').trim().toUpperCase();
-      const origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : '';
+      let origin = (typeof window !== 'undefined' && window.location.origin) ? window.location.origin : '';
+      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        if (window._serverNetworkOrigin) {
+          origin = window._serverNetworkOrigin;
+        }
+      }
       let url = `${origin}/?join=${encodeURIComponent(cleanRoom)}`;
       if (gameType && gameType !== 'party') {
         url += `&game=${encodeURIComponent(gameType)}`;
@@ -730,6 +735,23 @@
       `;
 
       document.body.appendChild(overlay);
+
+      // Dynamically enhance localhost with local Wi-Fi IP for phone scans
+      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        fetch('/api/network-info')
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.origin) {
+              window._serverNetworkOrigin = data.origin;
+              const refreshedUrl = QRCodeModal.sanitizeUrl(null, cleanRoom, gameType);
+              const urlInput = document.getElementById('qrModalUrlInput');
+              const qrBox = overlay.querySelector('.qr-code-box');
+              if (urlInput) urlInput.value = refreshedUrl;
+              if (qrBox) qrBox.innerHTML = QRCodeGenerator.createSVG(refreshedUrl, { size: 200, margin: 2 });
+            }
+          })
+          .catch(() => {});
+      }
 
       // Play soft sound if sound engine is present
       if (window.sounds && typeof window.sounds.play === 'function') {

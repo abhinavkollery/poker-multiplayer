@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+const os = require('os');
 
 const PokerGame = require('./games/poker/game');
 const ImposterGame = require('./games/imposter/game');
@@ -176,6 +177,32 @@ app.get('/api/room/:roomId', (req, res) => {
     playerCount: game.players.length,
     maxPlayers: game.maxPlayers,
     state: game.state
+  });
+});
+
+// Helper: determine local LAN IPv4 address for QR code sharing on Wi-Fi
+function getLocalNetworkIp() {
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+// REST endpoint for local network IP info (for Wi-Fi QR code connection)
+app.get('/api/network-info', (req, res) => {
+  const localIp = getLocalNetworkIp();
+  const port = process.env.PORT || 3000;
+  res.json({
+    localIp,
+    port,
+    origin: localIp ? `http://${localIp}:${port}` : null
   });
 });
 
@@ -369,6 +396,11 @@ io.on('connection', socket => {
       ? game.reconnectPlayer(socket.id, name)
       : { success: false };
 
+    if (reconnectResult && reconnectResult.collision) {
+      socket.emit('join-error', reconnectResult.error);
+      return;
+    }
+
     if (reconnectResult && reconnectResult.success) {
       reconnected = true;
       player = reconnectResult.player;
@@ -376,6 +408,10 @@ io.on('connection', socket => {
       // 2. Check if a player with this name already exists in game.players
       const existing = game.players.find(p => p.name && p.name.toLowerCase() === cleanName);
       if (existing) {
+        if (existing.connected && existing.id !== socket.id) {
+          socket.emit('join-error', `A player named "${name}" is already active in this room. Please choose another name.`);
+          return;
+        }
         existing.id = socket.id;
         existing.connected = true;
         reconnected = true;
