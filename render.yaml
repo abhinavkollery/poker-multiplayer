@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: poker-multiplayer
+    env: node
+    buildCommand: npm install
+    startCommand: node server/index.js
+    plan: free
+    healthCheckPath: /
