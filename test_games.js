@@ -402,6 +402,24 @@ assert.strictEqual(switchedTrivia.gameType, 'trivia');
 assert.strictEqual(switchedTrivia.players.length, 2);
 console.log(`  ✓ Seamless party room game switching verified`);
 
+// ==========================================
+// Test 14: QR Code Generator & Modal Engine
+// ==========================================
+console.log('\nTest 14: QR Code Generator & Modal Engine');
+const { QRCodeGenerator, QRCodeModal } = require('./public/shared/qrcode.js');
+assert.strictEqual(typeof QRCodeGenerator.createSVG, 'function', 'createSVG must be a function');
+assert.strictEqual(typeof QRCodeModal.show, 'function', 'QRCodeModal.show must be a function');
+assert.strictEqual(typeof QRCodeModal.hide, 'function', 'QRCodeModal.hide must be a function');
+
+const shortQr = QRCodeGenerator.createSVG('ABCDEF', { size: 180 });
+assert(shortQr.includes('<svg') && shortQr.includes('</svg>'), 'Must produce valid SVG XML');
+assert(shortQr.includes('viewBox='), 'Must have viewBox for crisp scalability');
+
+const longUrl = 'https://poker-multiplayer.onrender.com/drawguess/game.html?room=XYZ999&name=Picasso';
+const longQr = QRCodeGenerator.createSVG(longUrl, { size: 240 });
+assert(longQr.length > shortQr.length, 'Longer URL must generate higher density QR matrix');
+console.log('  ✓ Zero-dependency QR Code generator, vector SVG path, and modal engine verified');
+
 // Clean timers
 imposter.clearTimer();
 waveCoop.clearTimer();
@@ -412,5 +430,5 @@ drawGame.clearTimer();
 triviaGame.clearTimer();
 spyGame.clearTimer();
 
-console.log('\n🎉 ALL 13 TEST SUITES PASSED FLAWLESSLY!');
+console.log('\n🎉 ALL 14 TEST SUITES PASSED FLAWLESSLY!');
 process.exit(0);

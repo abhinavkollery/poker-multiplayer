@@ -402,6 +402,9 @@
         <span id="navRoomCode" style="color: #7de7ff;">------</span>
         <span>📋</span>
       </div>
+      <button class="btn btn-ghost" onclick="showQRCode()" style="padding: 6px 12px; font-size: 13px;" title="Scan QR Code">
+        <span>📱 QR</span>
+      </button>
     </div>
 
     <div class="nav-center">
@@ -1071,6 +1074,12 @@
       }).catch(() => {
         showToast(`Room code: ${roomId}`);
       });
+    }
+
+    function showQRCode() {
+      if (window.QRCodeModal) {
+        window.QRCodeModal.show(window.location.href, roomId);
+      }
     }
 
     function toggleChat() {
