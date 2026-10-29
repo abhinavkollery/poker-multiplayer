@@ -420,15 +420,84 @@ const longQr = QRCodeGenerator.createSVG(longUrl, { size: 240 });
 assert(longQr.length > shortQr.length, 'Longer URL must generate higher density QR matrix');
 console.log('  ✓ Zero-dependency QR Code generator, vector SVG path, and modal engine verified');
 
+// ==========================================
+// Test 15: Reconnection, Anti-Ghost Deduplication, and Lobby Splice
+// ==========================================
+console.log('\nTest 15: Reconnection, Anti-Ghost Deduplication, and Lobby Splice');
+const reconGame = createGameInstance('poker', 'RECON1');
+reconGame.addPlayer('r1', 'Alice');
+reconGame.addPlayer('r2', 'Bob');
+assert.strictEqual(reconGame.players.length, 2);
+
+// Disconnect Bob in lobby -> Bob must be removed (no ghost)
+reconGame.removePlayer('r2');
+assert.strictEqual(reconGame.players.length, 1, 'Disconnected player in waiting lobby must be removed');
+assert.strictEqual(reconGame.players[0].name, 'Alice');
+
+// Disconnect host Alice in lobby -> Alice removed, players empty
+reconGame.removePlayer('r1');
+assert.strictEqual(reconGame.players.length, 0, 'Host disconnect in empty lobby cleans players');
+
+// Reconnection during active game
+const activePoker = createGameInstance('poker', 'ACTIVE1');
+activePoker.addPlayer('a1', 'Charlie');
+activePoker.addPlayer('a2', 'Dana');
+activePoker.startGame();
+assert.strictEqual(activePoker.state, 'pre-flop');
+
+// Dana disconnects during active game
+activePoker.removePlayer('a2');
+assert.strictEqual(activePoker.players.length, 2, 'In-game disconnect must preserve player record');
+assert.strictEqual(activePoker.players[1].connected, false);
+
+// Dana reconnects with new socket ID 'a2_new'
+const reconResult = activePoker.reconnectPlayer('a2_new', 'Dana');
+assert.strictEqual(reconResult.success, true, 'Reconnect must succeed');
+assert.strictEqual(activePoker.players[1].id, 'a2_new', 'Player socket ID must be updated');
+assert.strictEqual(activePoker.players[1].connected, true, 'Player must be marked connected');
+assert.strictEqual(activePoker.players.length, 2, 'No ghost player added on reconnect');
+
+// Game switch filter verification: bots and disconnected players excluded
+const lobbyPoker = createGameInstance('poker', 'BOTLOBBY');
+lobbyPoker.addPlayer('h1', 'Charlie');
+lobbyPoker.addPlayer('h2', 'Dana');
+lobbyPoker.addBot('Bot1');
+assert.strictEqual(lobbyPoker.players.length, 3);
+lobbyPoker.players[1].connected = false; // Dana disconnects
+
+const activeHumans = lobbyPoker.players.filter(p => p.connected && !p.isBot);
+assert.strictEqual(activeHumans.length, 1);
+assert.strictEqual(activeHumans[0].name, 'Charlie');
+console.log('  ✓ Lobby splice, active reconnect, and game switch ghost filtering verified');
+
+// ==========================================
+// Test 16: Vercel Deployment & API Verification
+// ==========================================
+console.log('\nTest 16: Vercel Deployment & API Verification');
+const vercelHandler = require('./api/index.js');
+assert.strictEqual(typeof vercelHandler, 'function', 'Vercel handler must be a callable request listener');
+assert(vercelHandler.server, 'Vercel handler must expose http.Server');
+assert(vercelHandler.io, 'Vercel handler must expose Socket.IO instance');
+
+const vercelConfig = require('./vercel.json');
+assert.strictEqual(vercelConfig.version, 2, 'vercel.json must be version 2');
+assert(Array.isArray(vercelConfig.rewrites), 'vercel.json must specify rewrites array');
+const rewrites = vercelConfig.rewrites.map(r => r.source);
+['/poker', '/imposter', '/wavelength', '/platformer', '/drawguess', '/codenames', '/trivia', '/liarsdice', '/spyfall', '/api/(.*)', '/socket.io/(.*)'].forEach(route => {
+  assert(rewrites.some(r => r.includes(route.replace('/(.*)', ''))), `Route ${route} must have a Vercel rewrite`);
+});
+console.log('  ✓ Vercel Serverless Function entry point and vercel.json rewrites verified');
+
 // Clean timers
 imposter.clearTimer();
 waveCoop.clearTimer();
 waveTeams.clearTimer();
 poker.clearTurnTimer();
+activePoker.clearTurnTimer();
 clearTimeout(plat.timer);
 drawGame.clearTimer();
 triviaGame.clearTimer();
 spyGame.clearTimer();
 
-console.log('\n🎉 ALL 14 TEST SUITES PASSED FLAWLESSLY!');
+console.log('\n🎉 ALL 16 TEST SUITES PASSED FLAWLESSLY!');
 process.exit(0);

@@ -130,7 +130,7 @@ class PokerGame {
     const trimmedName = (name || '').trim().toLowerCase();
     const player = this.players.find(p => p.name.toLowerCase() === trimmedName);
     if (!player) {
-      return { error: 'Player not found in this room' };
+      return { success: false, error: 'Player not found in this room' };
     }
 
     const oldId = player.id;

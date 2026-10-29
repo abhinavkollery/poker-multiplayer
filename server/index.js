@@ -22,6 +22,17 @@ const io = new Server(server, {
 
 app.use(express.json());
 
+// Enable CORS for Vercel, Render, and custom domains
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Specific game routes (registered before express.static)
 app.get(['/poker', '/poker/'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/poker/lobby.html'));
@@ -138,6 +149,16 @@ function createGameInstance(gameType, roomId, payload = {}) {
   return game;
 }
 
+// REST endpoint for health and server status (Vercel & Render)
+app.get(['/api', '/api/health'], (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    games: ['poker', 'imposter', 'wavelength', 'platformer', 'drawguess', 'codenames', 'trivia', 'liarsdice', 'spyfall']
+  });
+});
+
 // REST endpoint to inspect room status
 app.get('/api/room/:roomId', (req, res) => {
   const roomId = (req.params.roomId || '').toUpperCase();
@@ -247,6 +268,9 @@ io.on('connection', socket => {
         socket.emit('join-error', addResult.error);
         return;
       }
+      if (addResult.reconnected) {
+        reconnected = true;
+      }
       player = addResult.player;
     }
 
@@ -316,7 +340,7 @@ io.on('connection', socket => {
 
     if (result && result.error) {
       socket.emit('action-error', result.error);
-    } else {
+    } else if (result && !result.silent) {
       emitPersonalizedStates(game, io);
     }
   });
@@ -337,7 +361,9 @@ io.on('connection', socket => {
     if (typeof oldGame.clearTurnTimer === 'function') oldGame.clearTurnTimer();
 
     const newGame = createGameInstance(newGameType, roomId);
-    oldGame.players.forEach(p => {
+    // Only migrate active connected human players, eliminating ghosts and bots
+    const activePlayers = oldGame.players.filter(p => p.connected && !p.isBot);
+    activePlayers.forEach(p => {
       newGame.addPlayer(p.id, p.name);
     });
 
@@ -529,7 +555,49 @@ io.on('connection', socket => {
     }
   });
 
-  // 10. Draw & Guess Chat Guess Handler
+  // 10. Draw & Guess Real-time Differential Drawing & Chat
+  socket.on('drawguess:stroke', (strokeData) => {
+    const roomId = socket.data?.roomId;
+    if (!roomId) return;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'drawguess' && game.state === 'drawing') {
+      const drawer = game.getCurrentDrawer();
+      if (drawer && drawer.id === socket.id) {
+        if (!game.strokes) game.strokes = [];
+        game.strokes.push(strokeData);
+        socket.to(roomId).emit('drawguess:stroke', strokeData);
+      }
+    }
+  });
+
+  socket.on('drawguess:clear', () => {
+    const roomId = socket.data?.roomId;
+    if (!roomId) return;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'drawguess') {
+      const drawer = game.getCurrentDrawer();
+      if (drawer && drawer.id === socket.id) {
+        game.strokes = [];
+        io.to(roomId).emit('drawguess:clear');
+      }
+    }
+  });
+
+  socket.on('drawguess:undo', () => {
+    const roomId = socket.data?.roomId;
+    if (!roomId) return;
+    const game = rooms.get(roomId);
+    if (game && game.gameType === 'drawguess') {
+      const drawer = game.getCurrentDrawer();
+      if (drawer && drawer.id === socket.id) {
+        if (game.strokes && game.strokes.length) {
+          game.strokes.pop();
+          io.to(roomId).emit('drawguess:undo');
+        }
+      }
+    }
+  });
+
   socket.on('drawguess:guess', ({ text }) => {
     const roomId = socket.data?.roomId;
     const game = rooms.get(roomId);
@@ -606,4 +674,11 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server, io, rooms, createGameInstance };
+// Attach components to app function for unified Vercel and Node module exports
+app.app = app;
+app.server = server;
+app.io = io;
+app.rooms = rooms;
+app.createGameInstance = createGameInstance;
+
+module.exports = app;

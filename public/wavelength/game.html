@@ -644,6 +644,7 @@
   </aside>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
   <script src="/shared/sounds.js"></script>
   <script src="/shared/reactions.js"></script>
   <script src="/shared/qrcode.js"></script>
@@ -672,7 +673,17 @@
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       roomId = (params.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
-      playerName = sessionStorage.getItem('playerName') || 'Player_' + Math.floor(Math.random() * 1000);
+      playerName = (
+        params.get('name') ||
+        sessionStorage.getItem('playerName') ||
+        localStorage.getItem('party_player_name') ||
+        localStorage.getItem('playerName') ||
+        'Player'
+      ).trim();
+      sessionStorage.setItem('playerName', playerName);
+      localStorage.setItem('party_player_name', playerName);
+      localStorage.setItem('playerName', playerName);
+      if (roomId) sessionStorage.setItem('roomId', roomId);
 
       if (!roomId) {
         window.location.href = '/?game=wavelength';
@@ -683,7 +694,7 @@
       initDialInteraction();
       renderDialTicks();
 
-      socket = io();
+      socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
 
       socket.on('connect', () => {
         socket.emit('join-room', { roomId, name: playerName });
@@ -998,22 +1009,44 @@
         return Math.max(0, Math.min(100, angleToPos(angleDeg)));
       }
 
+      let dialThrottleTimeout = null;
+      let pendingDialPos = null;
+
+      function emitDialPosition(pos) {
+        pendingDialPos = pos;
+        if (!dialThrottleTimeout) {
+          dialThrottleTimeout = setTimeout(() => {
+            dialThrottleTimeout = null;
+            if (pendingDialPos !== null) {
+              socket.emit('wavelength:move-dial', { position: pendingDialPos });
+            }
+          }, 30);
+        }
+      }
+
       function onPointerDown(e) {
         if (!gameState || gameState.state !== 'team_guess' || gameState.isPsychic) return;
         isDraggingDial = true;
         const pos = calculatePosFromEvent(e);
         updateNeedleDisplay(pos);
-        socket.emit('wavelength:move-dial', { position: pos });
+        emitDialPosition(pos);
       }
 
       function onPointerMove(e) {
         if (!isDraggingDial) return;
         const pos = calculatePosFromEvent(e);
         updateNeedleDisplay(pos);
-        socket.emit('wavelength:move-dial', { position: pos });
+        emitDialPosition(pos);
       }
 
       function onPointerUp() {
+        if (isDraggingDial && pendingDialPos !== null) {
+          if (dialThrottleTimeout) {
+            clearTimeout(dialThrottleTimeout);
+            dialThrottleTimeout = null;
+          }
+          socket.emit('wavelength:move-dial', { position: pendingDialPos });
+        }
         isDraggingDial = false;
       }
 

@@ -633,13 +633,32 @@
         </form>
       </section>
 
-      <div class="footer-links">
+      <div class="footer-links" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px;">
         <span>Active Game: <strong id="activeGameLabel" style="color: var(--gold-light);">Texas Hold'em</strong></span>
+        <button type="button" onclick="openServerConfigModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 999px; padding: 4px 12px; color: #94a3b8; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+          ⚙️ <span>Server:</span> <span id="currentServerDisplay" style="color: #38bdf8; font-weight: 600;">Origin</span>
+        </button>
       </div>
     </main>
   </div>
 
+  <!-- Backend Server Configuration Modal (Vercel / Render / Custom) -->
+  <div id="serverModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+      <h3 style="margin: 0 0 8px; font-size: 1.2rem; color: #f8fafc;">⚙️ Backend Server Setting</h3>
+      <p style="margin: 0 0 16px; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+        Deploying frontend on Vercel and backend on Render? Set your Render backend URL here (e.g. <code>https://your-app.onrender.com</code>). Leave blank to use Current Origin.
+      </p>
+      <input type="text" id="customServerInput" placeholder="https://your-backend.onrender.com" style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-size: 0.95rem; margin-bottom: 16px;">
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" onclick="closeServerConfigModal()" style="padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: #cbd5e1; cursor: pointer;">Cancel</button>
+        <button type="button" onclick="saveServerConfig()" style="padding: 8px 18px; border-radius: 8px; border: none; background: #38bdf8; color: #000; font-weight: 700; cursor: pointer;">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
   <script>
     const GAME_META = {
       poker: {
@@ -730,7 +749,7 @@
     let socket = null;
 
     try {
-      socket = io();
+      socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
     } catch (e) {
       console.warn('Socket.IO connection pending');
     }
@@ -793,7 +812,7 @@
           .catch(() => {});
       }
 
-      const savedName = localStorage.getItem('party_player_name');
+      const savedName = localStorage.getItem('party_player_name') || localStorage.getItem('playerName') || sessionStorage.getItem('playerName');
       if (savedName) {
         document.getElementById('createPlayerName').value = savedName;
         document.getElementById('joinPlayerName').value = savedName;
@@ -806,6 +825,8 @@
       if (!name) return alert('Please enter your name');
 
       localStorage.setItem('party_player_name', name);
+      localStorage.setItem('playerName', name);
+      sessionStorage.setItem('playerName', name);
 
       let payload = { gameType: currentGame, name };
 
@@ -853,6 +874,8 @@
 
       if (!name || !roomId) return alert('Name and room code are required');
       localStorage.setItem('party_player_name', name);
+      localStorage.setItem('playerName', name);
+      sessionStorage.setItem('playerName', name);
 
       const btn = document.getElementById('btnSubmitJoin');
       btn.disabled = true;
@@ -884,8 +907,53 @@
     function navigateToGame(gameType, roomId) {
       const encoded = encodeURIComponent(roomId);
       const name = encodeURIComponent(localStorage.getItem('party_player_name') || 'Player');
-      window.location.href = `/${gameType}/game.html?room=${encoded}&name=${name}`;
+      let targetUrl = `/${gameType}/game.html?room=${encoded}&name=${name}`;
+      const backendUrl = window.getPartyBackendUrl && window.getPartyBackendUrl();
+      if (backendUrl) {
+        targetUrl += `&server=${encodeURIComponent(backendUrl)}`;
+      }
+      window.location.href = targetUrl;
     }
+
+    function openServerConfigModal() {
+      const modal = document.getElementById('serverModal');
+      const input = document.getElementById('customServerInput');
+      input.value = localStorage.getItem('party_server_url') || '';
+      modal.style.display = 'flex';
+    }
+
+    function closeServerConfigModal() {
+      document.getElementById('serverModal').style.display = 'none';
+    }
+
+    function saveServerConfig() {
+      const input = document.getElementById('customServerInput');
+      const val = input.value.trim().replace(/\/+$/, '');
+      if (val) {
+        localStorage.setItem('party_server_url', val);
+      } else {
+        localStorage.removeItem('party_server_url');
+      }
+      closeServerConfigModal();
+      window.location.reload();
+    }
+
+    // Update server display badge on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const backendUrl = window.getPartyBackendUrl && window.getPartyBackendUrl();
+      const badge = document.getElementById('currentServerDisplay');
+      if (badge) {
+        if (backendUrl) {
+          try {
+            badge.textContent = new URL(backendUrl).hostname;
+          } catch (e) {
+            badge.textContent = backendUrl;
+          }
+        } else {
+          badge.textContent = 'Origin';
+        }
+      }
+    });
 
     function resetButtons() {
       const btnCreate = document.getElementById('btnSubmitCreate');

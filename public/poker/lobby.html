@@ -351,6 +351,7 @@
 
   <!-- Socket.io Library -->
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
 
   <script>
     // Tab switching logic
@@ -410,7 +411,7 @@
 
     // Restore saved player name if available
     window.addEventListener('DOMContentLoaded', () => {
-      const savedName = sessionStorage.getItem('playerName') || '';
+      const savedName = sessionStorage.getItem('playerName') || localStorage.getItem('party_player_name') || localStorage.getItem('playerName') || '';
       if (savedName) {
         document.getElementById('createPlayerName').value = savedName;
         document.getElementById('joinPlayerName').value = savedName;
@@ -429,7 +430,7 @@
     // Socket.io initialization
     let socket;
     try {
-      socket = io();
+      socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
     } catch (err) {
       console.error('Socket.io failed to initialize:', err);
     }
@@ -454,8 +455,13 @@
         const playerName = document.getElementById('createPlayerName').value.trim();
         sessionStorage.setItem('roomId', roomId);
         sessionStorage.setItem('playerName', playerName);
+        localStorage.setItem('party_player_name', playerName);
+        localStorage.setItem('playerName', playerName);
         sessionStorage.setItem('isHost', 'true');
-        window.location.href = `/game.html?room=${encodeURIComponent(roomId)}`;
+        let dest = `/game.html?room=${encodeURIComponent(roomId)}&name=${encodeURIComponent(playerName)}`;
+        const sUrl = window.getPartyBackendUrl && window.getPartyBackendUrl();
+        if (sUrl) dest += `&server=${encodeURIComponent(sUrl)}`;
+        window.location.href = dest;
       });
 
       socket.on('room-joined', ({ roomId, reconnected }) => {
@@ -463,8 +469,13 @@
         const playerName = document.getElementById('joinPlayerName').value.trim();
         sessionStorage.setItem('roomId', roomId);
         sessionStorage.setItem('playerName', playerName);
+        localStorage.setItem('party_player_name', playerName);
+        localStorage.setItem('playerName', playerName);
         sessionStorage.setItem('isHost', 'false');
-        window.location.href = `/game.html?room=${encodeURIComponent(roomId)}`;
+        let dest = `/game.html?room=${encodeURIComponent(roomId)}&name=${encodeURIComponent(playerName)}`;
+        const sUrl = window.getPartyBackendUrl && window.getPartyBackendUrl();
+        if (sUrl) dest += `&server=${encodeURIComponent(sUrl)}`;
+        window.location.href = dest;
       });
 
       socket.on('join-error', (errorMessage) => {

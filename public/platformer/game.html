@@ -372,6 +372,7 @@
   </aside>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
   <script src="/shared/sounds.js"></script>
   <script src="/shared/qrcode.js"></script>
   <script src="/shared/reactions.js"></script>
@@ -437,7 +438,17 @@
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       roomId = (params.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
-      playerName = sessionStorage.getItem('playerName') || 'Player_' + Math.floor(Math.random() * 1000);
+      playerName = (
+        params.get('name') ||
+        sessionStorage.getItem('playerName') ||
+        localStorage.getItem('party_player_name') ||
+        localStorage.getItem('playerName') ||
+        'Player'
+      ).trim();
+      sessionStorage.setItem('playerName', playerName);
+      localStorage.setItem('party_player_name', playerName);
+      localStorage.setItem('playerName', playerName);
+      if (roomId) sessionStorage.setItem('roomId', roomId);
 
       if (!roomId) {
         window.location.href = '/?game=platformer';
@@ -448,7 +459,7 @@
       setupInputListeners();
       setupTouchControls();
 
-      socket = io();
+      socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
       partyReactions = new PartyReactions(socket);
       partyReactions.renderBar();
 
@@ -942,11 +953,29 @@
       });
     }
 
+    let lastSentX = null;
+    let lastSentY = null;
+    let stationaryCount = 0;
+
     function syncPositionToServer() {
       if (!socket || !gameState || gameState.state !== 'playing') return;
+      const curX = Math.round(localPhysics.x * 100) / 100;
+      const curY = Math.round(localPhysics.y * 100) / 100;
+      const isMoving = Math.abs(localPhysics.vx) > 0.01 || Math.abs(localPhysics.vy) > 0.01;
+
+      if (!isMoving && curX === lastSentX && curY === lastSentY) {
+        stationaryCount++;
+        // Throttled heartbeat when resting (once every 12 ticks ~ 480ms)
+        if (stationaryCount % 12 !== 0) return;
+      } else {
+        stationaryCount = 0;
+      }
+
+      lastSentX = curX;
+      lastSentY = curY;
       socket.emit('platformer:sync', {
-        x: Math.round(localPhysics.x * 100) / 100,
-        y: Math.round(localPhysics.y * 100) / 100,
+        x: curX,
+        y: curY,
         vx: Math.round(localPhysics.vx * 10) / 10,
         vy: Math.round(localPhysics.vy * 10) / 10,
         facing: localPhysics.facing,

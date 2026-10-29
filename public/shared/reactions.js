@@ -1,15 +1,18 @@
 // Floating Emoji Reactions System for Party Games Hub
+// Optimized 60 FPS hardware-accelerated particle system
 
 class PartyReactions {
-  constructor(socket) {
+  constructor(socket = null) {
     this.socket = socket;
     this.emojis = ['👏', '🔥', '💀', '😂', '🤯', '🎯', '❤️'];
     this.container = null;
+    this.maxParticles = 12;
     this.init();
   }
 
   init() {
-    // Create floating particles container
+    if (this.container || typeof document === 'undefined') return;
+
     this.container = document.createElement('div');
     this.container.id = 'floatingReactionsContainer';
     this.container.style.cssText = `
@@ -22,21 +25,24 @@ class PartyReactions {
     document.body.appendChild(this.container);
 
     if (this.socket) {
-      this.socket.on('party:reaction', ({ emoji, senderName }) => {
-        this.spawnReaction(emoji, senderName);
-        if (window.partySounds) window.partySounds.click();
-      });
+      this.bindSocket(this.socket);
     }
   }
 
-  setSocket(socket) {
+  bindSocket(socket) {
     this.socket = socket;
-    if (this.socket) {
-      this.socket.on('party:reaction', ({ emoji, senderName }) => {
-        this.spawnReaction(emoji, senderName);
-        if (window.partySounds) window.partySounds.click();
-      });
-    }
+    if (!this.socket) return;
+    this.socket.off('party:reaction'); // Prevent duplicate listener
+    this.socket.on('party:reaction', ({ emoji, senderName }) => {
+      this.spawnReaction(emoji, senderName);
+      if (window.sounds && typeof window.sounds.click === 'function') {
+        window.sounds.click();
+      }
+    });
+  }
+
+  setSocket(socket) {
+    this.bindSocket(socket);
   }
 
   send(emoji) {
@@ -44,30 +50,43 @@ class PartyReactions {
       this.socket.emit('party:reaction', { emoji });
     }
     this.spawnReaction(emoji, 'You');
-    if (window.partySounds) window.partySounds.click();
+    if (window.sounds && typeof window.sounds.click === 'function') {
+      window.sounds.click();
+    }
+  }
+
+  showParticle(emoji, senderName) {
+    this.spawnReaction(emoji, senderName);
   }
 
   spawnReaction(emoji, senderName) {
+    if (!this.container) this.init();
     if (!this.container) return;
+
+    // Prune excess particles to keep DOM light and smooth
+    if (this.container.children.length >= this.maxParticles) {
+      this.container.removeChild(this.container.firstChild);
+    }
 
     const el = document.createElement('div');
     const startX = 15 + Math.random() * 70; // 15% to 85% screen width
-    const drift = (Math.random() - 0.5) * 60; // horizontal drift
+    const drift = (Math.random() - 0.5) * 50;
 
     el.style.cssText = `
       position: absolute;
-      bottom: 20px;
+      bottom: 24px;
       left: ${startX}vw;
-      font-size: ${28 + Math.random() * 14}px;
+      font-size: ${26 + Math.random() * 12}px;
       user-select: none;
       pointer-events: none;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 2.2s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 2.2s ease;
+      transition: transform 2s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 2s ease;
       transform: translate3d(0, 0, 0) scale(0.6);
       opacity: 1;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+      will-change: transform, opacity;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
     `;
 
     el.innerHTML = `
@@ -77,19 +96,19 @@ class PartyReactions {
 
     this.container.appendChild(el);
 
-    // Trigger animation next tick
     requestAnimationFrame(() => {
-      el.style.transform = `translate3d(${drift}px, -85vh, 0) scale(1.15)`;
+      el.style.transform = `translate3d(${drift}px, -80vh, 0) scale(1.15)`;
       el.style.opacity = '0';
     });
 
     setTimeout(() => {
-      el.remove();
-    }, 2300);
+      if (el.parentNode) el.remove();
+    }, 2100);
   }
 
-  // Renders a sleek floating reaction bar at bottom right
   renderBar(targetContainerId = null) {
+    if (document.querySelector('.party-reactions-bar')) return;
+
     const bar = document.createElement('div');
     bar.className = 'party-reactions-bar';
     bar.style.cssText = `
@@ -133,7 +152,7 @@ class PartyReactions {
     // Sound mute toggle button
     const muteBtn = document.createElement('button');
     const updateMuteIcon = () => {
-      muteBtn.textContent = window.partySounds && window.partySounds.muted ? '🔇' : '🔊';
+      muteBtn.textContent = window.sounds && window.sounds.muted ? '🔇' : '🔊';
     };
     updateMuteIcon();
     muteBtn.style.cssText = `
@@ -147,8 +166,8 @@ class PartyReactions {
       margin-left: 4px;
     `;
     muteBtn.onclick = () => {
-      if (window.partySounds) {
-        window.partySounds.toggleMute();
+      if (window.sounds) {
+        window.sounds.toggleMute();
         updateMuteIcon();
       }
     };
@@ -158,5 +177,7 @@ class PartyReactions {
   }
 }
 
+// Global instances and exports
+const defaultReactions = new PartyReactions();
 window.PartyReactions = PartyReactions;
-
+window.Reactions = defaultReactions;

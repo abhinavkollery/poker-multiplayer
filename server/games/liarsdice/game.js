@@ -25,7 +25,21 @@ class LiarsDiceGame {
     if (this.players.length >= this.maxPlayers) {
       return { error: 'Room is full' };
     }
-    const cleanName = (name || '').trim().slice(0, 16) || `Pirate ${this.players.length + 1}`;
+    const cleanName = (name || '').trim().slice(0, 16);
+    if (!cleanName) {
+      return { error: 'Player name is required' };
+    }
+
+    const existing = this.players.find(p => p.name.toLowerCase() === cleanName.toLowerCase());
+    if (existing) {
+      if (!existing.connected) {
+        existing.id = id;
+        existing.connected = true;
+        return { success: true, player: existing, reconnected: true };
+      }
+      return { error: 'Player name already taken' };
+    }
+
     const player = {
       id,
       name: cleanName,
@@ -35,12 +49,20 @@ class LiarsDiceGame {
       connected: true
     };
     this.players.push(player);
-    return { player };
+    return { success: true, player };
   }
 
   removePlayer(id) {
-    const p = this.players.find(pl => pl.id === id);
-    if (p) p.connected = false;
+    const idx = this.players.findIndex(pl => pl.id === id);
+    if (idx === -1) return;
+
+    if (this.state === 'waiting') {
+      this.players.splice(idx, 1);
+      return;
+    }
+
+    const p = this.players[idx];
+    p.connected = false;
 
     // If current player disconnected, advance turn
     if (this.state === 'bidding' && this.getCurrentPlayer()?.id === id) {
@@ -49,13 +71,14 @@ class LiarsDiceGame {
   }
 
   reconnectPlayer(id, name) {
-    const p = this.players.find(pl => pl.name === name);
+    const cleanName = (name || '').trim().toLowerCase();
+    const p = this.players.find(pl => pl.name.toLowerCase() === cleanName);
     if (p) {
       p.id = id;
       p.connected = true;
       return { success: true, player: p };
     }
-    return { success: false };
+    return { success: false, error: 'Player not found' };
   }
 
   canStart() {

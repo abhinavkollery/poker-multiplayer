@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/poker/game", "destination": "/poker/game.html" },
+    { "source": "/poker", "destination": "/poker/lobby.html" },
+    { "source": "/poker/", "destination": "/poker/lobby.html" },
+    { "source": "/imposter", "destination": "/imposter/game.html" },
+    { "source": "/imposter/", "destination": "/imposter/game.html" },
+    { "source": "/imposter/game", "destination": "/imposter/game.html" },
+    { "source": "/wavelength", "destination": "/wavelength/game.html" },
+    { "source": "/wavelength/", "destination": "/wavelength/game.html" },
+    { "source": "/wavelength/game", "destination": "/wavelength/game.html" },
+    { "source": "/platformer", "destination": "/platformer/game.html" },
+    { "source": "/platformer/", "destination": "/platformer/game.html" },
+    { "source": "/platformer/game", "destination": "/platformer/game.html" },
+    { "source": "/drawguess", "destination": "/drawguess/game.html" },
+    { "source": "/drawguess/", "destination": "/drawguess/game.html" },
+    { "source": "/drawguess/game", "destination": "/drawguess/game.html" },
+    { "source": "/codenames", "destination": "/codenames/game.html" },
+    { "source": "/codenames/", "destination": "/codenames/game.html" },
+    { "source": "/codenames/game", "destination": "/codenames/game.html" },
+    { "source": "/trivia", "destination": "/trivia/game.html" },
+    { "source": "/trivia/", "destination": "/trivia/game.html" },
+    { "source": "/trivia/game", "destination": "/trivia/game.html" },
+    { "source": "/liarsdice", "destination": "/liarsdice/game.html" },
+    { "source": "/liarsdice/", "destination": "/liarsdice/game.html" },
+    { "source": "/liarsdice/game", "destination": "/liarsdice/game.html" },
+    { "source": "/spyfall", "destination": "/spyfall/game.html" },
+    { "source": "/spyfall/", "destination": "/spyfall/game.html" },
+    { "source": "/spyfall/game", "destination": "/spyfall/game.html" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/socket.io/(.*)", "destination": "/api/index.js" }
+  ]
+}
+

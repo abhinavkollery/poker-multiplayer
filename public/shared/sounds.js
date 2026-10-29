@@ -6,6 +6,8 @@ class SoundEngine {
     this.ctx = null;
     this.muted = localStorage.getItem('party_sounds_muted') === 'true';
     this.volume = 0.25;
+    this.maxConcurrent = 6;
+    this.activeVoices = 0;
   }
 
   init() {
@@ -16,7 +18,7 @@ class SoundEngine {
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
   }
 
@@ -29,9 +31,10 @@ class SoundEngine {
   playTone(freq, duration, type = 'sine', sweepTo = null) {
     if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
+    if (!this.ctx || this.activeVoices >= this.maxConcurrent) return;
 
     try {
+      this.activeVoices++;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
@@ -49,8 +52,21 @@ class SoundEngine {
 
       osc.start();
       osc.stop(this.ctx.currentTime + duration);
+      osc.onended = () => {
+        this.activeVoices = Math.max(0, this.activeVoices - 1);
+      };
     } catch (e) {
-      // Audio autoplay policy fallback
+      this.activeVoices = Math.max(0, this.activeVoices - 1);
+    }
+  }
+
+  // Universal dispatch method for sounds.play('name')
+  play(name) {
+    if (this.muted) return;
+    if (typeof this[name] === 'function') {
+      this[name]();
+    } else {
+      this.click();
     }
   }
 
@@ -68,65 +84,64 @@ class SoundEngine {
   }
 
   jump() {
-    this.playTone(250, 0.12, 'sine', 600);
+    this.playTone(220, 0.12, 'square', 540);
   }
 
   bounce() {
-    this.playTone(200, 0.18, 'sine', 800);
+    this.playTone(300, 0.18, 'sine', 700);
   }
 
   buttonPress() {
-    this.playTone(350, 0.1, 'square', 250);
+    this.playTone(480, 0.08, 'sine', 320);
   }
 
   keyCollect() {
-    this.playTone(600, 0.08, 'sine');
-    setTimeout(() => this.playTone(900, 0.12, 'sine'), 60);
-    setTimeout(() => this.playTone(1200, 0.2, 'sine'), 120);
+    this.playTone(880, 0.1, 'triangle', 1320);
   }
 
   success() {
-    this.playTone(523.25, 0.1, 'sine'); // C5
-    setTimeout(() => this.playTone(659.25, 0.1, 'sine'), 80); // E5
-    setTimeout(() => this.playTone(783.99, 0.25, 'sine'), 160); // G5
+    this.playTone(523.25, 0.08, 'sine');
+    setTimeout(() => this.playTone(659.25, 0.12, 'sine'), 90);
   }
 
   error() {
-    this.playTone(220, 0.15, 'sawtooth', 120);
-    setTimeout(() => this.playTone(180, 0.2, 'sawtooth', 90), 100);
-  }
-
-  timerTick() {
-    this.playTone(1000, 0.03, 'sine', 800);
+    this.playTone(220, 0.15, 'sawtooth', 110);
   }
 
   buzzer() {
-    this.playTone(150, 0.35, 'sawtooth');
+    this.playTone(180, 0.22, 'sawtooth', 90);
+  }
+
+  timerTick() {
+    this.playTone(900, 0.03, 'triangle', 600);
   }
 
   dialTick() {
-    this.playTone(1200, 0.02, 'sine', 900);
+    this.playTone(1200, 0.02, 'sine', 800);
   }
 
   diceRoll() {
     for (let i = 0; i < 4; i++) {
-      setTimeout(() => this.playTone(600 + Math.random() * 300, 0.04, 'triangle'), i * 40);
+      setTimeout(() => {
+        this.playTone(600 + Math.random() * 800, 0.04, 'triangle', 300);
+      }, i * 45);
     }
   }
 
   winFanfare() {
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, idx) => {
-      setTimeout(() => this.playTone(freq, 0.25, 'triangle'), idx * 120);
+      setTimeout(() => this.playTone(freq, 0.25, 'triangle'), idx * 110);
     });
   }
 }
 
-// Global sound manager instance
-window.partySounds = new SoundEngine();
+// Global sound manager instance with unified aliases
+const soundInstance = new SoundEngine();
+window.sounds = soundInstance;
+window.partySounds = soundInstance;
 
 // Auto-unlock Web Audio context on first click/touch
 window.addEventListener('pointerdown', () => {
-  if (window.partySounds) window.partySounds.init();
+  if (window.sounds) window.sounds.init();
 }, { once: true });
-

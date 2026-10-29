@@ -270,14 +270,24 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
   <script src="/shared/sounds.js"></script>
   <script src="/shared/reactions.js"></script>
   <script src="/shared/qrcode.js"></script>
   <script>
-    const socket = io();
+    const socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
-    const playerName = urlParams.get('name') || localStorage.getItem('party_player_name') || 'TriviaBuff';
+    const playerName = (
+      urlParams.get('name') ||
+      sessionStorage.getItem('playerName') ||
+      localStorage.getItem('party_player_name') ||
+      localStorage.getItem('playerName') ||
+      'Player'
+    ).trim();
+    sessionStorage.setItem('playerName', playerName);
+    localStorage.setItem('party_player_name', playerName);
+    localStorage.setItem('playerName', playerName);
 
     let myPlayerId = null;
     let selectedOption = null;

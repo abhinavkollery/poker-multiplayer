@@ -372,14 +372,24 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
   <script src="/shared/sounds.js"></script>
   <script src="/shared/reactions.js"></script>
   <script src="/shared/qrcode.js"></script>
   <script>
-    const socket = io();
+    const socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = (urlParams.get('room') || urlParams.get('roomId') || '').toUpperCase();
-    const playerName = urlParams.get('name') || localStorage.getItem('party_player_name') || 'Artist';
+    const playerName = (
+      urlParams.get('name') ||
+      sessionStorage.getItem('playerName') ||
+      localStorage.getItem('party_player_name') ||
+      localStorage.getItem('playerName') ||
+      'Player'
+    ).trim();
+    sessionStorage.setItem('playerName', playerName);
+    localStorage.setItem('party_player_name', playerName);
+    localStorage.setItem('playerName', playerName);
 
     let myPlayerId = null;
     let isDrawer = false;
@@ -389,6 +399,8 @@
     let isDrawing = false;
     let lastX = 0;
     let lastY = 0;
+    let lastStrokesRenderedCount = 0;
+    let currentGameState = null;
 
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
@@ -468,7 +480,8 @@
       };
 
       renderStroke(strokeData);
-      socket.emit('player-action', { action: 'draw-stroke', ...strokeData });
+      lastStrokesRenderedCount++;
+      socket.emit('drawguess:stroke', strokeData);
 
       lastX = pos.x;
       lastY = pos.y;
@@ -497,13 +510,14 @@
     function clearCanvas() {
       if (!isDrawer) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      socket.emit('player-action', { action: 'clear-canvas' });
+      lastStrokesRenderedCount = 0;
+      socket.emit('drawguess:clear');
       sounds.play('click');
     }
 
     function undoStroke() {
       if (!isDrawer) return;
-      socket.emit('player-action', { action: 'undo-stroke' });
+      socket.emit('drawguess:undo');
       sounds.play('click');
     }
 
@@ -519,7 +533,28 @@
       document.getElementById('roomCodeDisplay').textContent = data.roomId;
     });
 
+    socket.on('drawguess:stroke', (strokeData) => {
+      renderStroke(strokeData);
+      lastStrokesRenderedCount++;
+    });
+
+    socket.on('drawguess:clear', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lastStrokesRenderedCount = 0;
+    });
+
+    socket.on('drawguess:undo', () => {
+      if (currentGameState && currentGameState.strokes) {
+        currentGameState.strokes.pop();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lastStrokesRenderedCount = 0;
+        currentGameState.strokes.forEach(s => renderStroke(s));
+        lastStrokesRenderedCount = currentGameState.strokes.length;
+      }
+    });
+
     socket.on('game-state', (state) => {
+      currentGameState = state;
       updateUI(state);
     });
 
@@ -593,10 +628,18 @@
         revealOverlay.style.display = 'none';
       }
 
-      // Repaint canvas strokes
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (Array.isArray(state.strokes)) {
-        state.strokes.forEach(s => renderStroke(s));
+      // Efficient stroke rendering: only repaint from scratch on turn/state reset
+      const serverStrokes = Array.isArray(state.strokes) ? state.strokes : [];
+      if (state.state === 'waiting' || state.state === 'choosing' || serverStrokes.length < lastStrokesRenderedCount) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lastStrokesRenderedCount = 0;
+        serverStrokes.forEach(s => renderStroke(s));
+        lastStrokesRenderedCount = serverStrokes.length;
+      } else if (serverStrokes.length > lastStrokesRenderedCount) {
+        for (let i = lastStrokesRenderedCount; i < serverStrokes.length; i++) {
+          renderStroke(serverStrokes[i]);
+        }
+        lastStrokesRenderedCount = serverStrokes.length;
       }
 
       // Render player list

@@ -58,7 +58,13 @@ class WavelengthGame {
     if (!cleanName) {
       return { error: 'Player name is required' };
     }
-    if (this.players.some(p => p.name.toLowerCase() === cleanName.toLowerCase())) {
+    const existing = this.players.find(p => p.name.toLowerCase() === cleanName.toLowerCase());
+    if (existing) {
+      if (!existing.connected) {
+        existing.id = socketId;
+        existing.connected = true;
+        return { success: true, player: existing, reconnected: true };
+      }
       return { error: 'Player name already taken' };
     }
 

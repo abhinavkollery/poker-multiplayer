@@ -1167,6 +1167,7 @@
 
   <!-- Shared & Socket.io Libraries -->
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/socket-client.js"></script>
   <script src="/shared/sounds.js"></script>
   <script src="/shared/reactions.js"></script>
   <script src="/shared/qrcode.js"></script>
@@ -1258,8 +1259,17 @@
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       roomId = (urlParams.get('room') || sessionStorage.getItem('roomId') || '').toUpperCase();
-      playerName = sessionStorage.getItem('playerName') || localStorage.getItem('playerName') || ('Player_' + Math.floor(Math.random() * 1000));
+      playerName = (
+        urlParams.get('name') ||
+        sessionStorage.getItem('playerName') ||
+        localStorage.getItem('party_player_name') ||
+        localStorage.getItem('playerName') ||
+        'Player'
+      ).trim();
       sessionStorage.setItem('playerName', playerName);
+      localStorage.setItem('party_player_name', playerName);
+      localStorage.setItem('playerName', playerName);
+      if (roomId) sessionStorage.setItem('roomId', roomId);
       isHost = sessionStorage.getItem('isHost') === 'true';
 
       if (!roomId) {
@@ -1286,7 +1296,7 @@
     // Socket.io initialization & event wiring
     function initSocket() {
       try {
-        socket = io();
+        socket = (typeof initPartySocket === 'function') ? initPartySocket() : io();
       } catch (err) {
         showToast('Socket connection failed', 'error');
         return;
