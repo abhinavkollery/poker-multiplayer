@@ -94,6 +94,29 @@
       border: 1px solid rgba(201, 162, 39, 0.35);
     }
 
+    .player-count-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border: 1px solid rgba(46, 204, 113, 0.3);
+      border-radius: 20px;
+      background: rgba(46, 204, 113, 0.1);
+      color: #b7f7ce;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .player-count-pill::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #35d07f;
+      box-shadow: 0 0 8px rgba(53, 208, 127, 0.65);
+    }
+
     .header-btn {
       padding: 7px 14px;
       font-size: 13px;
@@ -956,6 +979,290 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
+
+    @media (max-width: 900px) {
+      .table-container {
+        padding: 12px 12px 180px;
+      }
+
+      .poker-table {
+        width: 94vw;
+        height: 62vh;
+        max-height: 500px;
+      }
+
+      .table-watermark {
+        font-size: clamp(30px, 7vw, 56px);
+      }
+
+      .community-cards-container {
+        gap: 6px;
+      }
+
+      .community-cards-container .card-slot {
+        width: clamp(34px, 8vw, 50px);
+        height: clamp(48px, 11vw, 70px);
+      }
+
+      .seat-avatar-box {
+        width: 48px;
+        height: 48px;
+        font-size: 17px;
+      }
+
+      .player-seat.local-user .seat-cards .card {
+        width: 46px;
+        height: 66px;
+      }
+
+      .player-seat:not(.local-user) .seat-cards .card {
+        width: 34px;
+        height: 48px;
+        min-width: 34px;
+        min-height: 48px;
+      }
+
+      .action-panel {
+        padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+      }
+    }
+
+    @media (max-width: 600px) {
+      html, body {
+        width: 100%;
+        height: 100%;
+      }
+
+      .table-header {
+        height: auto;
+        min-height: 0;
+        padding: 7px 10px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 7px 8px;
+      }
+
+      .header-left {
+        min-width: 0;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .header-left .btn {
+        padding: 5px 7px !important;
+        font-size: 11px !important;
+      }
+
+      .room-badge {
+        gap: 4px;
+        padding: 5px 7px;
+        font-size: 11px;
+      }
+
+      .room-badge .code {
+        letter-spacing: 1px;
+      }
+
+      .hand-number-pill {
+        padding: 4px 7px;
+        font-size: 11px;
+      }
+
+      .header-center {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: center;
+        gap: 7px;
+      }
+
+      .stage-pill {
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+
+      .player-count-pill {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+
+      .header-right {
+        grid-column: 2;
+        grid-row: 1;
+        gap: 5px;
+      }
+
+      .header-btn {
+        padding: 5px 7px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .header-right .header-btn:first-child span:first-child {
+        font-size: 0;
+      }
+
+      .header-right .header-btn:first-child span:first-child::after {
+        content: '💬';
+        font-size: 14px;
+      }
+
+      .table-container {
+        min-height: 0;
+        padding: 8px 8px 205px;
+      }
+
+      .poker-table {
+        width: 96vw;
+        height: min(58vh, 430px);
+        max-height: none;
+        border-radius: 44% / 28%;
+        box-shadow:
+          0 0 0 6px #261608,
+          0 0 0 9px #4a2d13,
+          0 0 0 12px #1a0e05,
+          0 0 0 14px rgba(201, 162, 39, 0.55),
+          inset 0 0 42px rgba(0, 0, 0, 0.75),
+          0 16px 30px rgba(0, 0, 0, 0.8);
+      }
+
+      .poker-table::before {
+        inset: 14px;
+        border-radius: inherit;
+      }
+
+      .pot-container {
+        top: 31%;
+      }
+
+      .pot-badge {
+        gap: 5px;
+        padding: 4px 10px;
+      }
+
+      .pot-amount {
+        font-size: 15px;
+      }
+
+      .community-cards-container {
+        top: 48%;
+        gap: 4px;
+      }
+
+      .community-cards-container .card-slot {
+        width: clamp(30px, 9vw, 38px);
+        height: clamp(43px, 13vw, 54px);
+        border-radius: 5px;
+      }
+
+      .seat-avatar-box {
+        width: 38px;
+        height: 38px;
+        font-size: 14px;
+      }
+
+      .seat-info-box {
+        min-width: 0;
+        max-width: 74px;
+        padding: 2px 5px;
+      }
+
+      .seat-player-name {
+        max-width: 68px;
+        font-size: 10px;
+      }
+
+      .seat-chip-count {
+        font-size: 10px;
+      }
+
+      .seat-current-bet {
+        padding: 1px 5px;
+        font-size: 9px;
+      }
+
+      .player-seat.local-user .seat-cards .card {
+        width: 38px;
+        height: 54px;
+      }
+
+      .player-seat:not(.local-user) .seat-cards .card {
+        width: 27px;
+        height: 38px;
+        min-width: 27px;
+        min-height: 38px;
+      }
+
+      .action-panel {
+        width: 100%;
+        border-radius: 14px 14px 0 0;
+        padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+        gap: 7px;
+      }
+
+      .raise-controls-row {
+        gap: 8px;
+      }
+
+      .raise-presets {
+        gap: 4px;
+      }
+
+      .action-buttons-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .action-btn {
+        min-width: 0;
+        padding: 9px 4px;
+        font-size: 13px;
+      }
+
+      .action-btn .sub-text {
+        font-size: 10px;
+      }
+
+      .sidebar {
+        top: 0;
+        width: min(100vw, 360px);
+        padding-top: env(safe-area-inset-top);
+      }
+
+      .waiting-overlay,
+      .game-over-overlay {
+        padding: 12px;
+      }
+
+      .waiting-card,
+      .game-over-card {
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
+        padding: 20px 16px;
+        gap: 15px;
+      }
+
+      .waiting-title {
+        font-size: 22px;
+      }
+
+      .room-code-text {
+        font-size: 32px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .table-container {
+        padding-bottom: 215px;
+      }
+
+      .raise-input-box {
+        width: 92px;
+      }
+
+      .action-btn {
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -982,6 +1289,7 @@
       </div>
 
       <div class="header-center">
+        <div id="headerPlayerCount" class="player-count-pill" role="status" aria-live="polite" aria-atomic="true">0/6 players</div>
         <div id="stagePill" class="stage-pill">WAITING</div>
       </div>
 
@@ -1328,6 +1636,9 @@
       socket.on('game-state', (state) => {
         if (state && state.isHost !== undefined) {
           updateHostControlsUI(state.isHost);
+        }
+        if (state) {
+          updatePlayerCount(state.players || [], state.maxPlayers || 6);
         }
         handleGameState(state);
       });
@@ -1825,11 +2136,22 @@
     }
 
     // Lobby Overlay UI
+    function updatePlayerCount(players, maxPlayers) {
+      const count = `${players.length}/${maxPlayers || 6}`;
+      const headerCount = document.getElementById('headerPlayerCount');
+      const lobbyCount = document.getElementById('playerCountLabel');
+      if (headerCount) {
+        headerCount.textContent = `${count} players`;
+        headerCount.setAttribute('aria-label', `${players.length} of ${maxPlayers || 6} players`);
+      }
+      if (lobbyCount) lobbyCount.textContent = count;
+    }
+
     function updateLobbyUI(players, maxPlayers, hostId) {
       const list = document.getElementById('lobbyPlayersList');
       list.innerHTML = '';
       const total = players.length;
-      document.getElementById('playerCountLabel').textContent = `${total}/${maxPlayers || 6}`;
+      updatePlayerCount(players, maxPlayers);
 
       players.forEach(p => {
         const isThisHost = p.isHost || (hostId && p.id === hostId);
