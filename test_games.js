@@ -593,6 +593,36 @@ assert.strictEqual(switchedGame.hostName, 'TestHost', 'Host privileges must carr
 rooms.delete(navTestRoomId);
 console.log('  ✓ Room navigation grace period, host persistence, and permission boundaries verified');
 
+// ==========================================
+// Test 18: Stale Socket Name Collision Recovery
+// ==========================================
+console.log('\nTest 18: Stale Socket Name Collision Recovery');
+const staleJoinRoomId = 'STALE1';
+const staleJoinGame = createGameInstance('poker', staleJoinRoomId);
+staleJoinGame.addPlayer('stale_socket_id', 'ReturningPlayer');
+rooms.set(staleJoinRoomId, staleJoinGame);
+
+const activeNameSocket = { connected: true };
+io.sockets.sockets.set('stale_socket_id', activeNameSocket);
+const duplicateNameSocket = createMockSocket('duplicate_name_socket');
+let duplicateNameError = null;
+duplicateNameSocket.on('join-error', (error) => { duplicateNameError = error; });
+duplicateNameSocket.emit('join-room', { roomId: staleJoinRoomId, name: 'ReturningPlayer' });
+assert.match(duplicateNameError || '', /already active/, 'A player with a live socket must keep the duplicate-name protection');
+assert.strictEqual(staleJoinGame.players[0].id, 'stale_socket_id', 'An active player must not be displaced');
+
+io.sockets.sockets.delete('stale_socket_id');
+const recoveredNameSocket = createMockSocket('recovered_name_socket');
+let recoveredNameJoin = null;
+recoveredNameSocket.on('room-joined', (data) => { recoveredNameJoin = data; });
+recoveredNameSocket.emit('join-room', { roomId: staleJoinRoomId, name: 'ReturningPlayer' });
+assert(recoveredNameJoin, 'A stale player record without a live socket must be recoverable');
+assert.strictEqual(recoveredNameJoin.reconnected, true, 'Stale player recovery must use the existing player record');
+assert.strictEqual(staleJoinGame.players.length, 1, 'Stale recovery must not add a duplicate player');
+assert.strictEqual(staleJoinGame.players[0].id, 'recovered_name_socket', 'The stale record must be attached to the new socket');
+rooms.delete(staleJoinRoomId);
+console.log('  ✓ Stale socket records recover without weakening active duplicate-name protection');
+
 // Clean timers
 imposter.clearTimer();
 waveCoop.clearTimer();
@@ -604,5 +634,5 @@ drawGame.clearTimer();
 triviaGame.clearTimer();
 spyGame.clearTimer();
 
-console.log('\n🎉 ALL 17 TEST SUITES PASSED FLAWLESSLY!');
+console.log('\n🎉 ALL 18 TEST SUITES PASSED FLAWLESSLY!');
 process.exit(0);

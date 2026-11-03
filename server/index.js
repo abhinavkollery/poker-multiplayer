@@ -210,6 +210,12 @@ app.get('/api/network-info', (req, res) => {
 const roomCleanupTimers = new Map(); // roomId -> Timeout
 const playerDisconnectTimers = new Map(); // `${roomId}:${playerId}` -> Timeout
 
+function isPlayerConnectionActive(player) {
+  if (!player?.connected) return false;
+  if (player.isBot) return true;
+  return io.sockets.sockets.get(player.id)?.connected === true;
+}
+
 function scheduleRoomCleanup(roomId) {
   if (roomCleanupTimers.has(roomId)) return;
   const timer = setTimeout(() => {
@@ -392,13 +398,20 @@ io.on('connection', socket => {
     let player = null;
 
     // 1. Try game's reconnectPlayer first
-    const reconnectResult = (typeof game.reconnectPlayer === 'function')
+    let reconnectResult = (typeof game.reconnectPlayer === 'function')
       ? game.reconnectPlayer(socket.id, name)
       : { success: false };
 
     if (reconnectResult && reconnectResult.collision) {
-      socket.emit('join-error', reconnectResult.error);
-      return;
+      const stalePlayer = game.players.find(p => p.name && p.name.toLowerCase() === cleanName);
+      if (stalePlayer && !isPlayerConnectionActive(stalePlayer)) {
+        stalePlayer.connected = false;
+        reconnectResult = game.reconnectPlayer(socket.id, name);
+      }
+      if (reconnectResult && reconnectResult.collision) {
+        socket.emit('join-error', reconnectResult.error);
+        return;
+      }
     }
 
     if (reconnectResult && reconnectResult.success) {
@@ -408,7 +421,7 @@ io.on('connection', socket => {
       // 2. Check if a player with this name already exists in game.players
       const existing = game.players.find(p => p.name && p.name.toLowerCase() === cleanName);
       if (existing) {
-        if (existing.connected && existing.id !== socket.id) {
+        if (existing.id !== socket.id && isPlayerConnectionActive(existing)) {
           socket.emit('join-error', `A player named "${name}" is already active in this room. Please choose another name.`);
           return;
         }
