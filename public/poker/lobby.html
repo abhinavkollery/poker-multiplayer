@@ -228,6 +228,142 @@
       align-items: center;
       gap: 8px;
     }
+
+    body {
+      justify-content: flex-start;
+      background:
+        radial-gradient(ellipse at 50% 20%, rgba(32, 90, 60, 0.28), transparent 55%),
+        radial-gradient(ellipse at 100% 100%, rgba(118, 83, 21, 0.12), transparent 42%),
+        #080d12;
+    }
+
+    .lobby-wrapper {
+      max-width: 500px;
+      gap: 24px;
+      margin-block: auto;
+    }
+
+    .brand-header {
+      gap: 8px;
+    }
+
+    .brand-logo-chip {
+      width: 64px;
+      height: 64px;
+      box-shadow: 0 12px 32px rgba(201, 162, 39, 0.24), inset 0 2px 4px rgba(255, 255, 255, 0.55), inset 0 -2px 5px rgba(0, 0, 0, 0.45);
+    }
+
+    .brand-title {
+      font-size: clamp(28px, 6vw, 36px);
+      letter-spacing: -0.8px;
+      text-shadow: 0 8px 32px rgba(201, 162, 39, 0.2);
+    }
+
+    .brand-subtitle {
+      letter-spacing: 1.5px;
+    }
+
+    .lobby-card {
+      background: linear-gradient(145deg, rgba(20, 31, 40, 0.96), rgba(11, 18, 24, 0.96));
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.48), inset 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .tabs-header {
+      padding: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      background: rgba(4, 9, 13, 0.56);
+      margin-bottom: 22px;
+    }
+
+    .tab-btn {
+      min-height: 44px;
+      border-radius: 8px;
+    }
+
+    .tab-btn.active {
+      color: #ffe28a;
+      background: rgba(232, 197, 71, 0.1);
+    }
+
+    .tab-btn.active::after {
+      display: none;
+    }
+
+    .form-label {
+      color: #d3dce4;
+      font-weight: 600;
+    }
+
+    .form-input,
+    .form-select {
+      min-height: 48px;
+      background: rgba(5, 11, 16, 0.72);
+      border-color: rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .form-select {
+      color-scheme: dark;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      border-color: rgba(232, 197, 71, 0.78);
+      box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.16);
+    }
+
+    .btn:focus-visible,
+    .form-input:focus-visible,
+    .form-select:focus-visible {
+      outline: 2px solid #ffe28a;
+      outline-offset: 3px;
+    }
+
+    .form-submit-btn {
+      min-height: 54px;
+      box-shadow: 0 10px 24px rgba(201, 162, 39, 0.22);
+    }
+
+    .lobby-footer {
+      justify-content: center;
+      flex-wrap: wrap;
+      color: #8e9ba7;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        justify-content: flex-start;
+        padding: 22px 16px;
+      }
+
+      .lobby-wrapper {
+        gap: 20px;
+      }
+
+      .lobby-card {
+        padding: 22px 18px 24px;
+        border-radius: 18px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>

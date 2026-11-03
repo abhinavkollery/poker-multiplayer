@@ -955,6 +955,213 @@
         font-size: 30px;
       }
     }
+
+    /* Cohesive polish for the shared party and game-selection flow */
+    body {
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(35, 91, 67, 0.3), transparent 48%),
+        radial-gradient(ellipse at 0% 60%, rgba(34, 88, 117, 0.12), transparent 42%),
+        #080d12;
+    }
+
+    .hub-container {
+      justify-content: flex-start;
+      gap: 20px;
+      padding: clamp(28px, 6vh, 64px) 20px 40px;
+    }
+
+    .brand-hero {
+      margin-bottom: 8px;
+    }
+
+    .brand-title {
+      font-size: clamp(30px, 5vw, 44px);
+      letter-spacing: -1.5px;
+      text-shadow: 0 8px 36px rgba(201, 162, 39, 0.18);
+    }
+
+    .brand-subtitle {
+      color: #a7b3bf;
+    }
+
+    .party-entry-card,
+    .party-lobby-card,
+    .hub-card {
+      background: linear-gradient(145deg, rgba(20, 31, 40, 0.96), rgba(11, 18, 24, 0.96));
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.48), inset 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .party-entry-card {
+      padding: 26px;
+    }
+
+    .action-tabs {
+      padding: 5px;
+      background: rgba(4, 9, 13, 0.68);
+      border-color: rgba(255, 255, 255, 0.1);
+      margin-bottom: 24px;
+    }
+
+    .action-tab-btn {
+      min-height: 44px;
+      border-radius: 9px;
+    }
+
+    .action-tab-btn.active {
+      background: linear-gradient(135deg, rgba(232, 197, 71, 0.2), rgba(201, 162, 39, 0.1));
+      color: #ffe28a;
+      box-shadow: inset 0 0 0 1px rgba(232, 197, 71, 0.2);
+    }
+
+    .hub-container .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hub-container .form-label {
+      color: #d3dce4;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .hub-container .form-input,
+    .hub-container .form-select {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      background: rgba(5, 11, 16, 0.72);
+      color: #f8fafc;
+      font: inherit;
+      font-size: 16px;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      color-scheme: dark;
+    }
+
+    .hub-container .form-input::placeholder {
+      color: #71808e;
+    }
+
+    .hub-container .form-input:focus,
+    .hub-container .form-select:focus {
+      outline: none;
+      border-color: rgba(232, 197, 71, 0.78);
+      background: rgba(5, 11, 16, 0.94);
+      box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.16);
+    }
+
+    .hub-container button:focus-visible,
+    .hub-container a:focus-visible,
+    .hub-container [tabindex="0"]:focus-visible {
+      outline: 2px solid #ffe28a;
+      outline-offset: 3px;
+    }
+
+    .submit-btn {
+      min-height: 54px;
+      box-shadow: 0 10px 24px rgba(201, 162, 39, 0.22);
+    }
+
+    .party-entry-hint {
+      color: #9baab7;
+    }
+
+    .game-cards-grid {
+      gap: 14px;
+    }
+
+    .game-card-item {
+      min-height: 184px;
+      padding: 16px;
+      background: linear-gradient(155deg, rgba(22, 33, 45, 0.9), rgba(13, 21, 29, 0.9));
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .game-card-item.active {
+      background: linear-gradient(155deg, rgba(31, 47, 60, 0.98), rgba(14, 26, 34, 0.98));
+    }
+
+    .game-card-item:focus-visible {
+      outline: 2px solid #ffe28a;
+      outline-offset: 3px;
+    }
+
+    .game-card-tagline {
+      color: #aab7c4;
+    }
+
+    .game-meta-title {
+      letter-spacing: -0.5px;
+    }
+
+    .rules-accordion-box,
+    #lobbyGameSettingsWrapper {
+      background: rgba(4, 10, 15, 0.46) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .game-launch-sticky-bar {
+      background: rgba(10, 18, 25, 0.96);
+      border-color: rgba(201, 162, 39, 0.4);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.46);
+    }
+
+    @media (max-width: 600px) {
+      .hub-container {
+        padding: 24px 14px 32px;
+        gap: 16px;
+      }
+
+      .party-entry-card,
+      .party-lobby-card {
+        padding: 22px 18px;
+        border-radius: 20px;
+      }
+
+      .game-select-header-bar {
+        align-items: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 12px;
+      }
+
+      .game-launch-sticky-bar {
+        bottom: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .party-entry-card,
+      .party-lobby-card,
+      .hub-card {
+        padding: 18px 14px;
+      }
+
+      .party-header-actions {
+        width: 100%;
+      }
+
+      .party-header-actions .btn-party-action {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 
@@ -1197,7 +1404,7 @@
         <!-- Interactive Game Cards Grid -->
         <div id="gameCardsGrid" class="game-cards-grid" role="tablist">
           <!-- 1. Texas Hold'em Poker -->
-          <div class="game-card-item active" id="cardPoker" data-game="poker" onclick="switchGame('poker')" role="tab" tabindex="0">
+          <div class="game-card-item active" id="cardPoker" data-game="poker" onclick="switchGame('poker')" role="tab" tabindex="0" aria-selected="true">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🃏</div>
               <div class="game-card-status-pill">Selected ✓</div>
@@ -1213,7 +1420,7 @@
           </div>
 
           <!-- 2. The Imposter -->
-          <div class="game-card-item" id="cardImposter" data-game="imposter" onclick="switchGame('imposter')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardImposter" data-game="imposter" onclick="switchGame('imposter')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🕵️</div>
               <div class="game-card-status-pill">Select</div>
@@ -1229,7 +1436,7 @@
           </div>
 
           <!-- 3. Wavelength -->
-          <div class="game-card-item" id="cardWavelength" data-game="wavelength" onclick="switchGame('wavelength')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardWavelength" data-game="wavelength" onclick="switchGame('wavelength')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🌊</div>
               <div class="game-card-status-pill">Select</div>
@@ -1245,7 +1452,7 @@
           </div>
 
           <!-- 4. Co-op Platformer -->
-          <div class="game-card-item" id="cardPlatformer" data-game="platformer" onclick="switchGame('platformer')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardPlatformer" data-game="platformer" onclick="switchGame('platformer')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🏃‍♂️</div>
               <div class="game-card-status-pill">Select</div>
@@ -1261,7 +1468,7 @@
           </div>
 
           <!-- 5. Draw & Guess -->
-          <div class="game-card-item" id="cardDrawguess" data-game="drawguess" onclick="switchGame('drawguess')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardDrawguess" data-game="drawguess" onclick="switchGame('drawguess')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🎨</div>
               <div class="game-card-status-pill">Select</div>
@@ -1277,7 +1484,7 @@
           </div>
 
           <!-- 6. Codenames -->
-          <div class="game-card-item" id="cardCodenames" data-game="codenames" onclick="switchGame('codenames')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardCodenames" data-game="codenames" onclick="switchGame('codenames')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🕵️</div>
               <div class="game-card-status-pill">Select</div>
@@ -1293,7 +1500,7 @@
           </div>
 
           <!-- 7. Speed Trivia -->
-          <div class="game-card-item" id="cardTrivia" data-game="trivia" onclick="switchGame('trivia')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardTrivia" data-game="trivia" onclick="switchGame('trivia')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">⚡</div>
               <div class="game-card-status-pill">Select</div>
@@ -1309,7 +1516,7 @@
           </div>
 
           <!-- 8. Liar's Dice -->
-          <div class="game-card-item" id="cardLiarsdice" data-game="liarsdice" onclick="switchGame('liarsdice')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardLiarsdice" data-game="liarsdice" onclick="switchGame('liarsdice')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🎲</div>
               <div class="game-card-status-pill">Select</div>
@@ -1325,7 +1532,7 @@
           </div>
 
           <!-- 9. Spyfall -->
-          <div class="game-card-item" id="cardSpyfall" data-game="spyfall" onclick="switchGame('spyfall')" role="tab" tabindex="0">
+          <div class="game-card-item" id="cardSpyfall" data-game="spyfall" onclick="switchGame('spyfall')" role="tab" tabindex="0" aria-selected="false">
             <div class="game-card-header">
               <div class="game-card-icon-wrap">🕵️‍♂️</div>
               <div class="game-card-status-pill">Select</div>
@@ -1803,6 +2010,7 @@
       document.querySelectorAll('.game-card-item').forEach(card => {
         const isMatch = card.dataset.game === gameType;
         card.classList.toggle('active', isMatch);
+        card.setAttribute('aria-selected', String(isMatch));
         const statusPill = card.querySelector('.game-card-status-pill');
         if (statusPill) {
           statusPill.textContent = isMatch ? 'Selected ✓' : 'Select';
@@ -1959,7 +2167,10 @@
 
     // Keyboard Shortcuts (Arrow keys & digits 1-9)
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      const activeElement = document.activeElement;
+      const gameSelectScreen = document.getElementById('screenGameSelect');
+      if (!gameSelectScreen || gameSelectScreen.classList.contains('hidden')) return;
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(activeElement?.tagName) || activeElement?.isContentEditable) return;
 
       const gameKeys = ['poker', 'imposter', 'wavelength', 'platformer', 'drawguess', 'codenames', 'trivia', 'liarsdice', 'spyfall'];
       const num = parseInt(e.key, 10);
@@ -1968,14 +2179,25 @@
         return;
       }
 
-      const currentIndex = gameKeys.indexOf(currentGame);
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        const next = gameKeys[(currentIndex + 1) % gameKeys.length];
-        switchGame(next);
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        const prev = gameKeys[(currentIndex - 1 + gameKeys.length) % gameKeys.length];
-        switchGame(prev);
-      }
+      if (!activeElement?.classList.contains('game-card-item')) return;
+      const visibleCards = [...document.querySelectorAll('.game-card-item')]
+        .filter(card => card.style.display !== 'none');
+      const currentIndex = visibleCards.indexOf(activeElement);
+      const direction = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 :
+        e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!direction || currentIndex < 0 || visibleCards.length === 0) return;
+
+      e.preventDefault();
+      const nextCard = visibleCards[(currentIndex + direction + visibleCards.length) % visibleCards.length];
+      switchGame(nextCard.dataset.game);
+      nextCard.focus();
+    });
+
+    document.getElementById('gameCardsGrid').addEventListener('keydown', (e) => {
+      const gameCard = e.target.closest('.game-card-item');
+      if (!gameCard || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault();
+      gameCard.click();
     });
 
     function switchAction(action) {
