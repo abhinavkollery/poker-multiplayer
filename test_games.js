@@ -623,6 +623,54 @@ assert.strictEqual(staleJoinGame.players[0].id, 'recovered_name_socket', 'The st
 rooms.delete(staleJoinRoomId);
 console.log('  ✓ Stale socket records recover without weakening active duplicate-name protection');
 
+const handoffRoomId = 'HANDOF';
+const handoffGame = createGameInstance('party', handoffRoomId);
+handoffGame.addPlayer('handoff_old_socket', 'abhi');
+const disconnectedHandoffPlayer = handoffGame.addPlayer('gone_socket', 'GonePlayer').player;
+disconnectedHandoffPlayer.connected = false;
+handoffGame.hostName = 'abhi';
+handoffGame.hostPlayerId = 'handoff_old_socket';
+rooms.set(handoffRoomId, handoffGame);
+
+const handoffOldSocket = createMockSocket('handoff_old_socket');
+handoffOldSocket.data = { roomId: handoffRoomId, name: 'abhi', isHost: true };
+handoffOldSocket.connected = true;
+io.sockets.sockets.set(handoffOldSocket.id, handoffOldSocket);
+let handoffEvent = null;
+handoffOldSocket.on('party:game-switched', (data) => { handoffEvent = data; });
+handoffOldSocket.emit('party:switch-game', { newGameType: 'poker' });
+
+const handoffPokerGame = rooms.get(handoffRoomId);
+assert.strictEqual(handoffPokerGame.players.length, 1, 'Game switch must migrate the connected human player');
+assert.strictEqual(handoffPokerGame.players[0].connected, true, 'Migrated players remain connected until their handoff is authorized');
+assert.strictEqual(handoffPokerGame.players[0].id, handoffOldSocket.id, 'Migration retains the identity for reconnection');
+assert(handoffEvent?.handoffToken, 'Game switch must issue a one-time handoff token to the player socket');
+
+const handoffNewSocket = createMockSocket('handoff_new_socket');
+handoffNewSocket.handshake = { auth: { handoffToken: handoffEvent.handoffToken } };
+handoffNewSocket.connected = true;
+io.sockets.sockets.set(handoffNewSocket.id, handoffNewSocket);
+let handoffJoin = null;
+let handoffJoinError = null;
+handoffNewSocket.on('room-joined', (data) => { handoffJoin = data; });
+handoffNewSocket.on('join-error', (error) => { handoffJoinError = error; });
+handoffNewSocket.emit('join-room', { roomId: handoffRoomId, name: 'abhi' });
+assert(handoffJoin, `A player should rejoin after a game switch without a collision: ${handoffJoinError}`);
+assert.strictEqual(handoffJoin.reconnected, true, 'Game-switch handoff must reconnect the existing player record');
+assert.strictEqual(handoffPokerGame.players.length, 1, 'Game-switch handoff must not create a duplicate record');
+assert.strictEqual(handoffPokerGame.players[0].id, handoffNewSocket.id, 'The player record must use the destination socket');
+
+const reusedHandoffSocket = createMockSocket('reused_handoff_socket');
+reusedHandoffSocket.handshake = { auth: { handoffToken: handoffEvent.handoffToken } };
+let reusedHandoffError = null;
+reusedHandoffSocket.on('join-error', (error) => { reusedHandoffError = error; });
+reusedHandoffSocket.emit('join-room', { roomId: handoffRoomId, name: 'abhi' });
+assert.match(reusedHandoffError || '', /already active/, 'A consumed handoff token must not bypass duplicate-name protection');
+io.sockets.sockets.delete(handoffOldSocket.id);
+io.sockets.sockets.delete(handoffNewSocket.id);
+rooms.delete(handoffRoomId);
+console.log('  ✓ One-time game-switch handoff avoids collisions without weakening duplicate-name protection');
+
 // Clean timers
 imposter.clearTimer();
 waveCoop.clearTimer();

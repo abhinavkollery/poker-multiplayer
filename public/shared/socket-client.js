@@ -34,6 +34,10 @@
       timeout: 20000
     };
     const merged = Object.assign({}, defaultOptions, options);
+    const handoffToken = new URLSearchParams(window.location.search).get('handoff');
+    if (handoffToken) {
+      merged.auth = Object.assign({}, merged.auth, { handoffToken });
+    }
 
     if (backendUrl && typeof io === 'function') {
       return io(backendUrl, merged);
@@ -126,6 +130,12 @@
       // Always pass the current player's distinct name so sessions never clash
       if (!dest.includes('name=')) {
         dest += (dest.includes('?') ? '&' : '?') + `name=${name}`;
+      }
+
+      if (data.handoffToken) {
+        const destination = new URL(dest, window.location.href);
+        destination.searchParams.set('handoff', data.handoffToken);
+        dest = destination.toString();
       }
 
       const backendUrl = getPartyBackendUrl();

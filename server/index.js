@@ -209,11 +209,43 @@ app.get('/api/network-info', (req, res) => {
 // Persistent Room & Player Disconnection Management
 const roomCleanupTimers = new Map(); // roomId -> Timeout
 const playerDisconnectTimers = new Map(); // `${roomId}:${playerId}` -> Timeout
+const pendingPlayerHandoffs = new Map(); // token -> { roomId, name, playerId, expiresAt }
+const PLAYER_HANDOFF_TTL_MS = 30000;
 
 function isPlayerConnectionActive(player) {
   if (!player?.connected) return false;
   if (player.isBot) return true;
   return io.sockets.sockets.get(player.id)?.connected === true;
+}
+
+function consumePlayerHandoff(token, roomId, player) {
+  if (!token || !player) return false;
+  const handoff = pendingPlayerHandoffs.get(token);
+  if (!handoff) return false;
+  if (handoff.expiresAt < Date.now()) {
+    pendingPlayerHandoffs.delete(token);
+    clearTimeout(handoff.timer);
+    return false;
+  }
+  if (
+    handoff.roomId !== roomId ||
+    handoff.playerId !== player.id ||
+    handoff.name !== (player.name || '').toLowerCase()
+  ) {
+    return false;
+  }
+  pendingPlayerHandoffs.delete(token);
+  clearTimeout(handoff.timer);
+  return true;
+}
+
+function prunePlayerHandoffs() {
+  for (const [token, handoff] of pendingPlayerHandoffs) {
+    if (handoff.expiresAt < Date.now()) {
+      pendingPlayerHandoffs.delete(token);
+      clearTimeout(handoff.timer);
+    }
+  }
 }
 
 function scheduleRoomCleanup(roomId) {
@@ -369,6 +401,7 @@ io.on('connection', socket => {
 
   // 2. Join Room
   socket.on('join-room', (payload = {}) => {
+    prunePlayerHandoffs();
     const roomId = payload.roomId;
     const name = (payload.name || '').trim();
     if (!roomId) {
@@ -404,7 +437,9 @@ io.on('connection', socket => {
 
     if (reconnectResult && reconnectResult.collision) {
       const stalePlayer = game.players.find(p => p.name && p.name.toLowerCase() === cleanName);
-      if (stalePlayer && !isPlayerConnectionActive(stalePlayer)) {
+      const handoffToken = payload.handoffToken || socket.handshake?.auth?.handoffToken;
+      const hasHandoff = stalePlayer && consumePlayerHandoff(handoffToken, cleanRoomId, stalePlayer);
+      if (stalePlayer && (hasHandoff || !isPlayerConnectionActive(stalePlayer))) {
         stalePlayer.connected = false;
         reconnectResult = game.reconnectPlayer(socket.id, name);
       }
@@ -586,23 +621,43 @@ io.on('connection', socket => {
     newGame.creatorName = newGame.hostName;
     newGame.hostPlayerId = host ? host.id : socket.id;
 
-    // Migrate active connected/recent human players, eliminating ghosts and bots
-    const activePlayers = oldGame.players.filter(p => !p.isBot);
-    activePlayers.forEach(p => {
-      newGame.addPlayer(p.id, p.name);
-    });
-
-    rooms.set(roomId, newGame);
+    // Migrated players reconnect from the destination page with new sockets.
+    const activePlayers = oldGame.players.filter(p => p.connected && !p.isBot);
+    prunePlayerHandoffs();
 
     const redirectUrl = (newGameType === 'party' || newGameType === 'lobby')
       ? `/?room=${roomId}`
       : `/${newGameType}/game.html?room=${roomId}`;
 
-    io.to(roomId).emit('party:game-switched', {
-      newGameType,
-      roomId,
-      url: redirectUrl
+    activePlayers.forEach(p => {
+      const result = newGame.addPlayer(p.id, p.name);
+      if (!result.player) return;
+
+      const playerSocket = io.sockets.sockets.get(p.id);
+      if (!playerSocket) {
+        result.player.connected = false;
+        return;
+      }
+
+      const handoffToken = uuidv4();
+      const handoff = {
+        roomId,
+        name: p.name.toLowerCase(),
+        playerId: result.player.id,
+        expiresAt: Date.now() + PLAYER_HANDOFF_TTL_MS
+      };
+      handoff.timer = setTimeout(() => pendingPlayerHandoffs.delete(handoffToken), PLAYER_HANDOFF_TTL_MS);
+      handoff.timer.unref?.();
+      pendingPlayerHandoffs.set(handoffToken, handoff);
+      playerSocket.emit('party:game-switched', {
+        newGameType,
+        roomId,
+        url: redirectUrl,
+        handoffToken
+      });
     });
+
+    rooms.set(roomId, newGame);
 
     // Also send updated lobby & game states to the room sockets
     broadcastLobbyUpdate(newGame, io);
